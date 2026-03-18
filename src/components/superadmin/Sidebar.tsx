@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import { 
   LayoutDashboard, 
   Store, 
@@ -18,6 +19,7 @@ import {
 const MENU_ITEMS = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/superadmin/dashboard" },
   { icon: Store, label: "Restaurants", href: "/superadmin/restaurants" },
+  { icon: ShieldCheck, label: "Users", href: "/superadmin/users" },
   { icon: CreditCard, label: "Subscriptions", href: "/superadmin/subscriptions" },
   { icon: Package, label: "Plans / Packages", href: "/superadmin/plans" },
   { icon: Palette, label: "Branding", href: "/superadmin/branding" },
@@ -28,6 +30,17 @@ const MENU_ITEMS = [
 
 export default function SuperAdminSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.push("/login"); // Redirect to superadmin login page
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
 
   return (
     <aside className="w-72 bg-neutral-900 border-r border-neutral-800 flex flex-col h-screen fixed left-0 top-0 z-50">
@@ -80,7 +93,10 @@ export default function SuperAdminSidebar() {
           </div>
         </div>
 
-        <button className="flex items-center gap-3 w-full px-4 py-3 text-neutral-400 hover:text-red-500 hover:bg-red-500/5 rounded-2xl transition-all">
+        <button 
+          onClick={handleLogout}
+          className="flex items-center gap-3 w-full px-4 py-3 text-neutral-400 hover:text-red-500 hover:bg-red-500/5 rounded-2xl transition-all"
+        >
           <LogOut className="w-5 h-5" />
           <span className="text-sm font-bold">Logout</span>
         </button>

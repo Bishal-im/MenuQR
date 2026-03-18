@@ -16,17 +16,22 @@ import {
   ChevronLeft
 } from "lucide-react";
 
+import RestaurantModal from "@/components/superadmin/RestaurantModal";
+
 export default function RestaurantManagement() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const fetchData = async () => {
+    setLoading(true);
+    const data = await getRestaurants();
+    setRestaurants(data);
+    setLoading(false);
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      const data = await getRestaurants();
-      setRestaurants(data);
-      setLoading(false);
-    };
     fetchData();
   }, []);
 
@@ -38,13 +43,21 @@ export default function RestaurantManagement() {
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
+      <RestaurantModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onSuccess={fetchData} 
+      />
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-4xl font-black text-white tracking-tight leading-none mb-3">Restaurants</h1>
           <p className="text-neutral-500 font-medium">Manage all your restaurant partners and their access.</p>
         </div>
-        <button className="flex items-center justify-center gap-2 bg-white text-black hover:bg-neutral-200 active:scale-95 px-6 py-3.5 rounded-2xl font-black text-sm shadow-xl transition-all group">
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="flex items-center justify-center gap-2 bg-white text-black hover:bg-neutral-200 active:scale-95 px-6 py-3.5 rounded-2xl font-black text-sm shadow-xl transition-all group"
+        >
           <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" />
           Add New Restaurant
         </button>

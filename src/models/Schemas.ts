@@ -84,3 +84,31 @@ const OrderSchema = new Schema({
 });
 
 export const OrderModel = models.Order || model('Order', OrderSchema);
+
+// OTP Schema for Passwordless Auth
+const OTPSchema = new Schema({
+  email: { type: String, required: true },
+  otp: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now, expires: 120 } // 2 minutes TTL
+});
+
+// User Schema
+const UserSchema = new Schema({
+  email: { type: String, required: true, unique: true },
+  name: { type: String },
+  role: { 
+    type: String, 
+    enum: ['superadmin', 'admin', 'waiter', 'customer'],
+    default: 'customer'
+  },
+  restaurantId: { type: Schema.Types.ObjectId, ref: 'Restaurant' },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+}, { strict: true }); // Ensure only defined fields are allowed
+
+// Force refresh the models in development to avoid stale schema errors
+if (models.User) delete (mongoose as any).models.User;
+if (models.OTP) delete (mongoose as any).models.OTP;
+
+export const UserModel = model('User', UserSchema);
+export const OTPModel = model('OTP', OTPSchema);

@@ -1,7 +1,7 @@
 "use server";
 
 import { connectToDatabase } from "@/lib/db";
-import { PlatformStatsModel, RestaurantModel, PlanModel } from "@/models/Schemas";
+import { PlatformStatsModel, RestaurantModel, PlanModel, UserModel } from "@/models/Schemas";
 
 export interface PlatformStats {
   totalRestaurants: number;
@@ -134,6 +134,28 @@ export async function getAnalytics() {
       { name: 'Mar', orders: 18000 },
     ]
   };
+}
+
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: 'superadmin' | 'admin' | 'waiter' | 'customer';
+  restaurantId?: string;
+  createdAt: string;
+}
+
+export async function getUsers(): Promise<User[]> {
+  await connectToDatabase();
+  const users = await UserModel.find().lean();
+  return users.map((u: any) => ({
+    id: u._id.toString(),
+    email: u.email,
+    name: u.name || '',
+    role: u.role,
+    restaurantId: u.restaurantId?.toString() || '',
+    createdAt: u.createdAt ? u.createdAt.toISOString().split('T')[0] : '',
+  }));
 }
 
 // Server actions must only export async functions.
