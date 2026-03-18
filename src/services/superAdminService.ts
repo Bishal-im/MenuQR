@@ -1,3 +1,8 @@
+"use server";
+
+import { connectToDatabase } from "@/lib/db";
+import { PlatformStatsModel, RestaurantModel, PlanModel } from "@/models/Schemas";
+
 export interface PlatformStats {
   totalRestaurants: number;
   activeSubscriptions: number;
@@ -41,120 +46,94 @@ export interface Subscription {
   paymentStatus: 'paid' | 'pending' | 'failed';
 }
 
-// Mock Data
-const MOCK_STATS: PlatformStats = {
-  totalRestaurants: 156,
-  activeSubscriptions: 142,
-  monthlyRevenue: 28500,
-  totalOrders: 45000,
-  revenueGrowth: 12.5,
-  restaurantGrowth: 8.2,
-};
+import mongoose from "mongoose";
 
-const MOCK_PLANS: Plan[] = [
-  {
-    id: 'p1',
-    name: 'Basic',
-    price: 999,
-    billingCycle: 'monthly',
-    features: ['Up to 10 tables', 'Basic Menu', 'Email Support'],
-    maxTables: 10,
-    maxMenuItems: 50,
-    hasAnalytics: false,
-    hasBranding: false,
-  },
-  {
-    id: 'p2',
-    name: 'Pro',
-    price: 2499,
-    billingCycle: 'monthly',
-    features: ['Unlimited tables', 'Full Analytics', 'Custom Branding', 'Priority Support'],
-    maxTables: 100,
-    maxMenuItems: 500,
-    hasAnalytics: true,
-    hasBranding: true,
-  },
-];
+export async function getStats(): Promise<PlatformStats> {
+  await connectToDatabase();
+  const stats = await PlatformStatsModel.findOne();
+  return {
+    totalRestaurants: stats?.totalRestaurants || 0,
+    activeSubscriptions: stats?.activeSubscriptions || 0,
+    monthlyRevenue: stats?.monthlyRevenue || 0,
+    totalOrders: stats?.totalOrders || 0,
+    revenueGrowth: stats?.revenueGrowth || 0,
+    restaurantGrowth: stats?.restaurantGrowth || 0,
+  };
+}
 
-const MOCK_RESTAURANTS: Restaurant[] = [
-  {
-    id: 'r1',
-    name: 'The Grand Dhaba',
-    ownerName: 'Rahul Sharma',
-    email: 'contact@granddhaba.com',
-    phone: '+91 98765 43210',
-    address: 'Mumbai, Maharashtra',
-    planId: 'p2',
-    status: 'active',
-    createdAt: '2025-01-15',
-  },
-  {
-    id: 'r2',
-    name: 'Pizza Palace',
-    ownerName: 'John Doe',
-    email: 'info@pizzapalace.com',
-    phone: '+91 88776 55443',
-    address: 'Delhi, India',
-    planId: 'p1',
-    status: 'inactive',
-    createdAt: '2025-02-10',
-  },
-];
+export async function getRestaurants(): Promise<Restaurant[]> {
+  await connectToDatabase();
+  const restaurants = await RestaurantModel.find().lean();
+  return restaurants.map((r: any) => ({
+    id: r._id.toString(),
+    name: r.name,
+    ownerName: r.ownerName,
+    email: r.email,
+    phone: r.phone,
+    address: r.address,
+    planId: r.planId?.toString() || '',
+    status: r.status,
+    createdAt: r.createdAt.toISOString().split('T')[0],
+  }));
+}
 
-export const superAdminService = {
-  getStats: async (): Promise<PlatformStats> => {
-    return MOCK_STATS;
-  },
+export async function createRestaurant(data: Omit<Restaurant, 'id' | 'createdAt'>) {
+  await connectToDatabase();
+  const newRestaurant = await RestaurantModel.create({
+    ...data,
+    planId: mongoose.Types.ObjectId.isValid(data.planId) ? data.planId : undefined,
+  });
+  return { success: true, id: newRestaurant._id.toString() };
+}
 
-  getRestaurants: async (): Promise<Restaurant[]> => {
-    return MOCK_RESTAURANTS;
-  },
-
-  createRestaurant: async (data: Omit<Restaurant, 'id' | 'createdAt'>) => {
-    console.log("Creating restaurant:", data);
-    return { success: true, id: 'r' + Math.random().toString(36).substr(2, 9) };
-  },
-
-  updateRestaurant: async (id: string, data: Partial<Restaurant>) => {
-    console.log("Updating restaurant:", id, data);
-    return { success: true };
-  },
-
-  getPlans: async (): Promise<Plan[]> => {
-    return MOCK_PLANS;
-  },
-
-  createPlan: async (data: Omit<Plan, 'id'>) => {
-    console.log("Creating plan:", data);
-    return { success: true, id: 'p' + Math.random().toString(36).substr(2, 9) };
-  },
-
-  getSubscriptions: async () => {
-    return [
-      {
-        id: 's1',
-        restaurantId: 'r1',
-        planId: 'p2',
-        startDate: '2025-01-15',
-        expiryDate: '2026-01-15',
-        status: 'active',
-        paymentStatus: 'paid',
-      }
-    ];
-  },
-
-  getAnalytics: async () => {
-    return {
-      revenueByMonth: [
-        { name: 'Jan', revenue: 21000 },
-        { name: 'Feb', revenue: 24000 },
-        { name: 'Mar', revenue: 28500 },
-      ],
-      ordersByMonth: [
-        { name: 'Jan', orders: 12000 },
-        { name: 'Feb', orders: 15000 },
-        { name: 'Mar', orders: 18000 },
-      ]
-    };
+export async function updateRestaurant(id: string, data: Partial<Restaurant>) {
+  await connectToDatabase();
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return { success: false, error: "Invalid Restaurant ID" };
   }
-};
+  await RestaurantModel.findByIdAndUpdate(id, data);
+  return { success: true };
+}
+
+export async function getPlans(): Promise<Plan[]> {
+  await connectToDatabase();
+  const plans = await PlanModel.find().lean();
+  return plans.map((p: any) => ({
+    id: p._id.toString(),
+    name: p.name,
+    price: p.price,
+    billingCycle: p.billingCycle,
+    features: p.features,
+    maxTables: p.maxTables,
+    maxMenuItems: p.maxMenuItems,
+    hasAnalytics: p.hasAnalytics,
+    hasBranding: p.hasBranding,
+  }));
+}
+
+export async function createPlan(data: Omit<Plan, 'id'>) {
+  await connectToDatabase();
+  const newPlan = await PlanModel.create(data);
+  return { success: true, id: newPlan._id.toString() };
+}
+
+export async function getSubscriptions() {
+  return [];
+}
+
+export async function getAnalytics() {
+  return {
+    revenueByMonth: [
+      { name: 'Jan', revenue: 21000 },
+      { name: 'Feb', revenue: 24000 },
+      { name: 'Mar', revenue: 28500 },
+    ],
+    ordersByMonth: [
+      { name: 'Jan', orders: 12000 },
+      { name: 'Feb', orders: 15000 },
+      { name: 'Mar', orders: 18000 },
+    ]
+  };
+}
+
+// Server actions must only export async functions.

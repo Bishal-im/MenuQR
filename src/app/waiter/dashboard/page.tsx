@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { waiterService, WaiterOrder, OrderStatus } from "@/services/waiterService";
+import { getOrders, updateStatus, WaiterOrder, OrderStatus } from "@/services/waiterService";
 import OrderCard from "@/components/waiter/OrderCard";
 import { 
   Bell, 
@@ -21,25 +21,21 @@ export default function WaiterDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const fetchOrders = async () => {
-    const data = await waiterService.getOrders();
+    const data = await getOrders();
     setOrders(data);
     setLoading(false);
   };
 
   useEffect(() => {
     fetchOrders();
-
-    // Subscribe to new orders simulation
-    const unsubscribe = waiterService.subscribeToNewOrders((newOrder) => {
-      setOrders(prev => [newOrder, ...prev]);
-      // In a real app, play sound here
-    });
-
-    return () => unsubscribe();
+    
+    // In a real app, use SWR or React Query for polling
+    const interval = setInterval(fetchOrders, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleStatusUpdate = async (id: string, status: OrderStatus) => {
-    const success = await waiterService.updateStatus(id, status);
+    const success = await updateStatus(id, status);
     if (success) {
       setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
     }

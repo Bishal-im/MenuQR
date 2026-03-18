@@ -1,7 +1,7 @@
 "use client";
 
 import { useCart } from "@/context/CartContext";
-import { customerService } from "@/services/customerService";
+import { createOrder } from "@/services/customerService";
 import { ChevronLeft, Trash2, Plus, Minus, ArrowRight, Utensils, ReceiptText, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -22,13 +22,14 @@ export default function CartPage() {
         tableId: tableId || "T1",
         items: cart.map(item => ({
           menuItemId: item.id,
+          name: item.name,
           quantity: item.quantity,
           price: item.price
         })),
         totalAmount: totalAmount
       };
 
-      const response = await customerService.createOrder(orderData);
+      const response = await createOrder(orderData);
       if (response.success) {
         clearCart();
         router.push(`/order-success?orderId=${response.orderId}`);

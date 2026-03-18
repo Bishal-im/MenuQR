@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { superAdminService, Plan } from "@/services/superAdminService";
+import { getPlans, Plan } from "@/services/superAdminService";
 import { 
   Plus, 
   Check, 
@@ -20,7 +20,7 @@ export default function PlansManagement() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const data = await superAdminService.getPlans();
+      const data = await getPlans();
       setPlans(data);
       setLoading(false);
     };

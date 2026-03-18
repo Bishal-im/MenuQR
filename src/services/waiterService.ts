@@ -1,3 +1,8 @@
+"use server";
+
+import { connectToDatabase } from "@/lib/db";
+import { OrderModel } from "@/models/Schemas";
+
 export type OrderStatus = 'pending' | 'accepted' | 'preparing' | 'ready' | 'completed' | 'cancelled';
 
 export interface WaiterOrderItem {
@@ -16,65 +21,52 @@ export interface WaiterOrder {
   updatedAt: string;
 }
 
-// Mock Orders
-const MOCK_ORDERS: WaiterOrder[] = [
-  {
-    id: "ord_101",
-    tableId: "5",
-    items: [
-      { id: "m1", name: "Paneer Tikka", quantity: 2 },
-      { id: "m3", name: "Butter Chicken", quantity: 1 }
-    ],
-    totalAmount: 950,
-    status: 'pending',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: "ord_102",
-    tableId: "12",
-    items: [
-      { id: "m2", name: "Chicken Wings", quantity: 3 },
-      { id: "m4", name: "Dal Makhani", quantity: 1 }
-    ],
-    totalAmount: 1310,
-    status: 'preparing',
-    createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
-    updatedAt: new Date().toISOString(),
+export async function getOrders(): Promise<WaiterOrder[]> {
+  await connectToDatabase();
+  const orders = await OrderModel.find()
+    .sort({ createdAt: -1 })
+    .populate('items.menuItemId')
+    .lean();
+  
+  return orders.map((order: any) => ({
+    id: order._id.toString(),
+    tableId: order.tableId,
+    items: order.items.map((item: any) => ({
+      id: item.menuItemId?._id?.toString() || item.menuItemId?.toString() || item._id.toString(),
+      name: item.name || item.menuItemId?.name || 'Unknown Item',
+      quantity: item.quantity
+    })),
+    totalAmount: order.totalAmount,
+    status: order.status as OrderStatus,
+    createdAt: order.createdAt.toISOString(),
+    updatedAt: order.updatedAt.toISOString(),
+  }));
+}
+
+import mongoose from "mongoose";
+
+export async function acceptOrder(orderId: string): Promise<boolean> {
+  await connectToDatabase();
+  if (!mongoose.Types.ObjectId.isValid(orderId)) {
+    return false;
   }
-];
+  const result = await OrderModel.findByIdAndUpdate(orderId, { 
+    status: 'accepted',
+    updatedAt: new Date()
+  });
+  return !!result;
+}
 
-export const waiterService = {
-  getOrders: async (): Promise<WaiterOrder[]> => {
-    // In production: fetch from /api/waiter/orders
-    return MOCK_ORDERS;
-  },
-
-  acceptOrder: async (orderId: string): Promise<boolean> => {
-    console.log("Accepting order:", orderId);
-    return true;
-  },
-
-  updateStatus: async (orderId: string, status: OrderStatus): Promise<boolean> => {
-    console.log("Updating order", orderId, "to", status);
-    return true;
-  },
-
-  // Simulate new order for UI testing
-  subscribeToNewOrders: (callback: (order: WaiterOrder) => void) => {
-    // In production: Use WebSockets (socket.io)
-    // mock: send 1 order after 30 seconds
-    const timer = setTimeout(() => {
-      callback({
-        id: "ord_" + Math.random().toString(36).substr(2, 5),
-        tableId: (Math.floor(Math.random() * 20) + 1).toString(),
-        items: [{ id: "m1", name: "Random Starter", quantity: 1 }],
-        totalAmount: 250,
-        status: 'pending',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
-    }, 30000);
-    return () => clearTimeout(timer);
+export async function updateStatus(orderId: string, status: OrderStatus): Promise<boolean> {
+  await connectToDatabase();
+  if (!mongoose.Types.ObjectId.isValid(orderId)) {
+    return false;
   }
-};
+  const result = await OrderModel.findByIdAndUpdate(orderId, { 
+    status,
+    updatedAt: new Date()
+  });
+  return !!result;
+}
+
+// Server actions must only export async functions.

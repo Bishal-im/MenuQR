@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { superAdminService } from "@/services/superAdminService";
+import { getAnalytics } from "@/services/superAdminService";
 import { 
   TrendingUp, 
   Users, 
@@ -21,7 +21,7 @@ export default function PlatformAnalytics() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const data = await superAdminService.getAnalytics();
+      const data = await getAnalytics();
       setAnalyticsData(data);
       setLoading(false);
     };

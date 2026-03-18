@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useCart } from "@/context/CartContext";
-import { customerService, MenuItem as MenuItemType, Category } from "@/services/customerService";
+import { getMenu, MenuItem as MenuItemType, Category } from "@/services/customerService";
 import MenuItem from "@/components/customer/MenuItem";
 import CategoryBar from "@/components/customer/CategoryBar";
 import CartStickyButton from "@/components/customer/CartStickyButton";
@@ -35,7 +35,7 @@ function MenuContent() {
     const loadMenu = async () => {
       setLoading(true);
       try {
-        const data = await customerService.getMenu(restaurantId || "default_rid");
+        const data = await getMenu(restaurantId || "default_rid");
         setRestaurantName(data.restaurantName);
         setCategories(data.categories);
         setMenuItems(data.menu);

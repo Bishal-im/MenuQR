@@ -1,3 +1,8 @@
+"use server";
+
+import { connectToDatabase } from "@/lib/db";
+import { CategoryModel, MenuItemModel, OrderModel, RestaurantModel } from "@/models/Schemas";
+
 export interface MenuItem {
   id: string;
   name: string;
@@ -20,92 +25,94 @@ export interface OrderData {
   tableId: string;
   items: {
     menuItemId: string;
+    name: string;
     quantity: number;
     price: number;
   }[];
   totalAmount: number;
 }
 
-// Mock data for initial development
-const MOCK_CATEGORIES: Category[] = [
-  { id: "1", name: "Starters" },
-  { id: "2", name: "Main Course" },
-  { id: "3", name: "Beverages" },
-  { id: "4", name: "Desserts" },
-];
+import mongoose from "mongoose";
 
-const MOCK_MENU: MenuItem[] = [
-  {
-    id: "m1",
-    name: "Paneer Tikka",
-    description: "Marinated paneer cubes grilled to perfection with onions and bell peppers.",
-    price: 250,
-    image: "https://images.unsplash.com/photo-1567184109191-37 a6c2cf9c79?auto=format&fit=crop&q=80&w=400",
-    category: "1",
-    isVeg: true,
-    isAvailable: true,
-    isPopular: true,
-  },
-  {
-    id: "m2",
-    name: "Chicken Wings",
-    description: "Spicy and succulent chicken wings tossed in BBQ sauce.",
-    price: 320,
-    image: "https://images.unsplash.com/photo-1527477396000-e27163b481c2?auto=format&fit=crop&q=80&w=400",
-    category: "1",
-    isVeg: false,
-    isAvailable: true,
-  },
-  {
-    id: "m3",
-    name: "Butter Chicken",
-    description: "Classic Indian butter chicken with a rich tomato creamy gravy.",
-    price: 450,
-    image: "https://images.unsplash.com/photo-1603894584713-f484439d3 b1d?auto=format&fit=crop&q=80&w=400",
-    category: "2",
-    isVeg: false,
-    isAvailable: true,
-    isPopular: true,
-  },
-  {
-    id: "m4",
-    name: "Dal Makhani",
-    description: "Slow-cooked black lentils with cream and spices.",
-    price: 350,
-    image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&q=80&w=400",
-    category: "2",
-    isVeg: true,
-    isAvailable: true,
-  },
-];
-
-export const customerService = {
-  getMenu: async (restaurantId: string) => {
-    // In production, fetch from API: /api/customer/menu?restaurantId=${restaurantId}
-    return {
-      restaurantName: "The Grand Dhaba",
-      categories: MOCK_CATEGORIES,
-      menu: MOCK_MENU,
-    };
-  },
-
-  createOrder: async (data: OrderData) => {
-    // In production, POST to API: /api/customer/orders
-    console.log("Placing order:", data);
-    return {
-      success: true,
-      orderId: "ord_" + Math.random().toString(36).substr(2, 9),
-    };
-  },
-
-  getOrder: async (orderId: string) => {
-    // In production, fetch from API: /api/customer/orders/${orderId}
-    return {
-      id: orderId,
-      status: "pending", // pending, preparing, ready, served
-      items: MOCK_MENU.slice(0, 2).map(item => ({ ...item, quantity: 1 })),
-      totalAmount: 570,
-      createdAt: new Date().toISOString(),
-    };
+export async function getMenu(restaurantId: string) {
+  await connectToDatabase();
+  
+  let restaurant = null;
+  if (mongoose.Types.ObjectId.isValid(restaurantId)) {
+    restaurant = await RestaurantModel.findById(restaurantId);
   }
-};
+  
+  if (!restaurant) {
+    restaurant = await RestaurantModel.findOne();
+  }
+
+  const categories = await CategoryModel.find();
+  const menuItems = await MenuItemModel.find();
+
+  return {
+    restaurantName: restaurant?.name || "The Grand Dhaba",
+    categories: categories.map(c => ({ id: c._id.toString(), name: c.name })),
+    menu: menuItems.map(m => ({
+      id: m._id.toString(),
+      name: m.name,
+      description: m.description,
+      price: m.price,
+      image: m.image,
+      category: m.category?.toString(),
+      isVeg: m.isVeg,
+      isAvailable: m.isAvailable,
+      isPopular: m.isPopular,
+    })),
+  };
+}
+
+export async function createOrder(data: OrderData) {
+  await connectToDatabase();
+  
+  const newOrder = await OrderModel.create({
+    restaurantId: mongoose.Types.ObjectId.isValid(data.restaurantId) ? data.restaurantId : undefined,
+    tableId: data.tableId,
+    items: data.items.map(item => ({
+      menuItemId: mongoose.Types.ObjectId.isValid(item.menuItemId) ? item.menuItemId : undefined,
+      name: item.name,
+      quantity: item.quantity,
+      price: item.price
+    })),
+    totalAmount: data.totalAmount,
+    status: 'pending'
+  });
+
+  return {
+    success: true,
+    orderId: newOrder._id.toString(),
+  };
+}
+
+export async function getOrder(orderId: string) {
+  await connectToDatabase();
+  
+  if (!mongoose.Types.ObjectId.isValid(orderId)) {
+    throw new Error("Invalid Order ID format");
+  }
+
+  const order = await OrderModel.findById(orderId).populate('items.menuItemId');
+  if (!order) {
+    throw new Error("Order not found");
+  }
+
+  return {
+    id: order._id.toString(),
+    status: order.status,
+    items: order.items.map((item: any) => ({
+      id: item.menuItemId?._id?.toString() || item._id.toString(),
+      name: item.menuItemId?.name || item.name,
+      quantity: item.quantity,
+      price: item.price
+    })),
+    totalAmount: order.totalAmount,
+    createdAt: order.createdAt.toISOString(),
+  };
+}
+
+// Server actions must only export async functions.
+// Types and interfaces are also allowed.

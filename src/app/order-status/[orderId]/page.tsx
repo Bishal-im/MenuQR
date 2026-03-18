@@ -1,6 +1,6 @@
 "use client";
 
-import { customerService } from "@/services/customerService";
+import { getOrder } from "@/services/customerService";
 import { ChevronLeft, Clock, ChefHat, Check, Utensils, HelpCircle, Phone, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -18,7 +18,7 @@ export default function OrderStatusPage() {
     const fetchOrder = async () => {
       if (typeof orderId !== 'string') return;
       try {
-        const data = await customerService.getOrder(orderId);
+        const data = await getOrder(orderId);
         setOrderData(data);
         setStatus(data.status as OrderStatus);
       } catch (e) {

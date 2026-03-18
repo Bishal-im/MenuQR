@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { superAdminService, PlatformStats } from "@/services/superAdminService";
+import { getStats, PlatformStats } from "@/services/superAdminService";
 import { 
   Store, 
   CreditCard, 
@@ -20,7 +20,7 @@ export default function SuperAdminDashboard() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const data = await superAdminService.getStats();
+      const data = await getStats();
       setStats(data);
       setLoading(false);
     };

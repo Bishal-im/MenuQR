@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { superAdminService, Restaurant } from "@/services/superAdminService";
+import { getRestaurants, Restaurant } from "@/services/superAdminService";
 import { 
   Plus, 
   Search, 
@@ -23,7 +23,7 @@ export default function RestaurantManagement() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const data = await superAdminService.getRestaurants();
+      const data = await getRestaurants();
       setRestaurants(data);
       setLoading(false);
     };

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { superAdminService } from "@/services/superAdminService";
+import { getSubscriptions } from "@/services/superAdminService";
 import { 
   Calendar, 
   Search, 
@@ -20,7 +20,7 @@ export default function SubscriptionsManagement() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const data = await superAdminService.getSubscriptions();
+      const data = await getSubscriptions();
       setSubs(data);
       setLoading(false);
     };
