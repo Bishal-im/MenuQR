@@ -59,6 +59,11 @@ const OrderSchema = new Schema({
   tableId: String,
   items: [OrderItemSchema],
   totalAmount: Number,
+  paymentMethod: { 
+    type: String, 
+    enum: ['cash', 'esewa', 'khalti', 'imepay'],
+    default: 'cash'
+  },
   status: { 
     type: String, 
     enum: ['pending', 'accepted', 'preparing', 'ready', 'completed', 'cancelled'],
@@ -69,6 +74,17 @@ const OrderSchema = new Schema({
 });
 
 export const OrderModel = models.Order || model('Order', OrderSchema);
+
+// Table Schema
+const TableSchema = new Schema({
+  restaurantId: { type: Schema.Types.ObjectId, ref: 'Restaurant' },
+  number: { type: String, required: true },
+  capacity: { type: Number, default: 4 },
+  status: { type: String, enum: ['Active', 'Empty'], default: 'Empty' },
+  lastOrderAt: { type: Date },
+});
+
+export const TableModel = models.Table || model('Table', TableSchema);
 
 // OTP Schema for Passwordless Auth
 const OTPSchema = new Schema({

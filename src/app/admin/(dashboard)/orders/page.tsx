@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Search, 
@@ -11,37 +11,67 @@ import {
   AlertCircle,
   ChevronRight,
   Printer,
-  ChevronDown
+  ChevronDown,
+  Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const ordersData = [
-  { id: "#ORD-024", table: "T-03", items: [{ name: "Chicken Momo", qty: 2 }, { name: "Thali", qty: 1 }], total: 1250, time: "2 mins ago", status: "Preparing" },
-  { id: "#ORD-023", table: "T-09", items: [{ name: "Dal Bhat", qty: 4 }], total: 2400, time: "5 mins ago", status: "Pending" },
-  { id: "#ORD-022", table: "T-05", items: [{ name: "Thukpa", qty: 2 }, { name: "Sekwa", qty: 1 }], total: 1800, time: "12 mins ago", status: "Ready" },
-  { id: "#ORD-021", table: "T-02", items: [{ name: "Buff Momo", qty: 2 }, { name: "Chai", qty: 2 }], total: 950, time: "25 mins ago", status: "Completed" },
-  { id: "#ORD-020", table: "T-04", items: [{ name: "Sekwa", qty: 1 }, { name: "Lassi", qty: 1 }], total: 650, time: "45 mins ago", status: "Completed" },
-];
-
-const statusFilters = ["All", "Pending", "Preparing", "Ready", "Completed"];
+import { getAllOrders, updateOrderStatus } from "@/services/adminService";
 
 export default function OrdersPage() {
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("All");
-  const [selectedOrder, setSelectedOrder] = useState<typeof ordersData[0] | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const fetchOrders = async () => {
+    setLoading(true);
+    const data = await getAllOrders();
+    setOrders(data);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const handleUpdateStatus = async (orderId: string, status: string) => {
+    setIsUpdating(true);
+    const res = await updateOrderStatus(orderId, status);
+    if (res.success) {
+      await fetchOrders();
+      setSelectedOrder(null);
+    } else {
+      alert("Failed to update status: " + res.error);
+    }
+    setIsUpdating(false);
+  };
+
+  const statusFilters = ["All", "Pending", "Preparing", "Ready", "Completed", "Cancelled"];
 
   const filteredOrders = activeFilter === "All" 
-    ? ordersData 
-    : ordersData.filter(o => o.status === activeFilter);
+    ? orders 
+    : orders.filter(o => o.status === activeFilter);
 
   const getStatusStyle = (status: string) => {
-    switch (status) {
-      case "Pending": return "bg-blue-500/10 text-blue-500 border-blue-500/20";
-      case "Preparing": return "bg-amber-500/10 text-amber-500 border-amber-500/20";
-      case "Ready": return "bg-emerald-500/10 text-emerald-500 border-emerald-500/20";
-      case "Completed": return "bg-zinc-500/10 text-zinc-500 border-zinc-500/20";
+    switch (status.toLowerCase()) {
+      case "pending": return "bg-blue-500/10 text-blue-500 border-blue-500/20";
+      case "preparing": return "bg-amber-500/10 text-amber-500 border-amber-500/20";
+      case "ready": return "bg-emerald-500/10 text-emerald-500 border-emerald-500/20";
+      case "completed": return "bg-zinc-500/10 text-zinc-500 border-zinc-500/20";
+      case "cancelled": return "bg-red-500/10 text-red-500 border-red-500/20";
       default: return "bg-zinc-500/10 text-zinc-500";
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-4">
+        <Loader2 className="h-8 w-8 text-primary animate-spin" />
+        <p className="text-sm text-muted font-medium">Loading orders...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -89,55 +119,61 @@ export default function OrdersPage() {
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-border bg-background/30 px-6">
-                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted">Order ID</th>
+                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted font-sans">Order ID</th>
                 <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted font-sans">Table</th>
-                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted">Items</th>
-                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted">Total</th>
-                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted text-right">Status</th>
+                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted font-sans">Items</th>
+                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted font-sans">Total</th>
+                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted text-right font-sans">Status</th>
                 <th className="px-6 py-4 text-right"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/50">
-              {filteredOrders.map((order, i) => (
-                <tr 
-                  key={i} 
-                  className="group hover:bg-white/5 transition cursor-pointer"
-                  onClick={() => setSelectedOrder(order)}
-                >
-                  <td className="px-6 py-4">
-                    <p className="text-sm font-bold text-primary">{order.id}</p>
-                    <p className="text-[10px] text-muted flex items-center gap-1 mt-0.5">
-                      <Clock className="h-3 w-3" /> {order.time}
-                    </p>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="rounded-lg bg-background border border-border px-2 py-1 text-xs font-bold">
-                      {order.table}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 max-w-[200px]">
-                    <p className="text-sm font-medium truncate">
-                      {order.items.map(it => `${it.qty}x ${it.name}`).join(", ")}
-                    </p>
-                  </td>
-                  <td className="px-6 py-4">
-                    <p className="text-sm font-bold">Rs. {order.total}</p>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <span className={cn(
-                      "inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase",
-                      getStatusStyle(order.status)
-                    )}>
-                      {order.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button className="rounded-lg p-1.5 text-muted hover:bg-white/10 hover:text-foreground">
-                      <ChevronRight className="h-5 w-5" />
-                    </button>
-                  </td>
+              {filteredOrders.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-muted">No orders found.</td>
                 </tr>
-              ))}
+              ) : (
+                filteredOrders.map((order, i) => (
+                  <tr 
+                    key={i} 
+                    className="group hover:bg-white/5 transition cursor-pointer"
+                    onClick={() => setSelectedOrder(order)}
+                  >
+                    <td className="px-6 py-4">
+                      <p className="text-sm font-bold text-primary">{order.id}</p>
+                      <p className="text-[10px] text-muted flex items-center gap-1 mt-0.5">
+                        <Clock className="h-3 w-3" /> {new Date(order.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="rounded-lg bg-background border border-border px-2 py-1 text-xs font-bold">
+                        {order.table}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 max-w-[200px]">
+                      <p className="text-sm font-medium truncate">
+                        {order.items.map((it: any) => `${it.qty}x ${it.name}`).join(", ")}
+                      </p>
+                    </td>
+                    <td className="px-6 py-4">
+                      <p className="text-sm font-bold">Rs. {order.total}</p>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <span className={cn(
+                        "inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase",
+                        getStatusStyle(order.status)
+                      )}>
+                        {order.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <button className="rounded-lg p-1.5 text-muted hover:bg-white/10 hover:text-foreground">
+                        <ChevronRight className="h-5 w-5" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -182,31 +218,47 @@ export default function OrdersPage() {
 
                 <div className="space-y-4 mb-8">
                    <h4 className="text-sm font-bold uppercase tracking-widest text-muted">Items</h4>
-                   {selectedOrder.items.map((item, idx) => (
+                   {selectedOrder.items.map((item: any, idx: number) => (
                      <div key={idx} className="flex justify-between items-center py-2 border-b border-border/50">
                         <div className="flex items-center gap-3">
                           <span className="flex h-6 w-6 items-center justify-center rounded bg-primary/10 text-xs font-bold text-primary">{item.qty}</span>
                           <span className="text-sm font-medium">{item.name}</span>
                         </div>
-                        <span className="text-sm font-bold">Rs. {item.qty * 300}</span>
+                        {/* Note: In real app, price should be here too */}
                      </div>
                    ))}
                    <div className="pt-2 flex justify-between items-center font-bold text-lg">
                       <span>Total</span>
                       <span>Rs. {selectedOrder.total}</span>
                    </div>
+                   <div className="text-xs text-muted">Payment: <span className="uppercase font-bold text-primary">{selectedOrder.paymentMethod}</span></div>
                 </div>
 
                 <div className="space-y-3">
                   <h4 className="text-sm font-bold uppercase tracking-widest text-muted mb-4">Update Status</h4>
                   <div className="grid grid-cols-2 gap-3">
-                     <button className="flex flex-col items-center justify-center h-20 rounded-2xl border border-border bg-background p-4 hover:border-primary hover:text-primary transition group">
+                     <button 
+                      onClick={() => handleUpdateStatus(selectedOrder.fullId, "Preparing")}
+                      disabled={isUpdating}
+                      className="flex flex-col items-center justify-center h-20 rounded-2xl border border-border bg-background p-4 hover:border-primary hover:text-primary transition group disabled:opacity-50"
+                     >
                         <Clock className="h-5 w-5 mb-2 group-hover:animate-pulse" />
                         <span className="text-xs font-bold">Prepare</span>
                      </button>
-                     <button className="flex flex-col items-center justify-center h-20 rounded-2xl border border-border bg-background p-4 hover:border-emerald-500 hover:text-emerald-500 transition group">
+                     <button 
+                      onClick={() => handleUpdateStatus(selectedOrder.fullId, "Ready")}
+                      disabled={isUpdating}
+                      className="flex flex-col items-center justify-center h-20 rounded-2xl border border-border bg-background p-4 hover:border-emerald-500 hover:text-emerald-500 transition group disabled:opacity-50"
+                     >
                         <CheckCircle2 className="h-5 w-5 mb-2 group-hover:scale-110 transition" />
                         <span className="text-xs font-bold">Ready</span>
+                     </button>
+                     <button 
+                      onClick={() => handleUpdateStatus(selectedOrder.fullId, "Completed")}
+                      disabled={isUpdating}
+                      className="col-span-2 flex items-center justify-center gap-2 h-12 rounded-2xl bg-zinc-800 text-white font-bold hover:bg-zinc-700 transition disabled:opacity-50"
+                     >
+                        <CheckCircle2 className="h-4 w-4" /> Mark as Completed
                      </button>
                   </div>
                   <button className="w-full flex items-center justify-center gap-2 h-12 rounded-2xl bg-primary font-bold text-black mt-4 hover:bg-amber-500 transition">

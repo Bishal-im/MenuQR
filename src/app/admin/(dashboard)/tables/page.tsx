@@ -1,33 +1,73 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, QrCode, Download, Trash2, Users, ExternalLink, MoreVertical } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Plus, QrCode, Download, Trash2, Users, ExternalLink, MoreVertical, X, AlertCircle, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import DeleteConfirmationModal from "@/components/common/DeleteConfirmationModal";
-
-const tablesData = [
-  { id: 1, number: "T1", capacity: 2, status: "Active", lastOrder: "15 mins ago" },
-  { id: 2, number: "T2", capacity: 4, status: "Active", lastOrder: "5 mins ago" },
-  { id: 3, number: "T3", capacity: 4, status: "Empty", lastOrder: "2 hours ago" },
-  { id: 4, number: "T4", capacity: 6, status: "Active", lastOrder: "Now" },
-  { id: 5, number: "T5", capacity: 2, status: "Empty", lastOrder: "1 hour ago" },
-  { id: 6, number: "T6", capacity: 4, status: "Active", lastOrder: "30 mins ago" },
-];
+import { getTables, addTable, deleteTable } from "@/services/adminService";
 
 export default function TablesPage() {
+  const [tables, setTables] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({ number: "", capacity: 4 });
+  const [error, setError] = useState("");
   const [showQRModal, setShowQRModal] = useState<string | null>(null);
-  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; id: number | null; number: string }>({
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; id: string | null; number: string }>({
     isOpen: false,
     id: null,
     number: ""
   });
 
-  const handleDelete = () => {
-    // Mock deletion
-    console.log("Deleting table:", deleteModal.number);
-    setDeleteModal({ ...deleteModal, isOpen: false });
+  const fetchData = async () => {
+    setLoading(true);
+    const data = await getTables();
+    setTables(data);
+    setLoading(false);
   };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleAddTable = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError("");
+    const res = await addTable(formData.number, formData.capacity);
+    if (res.success) {
+      setIsModalOpen(false);
+      setFormData({ number: "", capacity: 4 });
+      await fetchData();
+    } else {
+      setError(res.error || "Failed to add table.");
+    }
+    setIsSubmitting(false);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteModal.id) return;
+    setIsSubmitting(true);
+    const res = await deleteTable(deleteModal.id);
+    if (res.success) {
+      setDeleteModal({ ...deleteModal, isOpen: false });
+      await fetchData();
+    } else {
+      alert("Failed to delete table: " + res.error);
+    }
+    setIsSubmitting(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-4">
+        <Loader2 className="h-8 w-8 text-primary animate-spin" />
+        <p className="text-sm text-muted font-medium">Loading tables...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -36,13 +76,16 @@ export default function TablesPage() {
           <h2 className="text-2xl font-bold tracking-tight">Tables & QR Codes</h2>
           <p className="text-sm text-muted">Generate and manage QR codes for your restaurant tables</p>
         </div>
-        <button className="flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-black hover:bg-amber-500 transition shadow-lg shadow-primary/20">
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-black hover:bg-amber-500 transition shadow-lg shadow-primary/20"
+        >
           <Plus className="h-4 w-4" /> Add New Table
         </button>
       </div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {tablesData.map((table, i) => (
+        {tables.map((table, i) => (
           <motion.div 
             key={table.id}
             initial={{ opacity: 0, y: 10 }}
@@ -67,7 +110,7 @@ export default function TablesPage() {
                   <Users className="h-3.5 w-3.5" />
                   <span>Capacity: {table.capacity} persons</span>
                </div>
-               <p className="text-xs text-muted/60">Last order: {table.lastOrder}</p>
+               <p className="text-xs text-muted/60">Order Status: {table.lastOrder}</p>
             </div>
 
             <div className="mt-6 grid grid-cols-2 gap-3">
@@ -92,7 +135,66 @@ export default function TablesPage() {
         ))}
       </div>
 
-      {/* QR Modal Placeholder */}
+      {/* Add Table Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => !isSubmitting && setIsModalOpen(false)} />
+          <div className="relative w-full max-w-lg rounded-3xl border border-border bg-card p-8 shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold">Add New Table</h3>
+              <button 
+                onClick={() => setIsModalOpen(false)}
+                disabled={isSubmitting}
+                className="p-2 rounded-full hover:bg-secondary transition disabled:opacity-50"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddTable} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-widest text-muted">Table Number</label>
+                <input 
+                  type="text" 
+                  required
+                  placeholder="e.g. T1"
+                  className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:border-primary focus:outline-none transition"
+                  value={formData.number}
+                  onChange={(e) => setFormData({ ...formData, number: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-widest text-muted">Capacity (Persons)</label>
+                <input 
+                  type="number" 
+                  required
+                  className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:border-primary focus:outline-none transition"
+                  value={formData.capacity}
+                  onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) })}
+                />
+              </div>
+
+              {error && (
+                <div className="flex items-center gap-2 rounded-xl bg-red-500/10 p-4 text-xs font-bold text-red-500 border border-red-500/20">
+                  <AlertCircle className="h-4 w-4" />
+                  {error}
+                </div>
+              )}
+
+              <button 
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full rounded-xl bg-primary py-4 text-sm font-bold text-black hover:bg-amber-500 transition disabled:opacity-50 flex items-center justify-center gap-2 mt-4"
+              >
+                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Add Table"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* QR Modal */}
       {showQRModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowQRModal(null)} />
@@ -104,7 +206,6 @@ export default function TablesPage() {
               <div className="flex flex-col items-center">
                  <div className="mb-6 rounded-2xl bg-white p-4 shadow-xl">
                     <div className="flex h-48 w-48 items-center justify-center rounded-lg border-2 border-dashed border-zinc-200 bg-zinc-50 relative">
-                       {/* Mock QR Code UI */}
                        <QrCode className="h-32 w-32 text-zinc-300" />
                        <p className="absolute bottom-2 text-[10px] font-bold text-zinc-400 uppercase tracking-tighter">Table {showQRModal} • MenuQR</p>
                     </div>
@@ -131,6 +232,7 @@ export default function TablesPage() {
         onConfirm={handleDelete}
         itemName={`Table ${deleteModal.number}`}
         description="Are you sure you want to delete this table? The associated QR code will become invalid."
+        isLoading={isSubmitting}
       />
     </div>
   );
