@@ -21,6 +21,18 @@ export interface Restaurant {
   createdAt: string;
 }
 
+export interface Plan {
+  id: string;
+  name: string;
+  price: number;
+  billingCycle: 'monthly' | 'yearly';
+  features: string[];
+  maxTables: number;
+  maxMenuItems: number;
+  hasAnalytics: boolean;
+  hasBranding: boolean;
+}
+
 
 
 import mongoose from "mongoose";
@@ -111,6 +123,34 @@ export async function deleteRestaurant(id: string) {
   await RestaurantModel.findByIdAndDelete(id);
   
   return { success: true };
+}
+
+export async function getPlans(): Promise<Plan[]> {
+  // Mock plans for now as they are static in the UI
+  return [
+    {
+      id: "p1",
+      name: "Starter",
+      price: 0,
+      billingCycle: "monthly",
+      features: ["Digital Menu QR", "Basic Order Management", "10 Tables Max", "50 Menu Items"],
+      maxTables: 10,
+      maxMenuItems: 50,
+      hasAnalytics: false,
+      hasBranding: false,
+    },
+    {
+      id: "p2",
+      name: "Pro",
+      price: 2499,
+      billingCycle: "monthly",
+      features: ["Unlimited Tables", "Unlimited Menu Items", "Advanced Analytics", "Custom Branding", "Priority Support"],
+      maxTables: 100,
+      maxMenuItems: 500,
+      hasAnalytics: true,
+      hasBranding: true,
+    }
+  ];
 }
 
 // Server actions must only export async functions.

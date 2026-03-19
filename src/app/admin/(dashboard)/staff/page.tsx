@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Plus, Search, Shield, User, Mail, Phone, Trash2, Edit2, Loader2, X, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getStaff, addStaff, deleteStaff, StaffMember } from "@/services/adminService";
+import DeleteConfirmationModal from "@/components/common/DeleteConfirmationModal";
 
 export default function StaffPage() {
   const [staffList, setStaffList] = useState<StaffMember[]>([]);
@@ -12,6 +13,11 @@ export default function StaffPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "", phone: "" });
   const [error, setError] = useState("");
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; id: string; name: string }>({
+    isOpen: false,
+    id: "",
+    name: ""
+  });
 
   const fetchStaff = async () => {
     setLoading(true);
@@ -50,18 +56,21 @@ export default function StaffPage() {
     }
   };
 
-  const handleDeleteStaff = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this staff member? They will lose access immediately.")) return;
-    
+  const handleDeleteStaff = async () => {
+    const { id } = deleteModal;
+    setIsSubmitting(true);
     try {
       const res = await deleteStaff(id);
       if (res.success) {
+        setDeleteModal({ ...deleteModal, isOpen: false });
         await fetchStaff();
       } else {
         alert(res.error || "Failed to delete staff member.");
       }
     } catch (err) {
       alert("Failed to delete staff member.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -144,7 +153,7 @@ export default function StaffPage() {
                           <Edit2 className="h-4 w-4" />
                         </button> */}
                         <button 
-                          onClick={() => handleDeleteStaff(staff.id)}
+                          onClick={() => setDeleteModal({ isOpen: true, id: staff.id, name: staff.name })}
                           className="p-2 text-muted hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -158,6 +167,15 @@ export default function StaffPage() {
           </div>
         </div>
       )}
+
+      <DeleteConfirmationModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ ...deleteModal, isOpen: false })}
+        onConfirm={handleDeleteStaff}
+        itemName={deleteModal.name}
+        description="Are you sure you want to delete this staff member? They will lose access to the waiter panel immediately."
+        isLoading={isSubmitting}
+      />
 
       {/* Add Staff Modal */}
       {isModalOpen && (

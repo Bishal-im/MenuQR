@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Plus, Search, Filter, Edit2, Trash2, Eye, EyeOff, MoreVertical, Image as ImageIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import DeleteConfirmationModal from "@/components/common/DeleteConfirmationModal";
 
 const menuData = [
   { id: 1, name: "Chicken Steamed Momo", category: "Appetizer", price: 180, status: "In Stock", image: "/momo.jpg", weight: "10 pcs" },
@@ -17,6 +18,17 @@ const categories = ["All", "Appetizer", "Main Course", "Beverage", "Dessert"];
 
 export default function MenuManagementPage() {
   const [activeCategory, setActiveCategory] = useState("All");
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; id: number | null; name: string }>({
+    isOpen: false,
+    id: null,
+    name: ""
+  });
+
+  const handleDelete = () => {
+    // Mock deletion for now as there's no service
+    console.log("Deleting item:", deleteModal.id);
+    setDeleteModal({ ...deleteModal, isOpen: false });
+  };
 
   return (
     <div className="space-y-6">
@@ -95,9 +107,13 @@ export default function MenuManagementPage() {
                    <p className="text-lg font-bold">Rs. {item.price}</p>
                    <div className="flex items-center gap-1">
                       <button className="rounded-lg p-2 text-muted hover:bg-white/5 hover:text-foreground">
-                        {item.status === "In Stock" ? <EyeOff className="h-4 w-4" title="Hide from menu" /> : <Eye className="h-4 w-4" title="Show on menu" />}
+                        {item.status === "In Stock" ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
-                      <button className="rounded-lg p-2 text-muted hover:bg-red-500/10 hover:text-red-500">
+                      <button 
+                        onClick={() => setDeleteModal({ isOpen: true, id: item.id, name: item.name })}
+                        className="rounded-lg p-2 text-muted hover:bg-red-500/10 hover:text-red-500"
+                        title="Delete item"
+                      >
                         <Trash2 className="h-4 w-4" />
                       </button>
                    </div>
@@ -107,6 +123,14 @@ export default function MenuManagementPage() {
           </motion.div>
         ))}
       </div>
+
+      <DeleteConfirmationModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ ...deleteModal, isOpen: false })}
+        onConfirm={handleDelete}
+        itemName={deleteModal.name}
+        description="Are you sure you want to delete this menu item? It will be removed from your digital menu immediately."
+      />
     </div>
   );
 }

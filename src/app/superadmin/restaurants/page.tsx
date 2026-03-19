@@ -19,12 +19,18 @@ import {
 import { deleteRestaurant } from "@/services/superAdminService";
 
 import RestaurantModal from "@/components/superadmin/RestaurantModal";
+import DeleteConfirmationModal from "@/components/common/DeleteConfirmationModal";
 
 export default function RestaurantManagement() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; id: string; name: string }>({
+    isOpen: false,
+    id: "",
+    name: ""
+  });
 
   const fetchData = async () => {
     setLoading(true);
@@ -33,16 +39,16 @@ export default function RestaurantManagement() {
     setLoading(false);
   };
 
-  const handleDelete = async (id: string, name: string) => {
-    if (confirm(`Are you sure you want to delete "${name}"? This will also remove all its users and orders. This action cannot be undone.`)) {
-      setLoading(true);
-      const res = await deleteRestaurant(id);
-      if (res.success) {
-        await fetchData();
-      } else {
-        alert(res.error || "Failed to delete restaurant");
-        setLoading(false);
-      }
+  const handleDelete = async () => {
+    const { id } = deleteModal;
+    setLoading(true);
+    const res = await deleteRestaurant(id);
+    if (res.success) {
+      setDeleteModal({ ...deleteModal, isOpen: false });
+      await fetchData();
+    } else {
+      alert(res.error || "Failed to delete restaurant");
+      setLoading(false);
     }
   };
 
@@ -62,6 +68,15 @@ export default function RestaurantManagement() {
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         onSuccess={fetchData} 
+      />
+      
+      <DeleteConfirmationModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ ...deleteModal, isOpen: false })}
+        onConfirm={handleDelete}
+        itemName={deleteModal.name}
+        description="Are you sure you want to delete this restaurant? This will remove all its users, orders, and data permanently."
+        isLoading={loading}
       />
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -148,7 +163,7 @@ export default function RestaurantManagement() {
               <div className="flex items-center justify-end pt-6 border-t border-neutral-800/50 mt-auto">
                 <div className="flex gap-2">
                   <button 
-                    onClick={() => handleDelete(res.id, res.name)}
+                    onClick={() => setDeleteModal({ isOpen: true, id: res.id, name: res.name })}
                     className="p-3 bg-neutral-900 border border-neutral-800 rounded-xl text-neutral-400 hover:text-red-500 hover:border-red-500/50 transition-all"
                   >
                     <Trash2 className="w-5 h-5" />

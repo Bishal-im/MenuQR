@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Plus, QrCode, Download, Trash2, Users, ExternalLink, MoreVertical } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import DeleteConfirmationModal from "@/components/common/DeleteConfirmationModal";
 
 const tablesData = [
   { id: 1, number: "T1", capacity: 2, status: "Active", lastOrder: "15 mins ago" },
@@ -16,6 +17,17 @@ const tablesData = [
 
 export default function TablesPage() {
   const [showQRModal, setShowQRModal] = useState<string | null>(null);
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; id: number | null; number: string }>({
+    isOpen: false,
+    id: null,
+    number: ""
+  });
+
+  const handleDelete = () => {
+    // Mock deletion
+    console.log("Deleting table:", deleteModal.number);
+    setDeleteModal({ ...deleteModal, isOpen: false });
+  };
 
   return (
     <div className="space-y-6">
@@ -70,7 +82,10 @@ export default function TablesPage() {
                </button>
             </div>
 
-            <button className="absolute right-4 bottom-[7.5rem] p-1 text-muted opacity-0 group-hover:opacity-100 transition hover:text-red-500">
+            <button 
+              onClick={() => setDeleteModal({ isOpen: true, id: table.id, number: table.number })}
+              className="absolute right-4 bottom-[7.5rem] p-1 text-muted opacity-0 group-hover:opacity-100 transition hover:text-red-500"
+            >
                <Trash2 className="h-4 w-4" />
             </button>
           </motion.div>
@@ -109,6 +124,14 @@ export default function TablesPage() {
            </motion.div>
         </div>
       )}
+
+      <DeleteConfirmationModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ ...deleteModal, isOpen: false })}
+        onConfirm={handleDelete}
+        itemName={`Table ${deleteModal.number}`}
+        description="Are you sure you want to delete this table? The associated QR code will become invalid."
+      />
     </div>
   );
 }

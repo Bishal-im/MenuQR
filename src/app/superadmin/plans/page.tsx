@@ -13,10 +13,22 @@ import {
   Palette,
   ArrowRight
 } from "lucide-react";
+import DeleteConfirmationModal from "@/components/common/DeleteConfirmationModal";
 
 export default function PlansManagement() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; id: string | null; name: string }>({
+    isOpen: false,
+    id: null,
+    name: ""
+  });
+
+  const handleDelete = () => {
+    // Mock deletion
+    console.log("Deleting plan:", deleteModal.id);
+    setDeleteModal({ ...deleteModal, isOpen: false });
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -62,7 +74,7 @@ export default function PlansManagement() {
             {/* Features List */}
             <div className="space-y-6 mb-12 flex-grow">
               <p className="text-[10px] text-orange-500 font-black uppercase tracking-widest border-b border-orange-500/10 pb-2">Includes Features</p>
-              {plan.features.map((feature, i) => (
+              {plan.features.map((feature: string, i: number) => (
                 <div key={i} className="flex items-center gap-4 group/item">
                   <div className="w-6 h-6 rounded-full bg-orange-500/10 flex items-center justify-center border border-orange-500/20 group-hover/item:bg-orange-500 transition-all">
                     <Check className="w-3.5 h-3.5 text-orange-500 group-hover/item:text-white" />
@@ -101,7 +113,10 @@ export default function PlansManagement() {
               <button className="flex-grow flex items-center justify-center gap-2 bg-neutral-900 border border-neutral-800 hover:bg-neutral-800 text-white px-6 py-4 rounded-2xl font-black text-sm transition-all active:scale-95">
                 <Edit3 className="w-4 h-4" /> Edit Plan
               </button>
-              <button className="p-4 bg-red-500/5 border border-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-2xl transition-all active:scale-95">
+              <button 
+                onClick={() => setDeleteModal({ isOpen: true, id: plan.id, name: plan.name })}
+                className="p-4 bg-red-500/5 border border-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-2xl transition-all active:scale-95"
+              >
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>
@@ -119,6 +134,14 @@ export default function PlansManagement() {
           </div>
         ))}
       </div>
+
+      <DeleteConfirmationModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ ...deleteModal, isOpen: false })}
+        onConfirm={handleDelete}
+        itemName={deleteModal.name}
+        description="Are you sure you want to delete this subscription plan? Existing restaurants using this plan might be affected."
+      />
 
       {/* Pro Help */}
       <div className="glass p-12 rounded-[3.5rem] border border-orange-500/10 bg-gradient-to-tr from-orange-500/10 via-transparent to-transparent flex flex-col md:flex-row items-center justify-between gap-8 group">
