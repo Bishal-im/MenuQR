@@ -66,7 +66,10 @@ export default function WaiterLayout({
             <User className="w-5 h-5 text-neutral-400" />
           </div>
           <button 
-            onClick={() => logout()}
+            onClick={async () => {
+              await logout();
+              router.push("/waiter/login");
+            }}
             className="p-2 text-neutral-500 hover:text-red-500 transition-colors"
             title="Logout"
           >

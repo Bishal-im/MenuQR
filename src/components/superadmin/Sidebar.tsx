@@ -33,7 +33,7 @@ export default function SuperAdminSidebar() {
   const handleLogout = async () => {
     try {
       await logout();
-      router.push("/login"); // Redirect to superadmin login page
+      router.push("/superadmin/login"); // Redirect to superadmin login page
     } catch (error) {
       console.error("Logout failed:", error);
     }
