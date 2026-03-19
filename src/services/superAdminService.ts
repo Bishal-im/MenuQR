@@ -1,12 +1,10 @@
 "use server";
 
 import { connectToDatabase } from "@/lib/db";
-import { PlatformStatsModel, RestaurantModel, PlanModel, UserModel, OrderModel } from "@/models/Schemas";
+import { PlatformStatsModel, RestaurantModel, UserModel, OrderModel } from "@/models/Schemas";
 
 export interface PlatformStats {
   totalRestaurants: number;
-  activeSubscriptions: number;
-  monthlyRevenue: number;
   totalOrders: number;
   revenueGrowth: number;
   restaurantGrowth: number;
@@ -19,32 +17,11 @@ export interface Restaurant {
   email: string;
   phone: string;
   address: string;
-  planId: string;
   status: 'active' | 'inactive';
   createdAt: string;
 }
 
-export interface Plan {
-  id: string;
-  name: string;
-  price: number;
-  billingCycle: 'monthly' | 'yearly';
-  features: string[];
-  maxTables: number;
-  maxMenuItems: number;
-  hasAnalytics: boolean;
-  hasBranding: boolean;
-}
 
-export interface Subscription {
-  id: string;
-  restaurantId: string;
-  planId: string;
-  startDate: string;
-  expiryDate: string;
-  status: 'active' | 'expired' | 'trial';
-  paymentStatus: 'paid' | 'pending' | 'failed';
-}
 
 import mongoose from "mongoose";
 
@@ -53,8 +30,6 @@ export async function getStats(): Promise<PlatformStats> {
   const stats = await PlatformStatsModel.findOne();
   return {
     totalRestaurants: stats?.totalRestaurants || 0,
-    activeSubscriptions: stats?.activeSubscriptions || 0,
-    monthlyRevenue: stats?.monthlyRevenue || 0,
     totalOrders: stats?.totalOrders || 0,
     revenueGrowth: stats?.revenueGrowth || 0,
     restaurantGrowth: stats?.restaurantGrowth || 0,
@@ -71,7 +46,6 @@ export async function getRestaurants(): Promise<Restaurant[]> {
     email: r.email,
     phone: r.phone,
     address: r.address,
-    planId: r.planId?.toString() || '',
     status: r.status,
     createdAt: r.createdAt.toISOString().split('T')[0],
   }));
@@ -79,10 +53,7 @@ export async function getRestaurants(): Promise<Restaurant[]> {
 
 export async function createRestaurant(data: Omit<Restaurant, 'id' | 'createdAt'>) {
   await connectToDatabase();
-  const newRestaurant = await RestaurantModel.create({
-    ...data,
-    planId: mongoose.Types.ObjectId.isValid(data.planId) ? data.planId : undefined,
-  });
+  const newRestaurant = await RestaurantModel.create(data);
   return { success: true, id: newRestaurant._id.toString() };
 }
 
@@ -95,44 +66,10 @@ export async function updateRestaurant(id: string, data: Partial<Restaurant>) {
   return { success: true };
 }
 
-export async function getPlans(): Promise<Plan[]> {
-  await connectToDatabase();
-  const plans = await PlanModel.find().lean();
-  return plans.map((p: any) => ({
-    id: p._id.toString(),
-    name: p.name,
-    price: p.price,
-    billingCycle: p.billingCycle,
-    features: p.features,
-    maxTables: p.maxTables,
-    maxMenuItems: p.maxMenuItems,
-    hasAnalytics: p.hasAnalytics,
-    hasBranding: p.hasBranding,
-  }));
-}
-
-export async function createPlan(data: Omit<Plan, 'id'>) {
-  await connectToDatabase();
-  const newPlan = await PlanModel.create(data);
-  return { success: true, id: newPlan._id.toString() };
-}
-
-export async function getSubscriptions() {
-  return [];
-}
-
 export async function getAnalytics() {
   return {
-    revenueByMonth: [
-      { name: 'Jan', revenue: 21000 },
-      { name: 'Feb', revenue: 24000 },
-      { name: 'Mar', revenue: 28500 },
-    ],
-    ordersByMonth: [
-      { name: 'Jan', orders: 12000 },
-      { name: 'Feb', orders: 15000 },
-      { name: 'Mar', orders: 18000 },
-    ]
+    revenueByMonth: [],
+    ordersByMonth: []
   };
 }
 

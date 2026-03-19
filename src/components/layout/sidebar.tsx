@@ -100,12 +100,6 @@ export function Sidebar() {
       </div>
 
       <div className="mt-auto border-t border-border p-3">
-        {!collapsed && (
-          <div className="mb-4 rounded-xl bg-primary/5 p-4">
-            <p className="text-xs font-bold uppercase tracking-wider text-primary">Pro Plan</p>
-            <p className="mt-1 text-xs text-muted">Renews Apr 15</p>
-          </div>
-        )}
         <button 
           onClick={handleLogout}
           className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-muted transition hover:bg-red-500/10 hover:text-red-500"

@@ -20,7 +20,7 @@ export default function SuperAdminLayout({
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 group-focus-within:text-orange-500 transition-colors" />
               <input 
                 type="text" 
-                placeholder="Search restaurants, transactions, or help..."
+                placeholder="Search restaurants or help..."
                 className="w-full bg-neutral-900/50 border border-neutral-800 rounded-xl py-2.5 pl-12 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-orange-500/50 focus:border-orange-500 transition-all placeholder:text-neutral-600"
               />
             </div>

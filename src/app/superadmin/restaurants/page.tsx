@@ -145,11 +145,7 @@ export default function RestaurantManagement() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-6 border-t border-neutral-800/50 mt-auto">
-                <div className="flex flex-col">
-                  <span className="text-[10px] text-neutral-500 font-black uppercase tracking-widest">Plan Assigned</span>
-                  <span className="text-sm font-black text-white">{res.planId === 'p2' ? 'Pro SaaS' : 'Basic SaaS'}</span>
-                </div>
+              <div className="flex items-center justify-end pt-6 border-t border-neutral-800/50 mt-auto">
                 <div className="flex gap-2">
                   <button 
                     onClick={() => handleDelete(res.id, res.name)}
