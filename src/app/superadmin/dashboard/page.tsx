@@ -35,8 +35,6 @@ export default function SuperAdminDashboard() {
 
   const CARDS = [
     { label: "Total Restaurants", value: stats?.totalRestaurants, icon: Store, growth: "+8.2%", color: "orange" },
-    { label: "Active Subs", value: stats?.activeSubscriptions, icon: CreditCard, growth: "+12.1%", color: "green" },
-    { label: "Monthly Revenue", value: `₹${stats?.monthlyRevenue}`, icon: Zap, growth: "+15.3%", color: "blue" },
     { label: "Total Orders", value: stats?.totalOrders, icon: TrendingUp, growth: "+22.5%", color: "purple" },
   ];
 
@@ -55,7 +53,7 @@ export default function SuperAdminDashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
         {CARDS.map((card, i) => (
           <div key={i} className="glass p-8 rounded-[2rem] border border-neutral-800/50 hover:border-orange-500/30 transition-all group relative overflow-hidden h-full flex flex-col justify-between">
             <div className="flex justify-between items-start mb-4">
@@ -103,7 +101,6 @@ export default function SuperAdminDashboard() {
                 </div>
                 <div className="flex items-center gap-6">
                   <div className="text-right">
-                    <p className="text-sm font-black text-white">PRO Plan</p>
                     <p className="text-[10px] text-green-500 font-black uppercase tracking-tighter">Active</p>
                   </div>
                   <div className="w-12 h-12 bg-neutral-900 rounded-2xl flex items-center justify-center text-neutral-400 group-hover:text-orange-500 transition-colors">

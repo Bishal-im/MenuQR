@@ -24,8 +24,6 @@ export const MenuItemModel = models.MenuItem || model('MenuItem', MenuItemSchema
 // PlatformStats Schema
 const PlatformStatsSchema = new Schema({
   totalRestaurants: Number,
-  activeSubscriptions: Number,
-  monthlyRevenue: Number,
   totalOrders: Number,
   revenueGrowth: Number,
   restaurantGrowth: Number,
@@ -33,19 +31,7 @@ const PlatformStatsSchema = new Schema({
 
 export const PlatformStatsModel = models.PlatformStats || model('PlatformStats', PlatformStatsSchema);
 
-// Plan Schema
-const PlanSchema = new Schema({
-  name: { type: String, required: true },
-  price: { type: Number, required: true },
-  billingCycle: { type: String, enum: ['monthly', 'yearly'], default: 'monthly' },
-  features: [String],
-  maxTables: Number,
-  maxMenuItems: Number,
-  hasAnalytics: Boolean,
-  hasBranding: Boolean,
-});
 
-export const PlanModel = models.Plan || model('Plan', PlanSchema);
 
 // Restaurant Schema
 const RestaurantSchema = new Schema({
@@ -54,7 +40,6 @@ const RestaurantSchema = new Schema({
   email: { type: String, required: true },
   phone: { type: String, required: true },
   address: { type: String },
-  planId: { type: Schema.Types.ObjectId, ref: 'Plan' },
   status: { type: String, enum: ['active', 'inactive'], default: 'active' },
   createdAt: { type: Date, default: Date.now },
 });

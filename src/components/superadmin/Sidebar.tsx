@@ -20,11 +20,8 @@ const MENU_ITEMS = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/superadmin/dashboard" },
   { icon: Store, label: "Restaurants", href: "/superadmin/restaurants" },
   { icon: ShieldCheck, label: "Users", href: "/superadmin/users" },
-  { icon: CreditCard, label: "Subscriptions", href: "/superadmin/subscriptions" },
-  { icon: Package, label: "Plans / Packages", href: "/superadmin/plans" },
   { icon: Palette, label: "Branding", href: "/superadmin/branding" },
   { icon: BarChart3, label: "Analytics", href: "/superadmin/analytics" },
-  { icon: CreditCard, label: "Payments", href: "/superadmin/payments" },
   { icon: Settings, label: "Settings", href: "/superadmin/settings" },
 ];
 
@@ -82,16 +79,7 @@ export default function SuperAdminSidebar() {
       </nav>
 
       <div className="p-4 border-t border-neutral-800">
-        <div className="p-4 bg-orange-500/5 rounded-2xl border border-orange-500/10 mb-4">
-          <p className="text-xs text-orange-500 font-black mb-1">PRO PLAN</p>
-          <div className="flex items-center justify-between text-[10px] text-neutral-400 font-medium">
-            <span>Server Health</span>
-            <span className="text-green-500 font-bold">100%</span>
-          </div>
-          <div className="w-full h-1 bg-neutral-800 rounded-full mt-2 overflow-hidden">
-            <div className="h-full bg-green-500 w-full" />
-          </div>
-        </div>
+
 
         <button 
           onClick={handleLogout}

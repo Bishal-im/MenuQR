@@ -18,7 +18,6 @@ export default function RestaurantModal({ isOpen, onClose, onSuccess }: Restaura
     email: "",
     phone: "",
     address: "",
-    planId: "p1", // Default to Basic
     status: "active",
   });
 
@@ -38,7 +37,6 @@ export default function RestaurantModal({ isOpen, onClose, onSuccess }: Restaura
           email: "",
           phone: "",
           address: "",
-          planId: "p1",
           status: "active",
         });
       }
