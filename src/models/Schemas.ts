@@ -86,8 +86,6 @@ const TableSchema = new Schema({
   lastOrderAt: { type: Date },
 });
 
-export const TableModel = models.Table || model('Table', TableSchema);
-
 // OTP Schema for Passwordless Auth
 const OTPSchema = new Schema({
   email: { type: String, required: true },
@@ -110,6 +108,18 @@ const UserSchema = new Schema({
   updatedAt: { type: Date, default: Date.now },
 }, { strict: true }); // Ensure only defined fields are allowed
 
+// PlatformSettings Schema
+const PlatformSettingsSchema = new Schema({
+  platformName: { type: String, default: "MenuQR" },
+  primaryColor: { type: String, default: "#f97316" },
+  layout: { type: String, default: "modern" },
+  platformFee: { type: Number, default: 0 },
+  currency: { type: String, default: "INR" },
+  allowNewSignups: { type: Boolean, default: true },
+  maintenanceMode: { type: Boolean, default: false },
+  lastUpdated: { type: Date, default: Date.now },
+});
+
 // Force refresh the models in development to avoid stale schema errors
 if (models.User) delete (mongoose as any).models.User;
 if (models.OTP) delete (mongoose as any).models.OTP;
@@ -117,6 +127,8 @@ if (models.Category) delete (mongoose as any).models.Category;
 if (models.MenuItem) delete (mongoose as any).models.MenuItem;
 if (models.Restaurant) delete (mongoose as any).models.Restaurant;
 if (models.Order) delete (mongoose as any).models.Order;
+if (models.Table) delete (mongoose as any).models.Table;
+if (models.PlatformSettings) delete (mongoose as any).models.PlatformSettings;
 
 export const UserModel = models.User || model('User', UserSchema);
 export const OTPModel = models.OTP || model('OTP', OTPSchema);
@@ -124,4 +136,6 @@ export const CategoryModel = models.Category || model('Category', CategorySchema
 export const MenuItemModel = models.MenuItem || model('MenuItem', MenuItemSchema);
 export const RestaurantModel = models.Restaurant || model('Restaurant', RestaurantSchema);
 export const OrderModel = models.Order || model('Order', OrderSchema);
+export const TableModel = models.Table || model('Table', TableSchema);
 export const PlatformStatsModel = models.PlatformStats || model('PlatformStats', PlatformStatsSchema);
+export const PlatformSettingsModel = models.PlatformSettings || model('PlatformSettings', PlatformSettingsSchema);

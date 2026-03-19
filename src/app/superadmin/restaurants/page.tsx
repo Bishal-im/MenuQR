@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 import { 
   Plus, 
@@ -178,9 +179,13 @@ export default function RestaurantManagement() {
                   >
                     <Trash2 className="w-5 h-5" />
                   </button>
-                  <button className="flex items-center gap-2 px-4 py-3 bg-neutral-900 border border-neutral-800 rounded-xl text-white font-black text-xs hover:bg-orange-500 hover:border-orange-400 transition-all">
+                  <Link 
+                    href={`/menu?restaurantId=${res.id}`}
+                    target="_blank"
+                    className="flex items-center gap-2 px-4 py-3 bg-neutral-900 border border-neutral-800 rounded-xl text-white font-black text-xs hover:bg-orange-500 hover:border-orange-400 transition-all"
+                  >
                     Control Panel <ExternalLink className="w-4 h-4" />
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>

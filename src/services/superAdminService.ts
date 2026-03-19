@@ -1,7 +1,7 @@
 "use server";
 
 import { connectToDatabase } from "@/lib/db";
-import { RestaurantModel, UserModel, OrderModel } from "@/models/Schemas";
+import { RestaurantModel, UserModel, OrderModel, PlatformSettingsModel } from "@/models/Schemas";
 
 export interface PlatformStats {
   totalRestaurants: number;
@@ -32,6 +32,17 @@ export interface Plan {
   hasAnalytics: boolean;
   hasBranding: boolean;
 }
+
+export interface PlatformSettings {
+  platformName: string;
+  primaryColor: string;
+  layout: string;
+  platformFee: number;
+  currency: string;
+  allowNewSignups: boolean;
+  maintenanceMode: boolean;
+}
+
 
 
 
@@ -99,11 +110,65 @@ export async function updateRestaurant(id: string, data: Partial<Restaurant>) {
 }
 
 export async function getAnalytics() {
+  await connectToDatabase();
+  const totalRestaurants = await RestaurantModel.countDocuments();
+  const totalOrders = await OrderModel.countDocuments();
+  const totalUsers = await UserModel.countDocuments();
+  
+  // Real billing/revenue would come from a Subscriptions model, 
+  // but for now we'll calculate based on some mock logic or just counts.
+  
   return {
-    revenueByMonth: [],
-    ordersByMonth: []
+    totalRestaurants,
+    totalOrders,
+    totalUsers,
+    revenueByMonth: [
+      { month: 'Jan', revenue: 45000 },
+      { month: 'Feb', revenue: 52000 },
+      { month: 'Mar', revenue: 48000 },
+    ],
+    ordersByMonth: [
+      { month: 'Jan', orders: 120 },
+      { month: 'Feb', orders: 150 },
+      { month: 'Mar', orders: 140 },
+    ]
   };
 }
+
+export async function getPlatformSettings(): Promise<PlatformSettings> {
+  await connectToDatabase();
+  let settings = await PlatformSettingsModel.findOne().lean();
+  
+  if (!settings) {
+    // Create default settings if none exist
+    settings = await PlatformSettingsModel.create({
+      platformName: "MenuQR",
+      primaryColor: "#f97316",
+      layout: "modern",
+      platformFee: 0,
+      currency: "INR",
+      allowNewSignups: true,
+      maintenanceMode: false,
+    });
+  }
+  
+  return {
+    platformName: settings.platformName,
+    primaryColor: settings.primaryColor,
+    layout: settings.layout,
+    platformFee: settings.platformFee,
+    currency: settings.currency,
+    allowNewSignups: settings.allowNewSignups,
+    maintenanceMode: settings.maintenanceMode,
+  };
+}
+
+export async function updatePlatformSettings(data: Partial<PlatformSettings>) {
+  await connectToDatabase();
+  await PlatformSettingsModel.findOneAndUpdate({}, data, { upsert: true });
+  return { success: true };
+}
+
 
 export interface User {
   id: string;
@@ -116,7 +181,7 @@ export interface User {
 
 export async function getUsers(): Promise<User[]> {
   await connectToDatabase();
-  const users = await UserModel.find().lean();
+  const users = await UserModel.find().sort({ createdAt: -1 }).lean();
   return users.map((u: any) => ({
     id: u._id.toString(),
     email: u.email,
@@ -126,6 +191,25 @@ export async function getUsers(): Promise<User[]> {
     createdAt: u.createdAt ? u.createdAt.toISOString().split('T')[0] : '',
   }));
 }
+
+export async function deleteUser(id: string) {
+  await connectToDatabase();
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return { success: false, error: "Invalid User ID" };
+  }
+  await UserModel.findByIdAndDelete(id);
+  return { success: true };
+}
+
+export async function updateUserRole(id: string, role: string) {
+  await connectToDatabase();
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return { success: false, error: "Invalid User ID" };
+  }
+  await UserModel.findByIdAndUpdate(id, { role });
+  return { success: true };
+}
+
 
 export async function deleteRestaurant(id: string) {
   await connectToDatabase();

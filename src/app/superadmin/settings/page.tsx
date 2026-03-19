@@ -1,5 +1,10 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import { getPlatformSettings, updatePlatformSettings } from "@/services/superAdminService";
+import type { PlatformSettings } from "@/services/superAdminService";
+
+
 import { 
   Settings as SettingsIcon, 
   Globe, 
@@ -10,10 +15,51 @@ import {
   Mail, 
   Check,
   Save,
-  ChevronRight
+  ChevronRight,
+  Loader2
 } from "lucide-react";
 
 export default function PlatformSettings() {
+  const [settings, setSettings] = useState<PlatformSettings | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      const data = await getPlatformSettings();
+      setSettings(data);
+      setLoading(false);
+    };
+    fetchSettings();
+  }, []);
+
+  const handleSave = async () => {
+    if (!settings) return;
+    setIsSaving(true);
+    try {
+      await updatePlatformSettings(settings);
+      alert("Settings saved successfully!");
+    } catch (error) {
+      console.error("Failed to save settings:", error);
+      alert("Error saving settings.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const updateSetting = (key: keyof PlatformSettings, value: any) => {
+    if (!settings) return;
+    setSettings({ ...settings, [key]: value });
+  };
+
+  if (loading || !settings) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-10 h-10 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-12 max-w-5xl mx-auto pb-20">
       {/* Header */}
@@ -22,10 +68,15 @@ export default function PlatformSettings() {
           <h1 className="text-5xl font-black text-white tracking-tighter leading-none mb-4">Platform Settings</h1>
           <p className="text-neutral-500 text-lg font-medium">Configure global platform behavior and system defaults.</p>
         </div>
-        <button className="flex items-center justify-center gap-3 bg-white text-black hover:bg-neutral-200 active:scale-95 px-8 py-4 rounded-[2rem] font-black text-sm shadow-2xl transition-all group">
-          <Save className="w-5 h-5" />
-          Save Changes
+        <button 
+          onClick={handleSave}
+          disabled={isSaving}
+          className="flex items-center justify-center gap-3 bg-white text-black hover:bg-neutral-200 active:scale-95 px-8 py-4 rounded-[2rem] font-black text-sm shadow-2xl transition-all group disabled:opacity-50"
+        >
+          {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+          {isSaving ? "Saving..." : "Save Changes"}
         </button>
+
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
@@ -66,7 +117,8 @@ export default function PlatformSettings() {
                   <label className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest pl-2">SaaS Name</label>
                   <input 
                     type="text" 
-                    defaultValue="MenuQR Ordering Platform"
+                    value={settings.platformName}
+                    onChange={(e) => updateSetting('platformName', e.target.value)}
                     className="bg-neutral-950 border border-neutral-900 rounded-2xl px-6 py-4 text-base font-bold text-white outline-none focus:border-orange-500 transition-all"
                   />
                 </div>
@@ -74,8 +126,9 @@ export default function PlatformSettings() {
                   <div className="flex flex-col gap-2">
                     <label className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest pl-2">Platform Fee (%)</label>
                     <input 
-                      type="text" 
-                      defaultValue="2.5"
+                      type="number" 
+                      value={settings.platformFee}
+                      onChange={(e) => updateSetting('platformFee', parseFloat(e.target.value))}
                       className="bg-neutral-950 border border-neutral-900 rounded-2xl px-6 py-4 text-base font-bold text-white outline-none focus:border-orange-500 transition-all"
                     />
                   </div>
@@ -83,11 +136,13 @@ export default function PlatformSettings() {
                     <label className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest pl-2">System Currency</label>
                     <input 
                       type="text" 
-                      defaultValue="INR (₹)"
+                      value={settings.currency}
+                      onChange={(e) => updateSetting('currency', e.target.value)}
                       className="bg-neutral-950 border border-neutral-900 rounded-2xl px-6 py-4 text-base font-bold text-white outline-none focus:border-orange-500 transition-all"
                     />
                   </div>
                 </div>
+
               </div>
             </div>
 
@@ -96,20 +151,24 @@ export default function PlatformSettings() {
               <h3 className="text-[10px] text-neutral-500 font-black uppercase tracking-widest mb-8 border-b border-neutral-800 pb-4">Global Feature Toggles</h3>
               <div className="space-y-6">
                 {[
-                  { label: "New Signups", status: true, desc: "Allow new restaurants to register" },
-                  { label: "Beta Branding", status: true, desc: "Enable experimental custom themes" },
-                  { label: "Maintenance Mode", status: false, desc: "Platform-wide service stop" },
+                  { label: "New Signups", status: settings.allowNewSignups, desc: "Allow new restaurants to register", key: 'allowNewSignups' },
+                  { label: "Beta Branding", status: true, desc: "Enable experimental custom themes", key: null },
+                  { label: "Maintenance Mode", status: settings.maintenanceMode, desc: "Platform-wide service stop", key: 'maintenanceMode' },
                 ].map((item, i) => (
                   <div key={i} className="flex items-center justify-between p-6 bg-neutral-950 rounded-[2rem] border border-neutral-900 group hover:border-neutral-800 transition-all">
                     <div>
                       <p className="text-sm font-black text-white tracking-tight">{item.label}</p>
                       <p className="text-[10px] text-neutral-500 font-medium">{item.desc}</p>
                     </div>
-                    <button className={`w-14 h-8 rounded-full relative transition-all duration-500 ${item.status ? 'bg-orange-500' : 'bg-neutral-800'}`}>
+                    <button 
+                      onClick={() => item.key && updateSetting(item.key as any, !item.status)}
+                      className={`w-14 h-8 rounded-full relative transition-all duration-500 ${item.status ? 'bg-orange-500' : 'bg-neutral-800'}`}
+                    >
                       <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all duration-500 ${item.status ? 'left-7 shadow-lg' : 'left-1'}`} />
                     </button>
                   </div>
                 ))}
+
               </div>
             </div>
           </div>

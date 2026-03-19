@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getUsers, User } from "@/services/superAdminService";
+import { getUsers, User, deleteUser, updateUserRole, PlatformSettings } from "@/services/superAdminService";
+import DeleteConfirmationModal from "@/components/common/DeleteConfirmationModal";
 import { 
   Search, 
   Filter, 
@@ -11,13 +12,21 @@ import {
   User as UserIcon,
   Calendar,
   ChevronRight,
-  ChevronLeft
+  ChevronLeft,
+  Trash2
 } from "lucide-react";
 
 export default function UserManagement() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; id: string | null; name: string }>({
+    isOpen: false,
+    id: null,
+    name: ""
+  });
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -33,6 +42,31 @@ export default function UserManagement() {
     u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
     u.role.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleDelete = async () => {
+    if (!deleteModal.id) return;
+    setIsDeleting(true);
+    const res = await deleteUser(deleteModal.id);
+    if (res.success) {
+      setDeleteModal({ ...deleteModal, isOpen: false });
+      const data = await getUsers();
+      setUsers(data);
+    } else {
+      alert("Failed to delete user: " + res.error);
+    }
+    setIsDeleting(false);
+  };
+
+  const handleRoleChange = async (userId: string, newRole: string) => {
+    const res = await updateUserRole(userId, newRole);
+    if (res.success) {
+      const data = await getUsers();
+      setUsers(data);
+    } else {
+      alert("Failed to update role");
+    }
+  };
+
 
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -125,10 +159,27 @@ export default function UserManagement() {
                       </div>
                     </td>
                     <td className="px-8 py-6">
-                      <button className="p-2 text-neutral-600 hover:text-white hover:bg-neutral-800 rounded-xl transition-all">
-                        <MoreVertical className="w-5 h-5" />
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <select 
+                          value={user.role}
+                          onChange={(e) => handleRoleChange(user.id, e.target.value)}
+                          className="bg-neutral-900 border border-neutral-800 rounded-lg px-2 py-1 text-[10px] font-black uppercase text-neutral-400 focus:border-orange-500 outline-none transition-all"
+                        >
+                          <option value="customer">Customer</option>
+                          <option value="waiter">Waiter</option>
+                          <option value="admin">Admin</option>
+                          <option value="superadmin">Superadmin</option>
+                        </select>
+                        <button 
+                          onClick={() => setDeleteModal({ isOpen: true, id: user.id, name: user.email })}
+                          className="p-2 text-neutral-600 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all"
+                          title="Delete User"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </div>
                     </td>
+
                   </tr>
                 ))
               ) : (
@@ -155,6 +206,16 @@ export default function UserManagement() {
           </button>
         </div>
       </div>
+
+      <DeleteConfirmationModal 
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ ...deleteModal, isOpen: false })}
+        onConfirm={handleDelete}
+        itemName={deleteModal.name}
+        description="Are you sure you want to delete this user? This action cannot be undone."
+        isLoading={isDeleting}
+      />
     </div>
+
   );
 }

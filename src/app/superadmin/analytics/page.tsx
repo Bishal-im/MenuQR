@@ -12,7 +12,8 @@ import {
   Download,
   Calendar,
   Layers,
-  Search
+  Search,
+  Loader2
 } from "lucide-react";
 
 export default function PlatformAnalytics() {
@@ -27,6 +28,20 @@ export default function PlatformAnalytics() {
     };
     fetchData();
   }, []);
+
+  const handleExport = () => {
+    if (!analyticsData) return;
+    const blob = new Blob([JSON.stringify(analyticsData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `platform-analytics-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
 
   if (loading) return (
     <div className="flex items-center justify-center h-full">
@@ -46,10 +61,14 @@ export default function PlatformAnalytics() {
           <button className="flex items-center justify-center gap-2 bg-neutral-900 border border-neutral-800 text-white px-6 py-3.5 rounded-2xl font-black text-xs hover:bg-neutral-800 transition-all">
             <Calendar className="w-4 h-4" /> Last 30 Days
           </button>
-          <button className="flex items-center justify-center gap-2 bg-orange-500 text-white px-8 py-3.5 rounded-2xl font-black text-xs shadow-xl shadow-orange-500/20 hover:bg-orange-600 transition-all group">
+          <button 
+            onClick={handleExport}
+            className="flex items-center justify-center gap-2 bg-orange-500 text-white px-8 py-3.5 rounded-2xl font-black text-xs shadow-xl shadow-orange-500/20 hover:bg-orange-600 transition-all group"
+          >
             <Download className="w-4 h-4" /> Export JSON
           </button>
         </div>
+
       </div>
 
       {/* Analytics Grid */}
@@ -64,11 +83,12 @@ export default function PlatformAnalytics() {
               <p className="text-xs text-neutral-500 font-bold uppercase tracking-widest mt-1">Platform monthly recurring revenue (MRR)</p>
             </div>
             <div className="text-right">
-              <span className="text-3xl font-black text-white">₹28.5L</span>
+              <span className="text-3xl font-black text-white">{analyticsData?.totalOrders || 0}</span>
               <p className="text-[10px] text-green-500 font-black flex items-center gap-1 justify-end mt-1">
-                <ArrowUpRight className="w-3 h-3" /> +14.2% THIS MO
+                <ArrowUpRight className="w-3 h-3" /> TOTAL ORDERS
               </p>
             </div>
+
           </div>
 
           {/* Fake Chart Visualization */}
@@ -96,15 +116,16 @@ export default function PlatformAnalytics() {
           
           <div className="space-y-10 flex-grow py-4">
             {[
-              { label: "High Volume (1k+)", count: 24, percent: 65, color: "orange" },
-              { label: "Medium Volume", count: 82, percent: 45, color: "neutral" },
-              { label: "Low Volume", count: 50, percent: 30, color: "neutral" },
+              { label: "Restaurants", count: analyticsData?.totalRestaurants || 0, percent: 100, color: "orange" },
+              { label: "Total Users", count: analyticsData?.totalUsers || 0, percent: 80, color: "neutral" },
+              { label: "Total Orders", count: analyticsData?.totalOrders || 0, percent: 60, color: "neutral" },
             ].map((item, i) => (
               <div key={i} className="space-y-4">
                 <div className="flex justify-between items-center text-xs font-black">
                   <span className="text-white uppercase tracking-tight">{item.label}</span>
-                  <span className="text-neutral-500">{item.count} REST.</span>
+                  <span className="text-neutral-500">{item.count} TOTAL</span>
                 </div>
+
                 <div className="w-full h-2 bg-neutral-900 rounded-full overflow-hidden border border-neutral-800">
                   <div 
                     className={`h-full transition-all duration-1000 ${item.color === 'orange' ? 'bg-orange-500' : 'bg-neutral-700'}`}

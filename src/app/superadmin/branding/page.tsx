@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getPlatformSettings, updatePlatformSettings, PlatformSettings } from "@/services/superAdminService";
 import { 
   Palette, 
   Layout, 
@@ -13,13 +14,56 @@ import {
   Smartphone, 
   Monitor,
   Sparkles,
-  Zap
+  Zap,
+  Loader2
 } from "lucide-react";
 
 export default function BrandingManagement() {
   const [primaryColor, setPrimaryColor] = useState("#f97316"); // default orange
   const [layout, setLayout] = useState("modern");
   const [previewDevice, setPreviewDevice] = useState<"mobile" | "desktop">("mobile");
+  const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      const settings = await getPlatformSettings();
+      setPrimaryColor(settings.primaryColor);
+      setLayout(settings.layout);
+      setLoading(false);
+    };
+    fetchSettings();
+  }, []);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await updatePlatformSettings({
+        primaryColor,
+        layout,
+      });
+      alert("Branding settings saved successfully!");
+    } catch (error) {
+      console.error("Failed to save branding:", error);
+      alert("Error saving branding settings.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleReset = async () => {
+    const settings = await getPlatformSettings();
+    setPrimaryColor(settings.primaryColor);
+    setLayout(settings.layout);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-10 h-10 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-10 max-w-7xl mx-auto pb-20">
@@ -30,13 +74,22 @@ export default function BrandingManagement() {
           <p className="text-neutral-500 font-medium">Configure global design system and tenant-level UI themes.</p>
         </div>
         <div className="flex gap-4">
-          <button className="flex items-center justify-center gap-2 bg-neutral-900 border border-neutral-800 text-white px-6 py-3.5 rounded-2xl font-black text-xs hover:bg-neutral-800 transition-all">
+          <button 
+            onClick={handleReset}
+            className="flex items-center justify-center gap-2 bg-neutral-900 border border-neutral-800 text-white px-6 py-3.5 rounded-2xl font-black text-xs hover:bg-neutral-800 transition-all"
+          >
             <RefreshCcw className="w-4 h-4" /> Reset
           </button>
-          <button className="flex items-center justify-center gap-2 bg-orange-500 text-white px-8 py-3.5 rounded-2xl font-black text-xs shadow-xl shadow-orange-500/20 hover:bg-orange-600 transition-all group">
-            <Save className="w-4 h-4 group-hover:scale-110 transition-transform" /> Save Changes
+          <button 
+            onClick={handleSave}
+            disabled={isSaving}
+            className="flex items-center justify-center gap-2 bg-orange-500 text-white px-8 py-3.5 rounded-2xl font-black text-xs shadow-xl shadow-orange-500/20 hover:bg-orange-600 transition-all group disabled:opacity-50"
+          >
+            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 group-hover:scale-110 transition-transform" />}
+            {isSaving ? "Saving..." : "Save Changes"}
           </button>
         </div>
+
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-10">
