@@ -91,19 +91,28 @@ export default function PlatformAnalytics() {
 
           </div>
 
-          {/* Fake Chart Visualization */}
+          {/* Revenue Chart Visualization */}
           <div className="flex items-end justify-between h-48 gap-4 px-4">
-            {[40, 65, 45, 80, 55, 95, 75].map((h, i) => (
-              <div key={i} className="flex-grow flex flex-col items-center group/bar">
-                <div 
-                  className={`w-full rounded-t-xl transition-all duration-700 relative overflow-hidden ${i === 5 ? 'bg-primary' : 'bg-neutral-800 group-hover/bar:bg-neutral-700'}`}
-                  style={{ height: `${h}%` }}
-                >
-                  {i === 5 && <div className="absolute inset-0 bg-white/10 animate-pulse" />}
-                </div>
-                <span className="text-[10px] text-neutral-600 font-black mt-4 uppercase">M{i+1}</span>
-              </div>
-            ))}
+            {analyticsData?.revenueByMonth && (
+              (() => {
+                const maxRevenue = Math.max(...analyticsData.revenueByMonth.map((r: any) => r.revenue), 1);
+                return analyticsData.revenueByMonth.map((item: any, i: number) => {
+                  const heightPercent = (item.revenue / maxRevenue) * 100;
+                  const isCurrentMonth = i === analyticsData.revenueByMonth.length - 1;
+                  return (
+                    <div key={i} className="flex-1 h-full flex flex-col justify-end items-center group/bar">
+                      <div 
+                        className={`w-full rounded-t-xl transition-all duration-700 relative overflow-hidden ${isCurrentMonth ? 'bg-primary' : 'bg-neutral-800 group-hover/bar:bg-neutral-700'}`}
+                        style={{ height: `${Math.max(heightPercent, 2)}%` }}
+                      >
+                        {isCurrentMonth && <div className="absolute inset-0 bg-white/10 animate-pulse" />}
+                      </div>
+                      <span className="text-[10px] text-neutral-600 font-black mt-4 uppercase">{item.month}</span>
+                    </div>
+                  );
+                });
+              })()
+            )}
           </div>
         </div>
 

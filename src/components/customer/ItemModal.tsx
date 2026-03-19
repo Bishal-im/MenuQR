@@ -53,11 +53,11 @@ export default function ItemModal({ item, onClose }: ItemModalProps) {
           
           <div className="absolute bottom-6 left-6 flex gap-2">
             {item.isVeg ? (
-              <span className="flex items-center gap-1.5 px-3 py-1 bg-green-500/90 backdrop-blur-md rounded-full text-[10px] font-black text-white uppercase tracking-tighter shadow-lg">
+              <span className="flex items-center gap-1.5 px-3 py-1 bg-primary/90 backdrop-blur-md rounded-full text-[10px] font-black text-white uppercase tracking-tighter shadow-lg">
                 <Leaf className="w-3 h-3" /> Veg
               </span>
             ) : (
-              <span className="flex items-center gap-1.5 px-3 py-1 bg-red-500/90 backdrop-blur-md rounded-full text-[10px] font-black text-white uppercase tracking-tighter shadow-lg">
+              <span className="flex items-center gap-1.5 px-3 py-1 bg-primary/90 backdrop-blur-md rounded-full text-[10px] font-black text-white uppercase tracking-tighter shadow-lg">
                 <Flame className="w-3 h-3" /> Non-Veg
               </span>
             )}

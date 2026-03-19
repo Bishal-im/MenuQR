@@ -33,7 +33,7 @@ export default function MenuItem({ item, onShowDetails }: MenuItemProps) {
       <div className="flex-grow flex flex-col">
         <div className="flex justify-between items-start">
           <div className="flex flex-col">
-            <span className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${item.isVeg ? 'text-green-500' : 'text-red-500'}`}>
+            <span className="text-[10px] font-bold uppercase tracking-wider mb-1 text-primary">
               {item.isVeg ? '● Veg' : '▲ Non-Veg'}
             </span>
             <h3 className="text-base font-bold text-white line-clamp-1">{item.name}</h3>
