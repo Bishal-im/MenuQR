@@ -1,13 +1,30 @@
-"use client";
-
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import SuperAdminSidebar from "@/components/superadmin/Sidebar";
-import { Search, Bell, User } from "lucide-react";
+import { Search, Bell, User, Loader2, LogOut } from "lucide-react";
 
 export default function SuperAdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { user, loading, logout } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && (!user || user.role !== 'superadmin')) {
+      router.push('/superadmin/login');
+    }
+  }, [user, loading, router]);
+
+  if (loading || !user || user.role !== 'superadmin') {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <Loader2 className="w-12 h-12 text-orange-500 animate-spin" />
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-black flex transition-all duration-500">
       <SuperAdminSidebar />
@@ -32,14 +49,21 @@ export default function SuperAdminLayout({
               <span className="absolute top-2 right-2 w-2 h-2 bg-orange-500 rounded-full border-2 border-black" />
             </button>
             <div className="h-8 w-[1px] bg-neutral-800" />
-            <div className="flex items-center gap-3 pl-2 group cursor-pointer">
+            <div className="flex items-center gap-3 pl-2 group">
               <div className="text-right flex flex-col">
-                <span className="text-sm font-black text-white group-hover:text-orange-500 transition-colors">Admin Root</span>
+                <span className="text-sm font-black text-white group-hover:text-orange-500 transition-colors">{user.name || "Admin Root"}</span>
                 <span className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">Platform Owner</span>
               </div>
               <div className="w-10 h-10 bg-gradient-to-tr from-orange-500 to-orange-400 rounded-xl flex items-center justify-center text-white border-2 border-neutral-800/50 shadow-xl group-hover:scale-105 transition-all">
                 <User className="w-6 h-6" />
               </div>
+              <button 
+                onClick={() => logout()}
+                className="ml-2 p-2 text-neutral-500 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all"
+                title="Logout"
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
             </div>
           </div>
         </header>

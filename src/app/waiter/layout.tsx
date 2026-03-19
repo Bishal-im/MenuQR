@@ -24,7 +24,7 @@ export default function WaiterLayout({
 
   useEffect(() => {
     if (!loading && (!user || user.role !== 'waiter')) {
-      router.push('/admin/login');
+      router.push('/waiter/login');
     }
   }, [user, loading, router]);
 

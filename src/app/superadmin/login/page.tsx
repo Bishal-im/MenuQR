@@ -10,12 +10,12 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle2,
-  UtensilsCrossed,
-  RefreshCcw
+  RefreshCcw,
+  ShieldAlert
 } from "lucide-react";
 import { requestOTP, verifyOTP } from "@/services/authService";
 
-export default function AdminLoginPage() {
+export default function SuperAdminLoginPage() {
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [step, setStep] = useState<"email" | "otp">("email");
@@ -29,17 +29,14 @@ export default function AdminLoginPage() {
 
   useEffect(() => {
     if (user && !authLoading) {
-      if (user.role === 'admin') {
-        router.push('/admin/dashboard');
-      } else if (user.role === 'waiter') {
-        router.push('/waiter/login');
-      } else if (user.role === 'superadmin') {
-        router.push('/superadmin/login');
+      if (user.role === 'superadmin') {
+        router.push('/superadmin/dashboard');
       } else {
-        router.push('/menu');
+        setError("Access denied: This portal is for SuperAdmins only.");
+        logout();
       }
     }
-  }, [user, authLoading, router]);
+  }, [user, authLoading, router, logout]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -103,15 +100,15 @@ export default function AdminLoginPage() {
     try {
       const res = await verifyOTP(email, otp);
       if (res.success && res.user) {
-        if (res.user.role !== 'admin') {
-          setError(`Access denied: This portal is for restaurant owners. Please use the ${res.user.role} portal.`);
+        if (res.user.role !== 'superadmin') {
+          setError("Access denied: You do not have SuperAdmin privileges.");
           await logout();
           return;
         }
-        setSuccess("Verified! Accessing dashboard...");
+        setSuccess("OTP Verified! Connecting to Core...");
         await refreshUser();
       } else {
-        setError(res.error || "Invalid verification code.");
+        setError(res.error || "Invalid or expired verification code.");
       }
     } catch (err: any) {
       setError("Verification failed. Please resend code.");
@@ -129,24 +126,23 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4 relative overflow-hidden">
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-orange-500/5 blur-[120px] rounded-full" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-orange-600/5 blur-[120px] rounded-full" />
+    <div className="min-h-screen bg-black flex items-center justify-center p-4 relative overflow-hidden">
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-orange-500/10 blur-[120px] rounded-full" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-orange-600/10 blur-[120px] rounded-full" />
       
       <div className="w-full max-w-md z-10">
-        <div className="bg-neutral-900/40 backdrop-blur-3xl border border-neutral-800/50 p-10 rounded-[3rem] shadow-2xl relative">
-          <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-24 h-24 bg-orange-500 rounded-[2rem] flex items-center justify-center shadow-2xl shadow-orange-500/20 rotate-12">
-            <UtensilsCrossed className="w-12 h-12 text-black -rotate-12" />
-          </div>
-
-          <div className="text-center mt-8 mb-10">
-            <h1 className="text-3xl font-black text-white mb-2 tracking-tighter">
-              Restaurant Portal
+        <div className="bg-neutral-900/50 backdrop-blur-3xl border border-neutral-800 p-8 rounded-[2.5rem] shadow-2xl">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-orange-500/20 bg-orange-500/10 text-orange-500 text-[10px] font-black uppercase tracking-widest mb-4">
+              <ShieldAlert className="w-3 h-3" /> Core Authorized Portal
+            </div>
+            <h1 className="text-4xl font-black text-white mb-2 tracking-tighter uppercase italic">
+              SuperAdmin
             </h1>
             <p className="text-neutral-500 text-sm font-medium">
               {step === "email" 
-                ? "Manage your kitchen, orders, and staff with ease." 
-                : "A secure verification code has been sent to your email."}
+                ? "Secure access to platform infrastructure." 
+                : "Enter the override code sent to your inbox."}
             </p>
           </div>
 
@@ -156,8 +152,8 @@ export default function AdminLoginPage() {
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500 group-focus-within:text-orange-500 transition-colors" />
                 <input 
                   type="email" 
-                  placeholder="Email Address"
-                  className="w-full bg-black/40 border border-neutral-800 focus:border-orange-500 text-white rounded-2xl py-4 pl-12 pr-4 outline-none transition-all font-medium"
+                  placeholder="Master Email"
+                  className="w-full bg-neutral-950 border border-neutral-800 focus:border-orange-500 text-white rounded-2xl py-4 pl-12 pr-4 outline-none transition-all font-medium"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -169,8 +165,8 @@ export default function AdminLoginPage() {
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500 group-focus-within:text-orange-500 transition-colors" />
                   <input 
                     type="text" 
-                    placeholder="6-Digit Verification Code"
-                    className="w-full bg-black/40 border border-neutral-800 focus:border-orange-500 text-white rounded-2xl py-4 pl-12 pr-4 outline-none transition-all font-medium text-center tracking-[0.5em]"
+                    placeholder="Master Code"
+                    className="w-full bg-neutral-950 border border-neutral-800 focus:border-orange-500 text-white rounded-2xl py-4 pl-12 pr-4 outline-none transition-all font-medium text-center tracking-[0.5em]"
                     value={otp}
                     onChange={(e) => setOtp(e.target.value)}
                     maxLength={6}
@@ -198,14 +194,14 @@ export default function AdminLoginPage() {
             )}
 
             {error && (
-              <div className="flex items-center gap-2 text-red-500 text-xs font-bold bg-red-500/10 p-4 rounded-2xl border border-red-500/20">
+              <div className="flex items-center gap-2 text-red-500 text-xs font-bold bg-red-500/10 p-4 rounded-xl border border-red-500/20">
                 <AlertCircle className="w-4 h-4" />
                 {error}
               </div>
             )}
 
             {success && (
-              <div className="flex items-center gap-2 text-green-500 text-xs font-bold bg-green-500/10 p-4 rounded-2xl border border-green-500/20">
+              <div className="flex items-center gap-2 text-green-500 text-xs font-bold bg-green-500/10 p-4 rounded-xl border border-green-500/20">
                 <CheckCircle2 className="w-4 h-4" />
                 {success}
               </div>
@@ -214,13 +210,13 @@ export default function AdminLoginPage() {
             <button 
               type="submit" 
               disabled={loading}
-              className="w-full bg-white text-black hover:bg-neutral-200 disabled:opacity-50 py-4 rounded-2xl font-black text-lg transition-all flex items-center justify-center gap-2 shadow-xl active:scale-95"
+              className="w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white py-4 rounded-2xl font-black text-lg transition-all flex items-center justify-center gap-2 shadow-xl shadow-orange-500/20 active:scale-95"
             >
               {loading ? (
                 <Loader2 className="w-6 h-6 animate-spin" />
               ) : (
                 <>
-                  {step === "email" ? "Send Secure Code" : "Verify & Enter"}
+                  {step === "email" ? "Request Authentication" : "Authorize Session"}
                   <ArrowRight className="w-5 h-5" />
                 </>
               )}
@@ -232,14 +228,14 @@ export default function AdminLoginPage() {
                 onClick={() => setStep("email")}
                 className="w-full text-neutral-500 hover:text-white text-[10px] font-black uppercase tracking-widest transition-colors py-2"
               >
-                Change Email Address
+                Change Admin Email
               </button>
             )}
           </form>
 
-          <div className="mt-10 text-center">
-            <p className="text-neutral-500 text-sm font-medium">
-              Want to join? Contact our support team.
+          <div className="mt-10 text-center border-t border-neutral-800 pt-8">
+            <p className="text-neutral-600 text-[10px] font-bold uppercase tracking-widest">
+              System Protected • No Password Required
             </p>
           </div>
         </div>
