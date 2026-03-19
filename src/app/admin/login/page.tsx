@@ -11,7 +11,8 @@ import {
   AlertCircle,
   CheckCircle2,
   UtensilsCrossed,
-  RefreshCcw
+  RefreshCcw,
+  LogOut
 } from "lucide-react";
 import { requestOTP, verifyOTP } from "@/services/authService";
 
@@ -31,13 +32,8 @@ export default function AdminLoginPage() {
     if (user && !authLoading) {
       if (user.role === 'admin') {
         router.push('/admin/dashboard');
-      } else if (user.role === 'waiter') {
-        router.push('/waiter/login');
-      } else if (user.role === 'superadmin') {
-        router.push('/superadmin/login');
-      } else {
-        router.push('/menu');
       }
+      // If user is superadmin or waiter, we stay on this page but allow them to logout
     }
   }, [user, authLoading, router]);
 
@@ -144,13 +140,39 @@ export default function AdminLoginPage() {
               Restaurant Portal
             </h1>
             <p className="text-neutral-500 text-sm font-medium">
-              {step === "email" 
-                ? "Manage your kitchen, orders, and staff with ease." 
-                : "A secure verification code has been sent to your email."}
+              {user && user.role !== 'admin' ? (
+                <span>You are currently logged in as a <strong className="text-orange-500 uppercase">{user.role}</strong>.</span>
+              ) : step === "email" ? (
+                "Manage your kitchen, orders, and staff with ease."
+              ) : (
+                "A secure verification code has been sent to your email."
+              )}
             </p>
           </div>
 
-          <form onSubmit={step === "email" ? handleEmailSubmit : handleOTPSubmit} className="space-y-4">
+          {user && user.role !== 'admin' ? (
+            <div className="space-y-6">
+              <div className="bg-orange-500/10 border border-orange-500/20 rounded-2xl p-6 text-center">
+                 <p className="text-sm text-neutral-400 mb-6">
+                   To access the Restaurant Owner portal, please logout from your current session first.
+                 </p>
+                 <button 
+                  onClick={() => logout()}
+                  className="w-full bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-2xl font-black text-lg transition-all flex items-center justify-center gap-2 shadow-xl shadow-orange-500/20 active:scale-95"
+                 >
+                   <LogOut className="w-6 h-6" />
+                   Logout Session
+                 </button>
+              </div>
+              <button 
+                onClick={() => router.back()}
+                className="w-full text-neutral-500 hover:text-white text-[10px] font-black uppercase tracking-widest transition-colors py-2"
+              >
+                Go Back
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={step === "email" ? handleEmailSubmit : handleOTPSubmit} className="space-y-4">
             {step === "email" ? (
               <div className="relative group">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500 group-focus-within:text-orange-500 transition-colors" />
@@ -236,6 +258,7 @@ export default function AdminLoginPage() {
               </button>
             )}
           </form>
+        )}
 
           <div className="mt-10 text-center">
             <p className="text-neutral-500 text-sm font-medium">
