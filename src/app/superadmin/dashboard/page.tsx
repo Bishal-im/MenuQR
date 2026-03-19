@@ -1,34 +1,37 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { getStats, getRecentSignups, PlatformStats, Restaurant } from "@/services/superAdminService";
 import { 
   Store, 
-  CreditCard, 
-  Users, 
-  Zap, 
   ArrowUpRight, 
   ArrowDownRight, 
   TrendingUp, 
   Plus, 
   ExternalLink 
 } from "lucide-react";
+import RestaurantModal from "@/components/superadmin/RestaurantModal";
 
 export default function SuperAdminDashboard() {
+  const router = useRouter();
   const [stats, setStats] = useState<PlatformStats | null>(null);
   const [recentSignups, setRecentSignups] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const fetchData = async () => {
+    setLoading(true);
+    const [statsData, signupsData] = await Promise.all([
+      getStats(),
+      getRecentSignups(5)
+    ]);
+    setStats(statsData);
+    setRecentSignups(signupsData);
+    setLoading(false);
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      const [statsData, signupsData] = await Promise.all([
-        getStats(),
-        getRecentSignups(5)
-      ]);
-      setStats(statsData);
-      setRecentSignups(signupsData);
-      setLoading(false);
-    };
     fetchData();
   }, []);
 
@@ -57,13 +60,22 @@ export default function SuperAdminDashboard() {
 
   return (
     <div className="space-y-10 max-w-7xl mx-auto">
+      <RestaurantModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onSuccess={fetchData} 
+      />
+
       {/* Welcome Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-black text-white tracking-tight leading-none mb-3">Platform Overview</h1>
           <p className="text-neutral-500 font-medium">Welcome back, Super Admin. Here's what's happening today.</p>
         </div>
-        <button className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 active:scale-95 text-white px-6 py-3.5 rounded-2xl font-black text-sm shadow-xl shadow-orange-500/20 transition-all group">
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 active:scale-95 text-white px-6 py-3.5 rounded-2xl font-black text-sm shadow-xl shadow-orange-500/20 transition-all group"
+        >
           <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform" />
           Onboard Restaurant
         </button>
@@ -97,7 +109,10 @@ export default function SuperAdminDashboard() {
         <div className="lg:col-span-2 glass rounded-[2.5rem] border border-neutral-800/50 p-8">
           <div className="flex justify-between items-center mb-10">
             <h2 className="text-xl font-black text-white tracking-tight">Recent Signups</h2>
-            <button className="text-xs font-black text-orange-500 uppercase tracking-widest hover:text-orange-400 transition-colors flex items-center gap-1">
+            <button 
+              onClick={() => router.push('/superadmin/restaurants')}
+              className="text-xs font-black text-orange-500 uppercase tracking-widest hover:text-orange-400 transition-colors flex items-center gap-1"
+            >
               View All <ArrowUpRight className="w-3 h-3" />
             </button>
           </div>
@@ -105,7 +120,11 @@ export default function SuperAdminDashboard() {
           <div className="space-y-6">
             {recentSignups.length > 0 ? (
               recentSignups.map((res, i) => (
-                <div key={res.id} className="flex items-center justify-between p-5 rounded-3xl hover:bg-neutral-900/50 border border-transparent hover:border-neutral-800/50 transition-all group">
+                <div 
+                  key={res.id} 
+                  onClick={() => router.push(`/superadmin/restaurants?search=${encodeURIComponent(res.name)}`)}
+                  className="flex items-center justify-between p-5 rounded-3xl hover:bg-neutral-900/50 border border-transparent hover:border-neutral-800/50 transition-all group cursor-pointer"
+                >
                   <div className="flex items-center gap-5">
                     <div className="w-14 h-14 bg-neutral-950 rounded-2xl flex items-center justify-center font-black text-lg text-white border border-neutral-800 shadow-md group-hover:bg-orange-500 group-hover:border-orange-400 transition-all duration-300">
                       {res.name.split(' ').map(w => w[0]).join('').substr(0, 2)}
@@ -125,7 +144,7 @@ export default function SuperAdminDashboard() {
                         {res.status}
                       </p>
                     </div>
-                    <div className="w-12 h-12 bg-neutral-900 rounded-2xl flex items-center justify-center text-neutral-400 group-hover:text-orange-500 transition-colors cursor-pointer">
+                    <div className="w-12 h-12 bg-neutral-900 rounded-2xl flex items-center justify-center text-neutral-400 group-hover:text-orange-500 transition-colors">
                       <ExternalLink className="w-5 h-5" />
                     </div>
                   </div>
@@ -171,3 +190,4 @@ export default function SuperAdminDashboard() {
     </div>
   );
 }
+

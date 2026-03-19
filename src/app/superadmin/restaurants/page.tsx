@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getRestaurants, Restaurant } from "@/services/superAdminService";
+
 import { 
   Plus, 
   Search, 
@@ -16,15 +16,18 @@ import {
   ChevronLeft,
   Trash2
 } from "lucide-react";
-import { deleteRestaurant } from "@/services/superAdminService";
-
+import { deleteRestaurant, getRestaurants, Restaurant } from "@/services/superAdminService";
+import { useSearchParams } from "next/navigation";
 import RestaurantModal from "@/components/superadmin/RestaurantModal";
 import DeleteConfirmationModal from "@/components/common/DeleteConfirmationModal";
 
 export default function RestaurantManagement() {
+  const searchParams = useSearchParams();
+  const initialSearch = searchParams.get("search") || "";
+  
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; id: string; name: string }>({
     isOpen: false,
@@ -55,6 +58,13 @@ export default function RestaurantManagement() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    const s = searchParams.get("search");
+    if (s !== null) {
+      setSearchQuery(s);
+    }
+  }, [searchParams]);
 
   const filteredRestaurants = restaurants.filter(r => 
     r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||

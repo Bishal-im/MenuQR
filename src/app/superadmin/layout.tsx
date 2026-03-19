@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import SuperAdminSidebar from "@/components/superadmin/Sidebar";
@@ -14,6 +14,7 @@ export default function SuperAdminLayout({
   const { user, loading, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const [searchQuery, setSearchQuery] = useState("");
 
   const isLoginPage = pathname === '/superadmin/login';
 
@@ -22,6 +23,13 @@ export default function SuperAdminLayout({
       router.push('/superadmin/login');
     }
   }, [user, loading, router, isLoginPage]);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/superadmin/restaurants?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
 
   if (isLoginPage) return <>{children}</>;
 
@@ -32,6 +40,7 @@ export default function SuperAdminLayout({
       </div>
     );
   }
+
   return (
     <div className="min-h-screen bg-black flex transition-all duration-500">
       <SuperAdminSidebar />
@@ -39,16 +48,18 @@ export default function SuperAdminLayout({
       <main className="flex-grow ml-72 min-h-screen flex flex-col relative overflow-hidden">
         {/* Top Navbar */}
         <header className="h-20 bg-black/50 backdrop-blur-xl border-b border-neutral-800/50 flex items-center justify-between px-10 sticky top-0 z-40 transition-all">
-          <div className="flex items-center gap-4 flex-grow max-w-xl">
+          <form onSubmit={handleSearch} className="flex items-center gap-4 flex-grow max-w-xl">
             <div className="relative w-full group">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 group-focus-within:text-orange-500 transition-colors" />
               <input 
                 type="text" 
                 placeholder="Search restaurants or help..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-neutral-900/50 border border-neutral-800 rounded-xl py-2.5 pl-12 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-orange-500/50 focus:border-orange-500 transition-all placeholder:text-neutral-600"
               />
             </div>
-          </div>
+          </form>
 
           <div className="flex items-center gap-6">
             <button className="relative p-2 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-xl transition-all group">
