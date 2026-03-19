@@ -97,7 +97,7 @@ export default function AdminLoginPage() {
     setSuccess("");
 
     try {
-      const res = await verifyOTP(email, otp);
+      const res = await verifyOTP(email, otp, 'admin');
       if (res.success && res.user) {
         if (res.user.role !== 'admin') {
           setError(`Access denied: This portal is for restaurant owners. Please use the ${res.user.role} portal.`);

@@ -106,7 +106,7 @@ export default function SuperAdminDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-10">
         {/* Recent Signups */}
-        <div className="lg:col-span-2 glass rounded-[2.5rem] border border-neutral-800/50 p-8">
+        <div className="lg:col-span-3 glass rounded-[2.5rem] border border-neutral-800/50 p-8">
           <div className="flex justify-between items-center mb-10">
             <h2 className="text-xl font-black text-white tracking-tight">Recent Signups</h2>
             <button 
@@ -156,35 +156,6 @@ export default function SuperAdminDashboard() {
               </div>
             )}
           </div>
-        </div>
-
-        {/* System Health */}
-        <div className="glass rounded-[2.5rem] border border-neutral-800/50 p-8 flex flex-col justify-between overflow-hidden relative">
-          <div>
-            <h2 className="text-xl font-black text-white tracking-tight mb-8">System Health</h2>
-            <div className="space-y-8">
-              {[
-                { label: "API Response", value: "45ms", status: "good" },
-                { label: "Database Load", value: "12%", status: "good" },
-                { label: "Redis Cache", value: "99.9%", status: "good" },
-                { label: "Storage Used", value: "4.2 GB", status: "warning" },
-              ].map((item, i) => (
-                <div key={i} className="flex items-center justify-between">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] text-neutral-500 font-black uppercase tracking-widest">{item.label}</span>
-                    <span className="text-base font-black text-white">{item.value}</span>
-                  </div>
-                  <div className={`w-2 h-2 rounded-full ${item.status === 'good' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : 'bg-orange-500 animate-pulse shadow-[0_0_10px_rgba(249,115,22,0.5)]'}`} />
-                </div>
-              ))}
-            </div>
-          </div>
-          
-          <div className="mt-12 bg-orange-500 p-6 rounded-3xl relative z-10">
-            <p className="text-sm font-black text-white leading-tight">Server Region: Asia South (Mumbai)</p>
-            <p className="text-[10px] text-orange-200 mt-1 uppercase font-bold tracking-widest">Active Since 2024</p>
-          </div>
-          <div className="absolute bottom-[-10%] right-[-10%] w-32 h-32 bg-orange-500 rounded-full blur-[80px] opacity-20" />
         </div>
       </div>
     </div>

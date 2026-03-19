@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { getSession, logout as apiLogout } from '@/services/authService';
 
 interface AuthUser {
@@ -28,40 +28,67 @@ const AuthContext = createContext<AuthContextType>({
 
 export const useAuth = () => useContext(AuthContext);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode; initialSession?: AuthUser | null }> = ({ 
-  children, 
-  initialSession = null 
-}) => {
-  const [user, setUser] = useState<AuthUser | null>(initialSession);
-  const [loading, setLoading] = useState(!initialSession);
+interface AuthProviderProps {
+  children: ReactNode;
+  initialSession: AuthUser | null;
+  role?: string; // The role expected for this context instance (from URL)
+}
 
-  const refreshUser = async (role?: string) => {
-    // If we already have a session from the server, we don't need to fetch it again on mount
-    // unless we want to force a refresh.
-    if (initialSession && loading && !role) {
-       setLoading(false);
-       return;
-    }
+export const AuthProvider = ({ children, initialSession, role }: AuthProviderProps) => {
+  // Only use initialSession if it matches the expected role for this panel
+  const filteredInitialSession = (initialSession && role && initialSession.role === role) 
+    ? initialSession 
+    : (initialSession && !role) ? initialSession : null;
+
+  const [user, setUser] = useState<AuthUser | null>(filteredInitialSession);
+  const [loading, setLoading] = useState(!filteredInitialSession);
+
+  const refreshUser = async (requestedRole?: string) => {
+    // If we're refreshing, use the specific requested role or the one from props
+    const targetRole = requestedRole || role;
 
     setLoading(true);
     try {
-      const session = await getSession(role);
-      setUser(session as AuthUser | null);
+      const url = targetRole ? `/api/auth/session?role=${targetRole}` : `/api/auth/session`;
+      const response = await fetch(url, { credentials: 'include' });
+      
+      if (response.ok) {
+        const data = await response.json();
+        // Only set user if the returned session matches the role we care about (if any)
+        if (data.session) {
+           if (!targetRole || data.session.role === targetRole) {
+             setUser(data.session as AuthUser);
+           } else {
+             // If session exists but doesn't match the target role, clear user for this context
+             setUser(null);
+           }
+        } else {
+           setUser(null);
+        }
+      } else {
+        // If the server returns an error (like 500 during recompile),
+        // we keep the current user state to avoid accidental logout.
+        console.warn("[AUTH] Session fetch returned error status:", response.status);
+      }
     } catch (error) {
-      console.error("Error fetching session:", error);
-      setUser(null);
+      // Network error or fetch failed - DO NOT clear the user.
+      // This is crucial for resilience during dev-mode reloads.
+      console.error("[AUTH] Error fetching session:", error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (!initialSession) {
-      refreshUser();
-    } else {
+    // Sync with initialSession when it changes (e.g. on full page reload)
+    if (filteredInitialSession) {
+      setUser(filteredInitialSession);
       setLoading(false);
+    } else if (!user) {
+      // If no user is present, try to fetch it for the current role
+      refreshUser(role);
     }
-  }, [initialSession]);
+  }, [filteredInitialSession, role]);
 
   const logout = async (role?: string) => {
     await apiLogout(role);

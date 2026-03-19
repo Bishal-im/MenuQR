@@ -99,7 +99,7 @@ export default function WaiterLoginPage() {
     setSuccess("");
 
     try {
-      const res = await verifyOTP(email, otp);
+      const res = await verifyOTP(email, otp, 'waiter');
       if (res.success && res.user) {
         if (res.user.role !== 'waiter') {
           setError("Access denied: You are not registered as a waiter.");

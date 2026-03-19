@@ -7,7 +7,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import CancelConfirmationModal from "@/components/common/CancelConfirmationModal";
 
-type OrderStatus = "pending" | "preparing" | "ready" | "served" | "cancelled";
+type OrderStatus = "pending" | "preparing" | "ready" | "served" | "cancelled" | "accepted" | "completed";
 
 export default function OrderStatusPage() {
   const { orderId } = useParams();
@@ -62,12 +62,15 @@ export default function OrderStatusPage() {
 
   const steps = [
     { id: "pending", label: "Confirmed", icon: Check, description: status === 'cancelled' ? "Order was cancelled" : "Your order is in the queue" },
+    { id: "accepted", label: "Accepted", icon: Check, description: "Restaurant has accepted your order" },
     { id: "preparing", label: "Preparing", icon: ChefHat, description: "Chef is cooking your meal" },
     { id: "ready", label: "Ready", icon: Utensils, description: "Picking up from kitchen" },
+    { id: "completed", label: "Served", icon: Clock, description: "Enjoy your meal!" },
     { id: "served", label: "Served", icon: Clock, description: "Enjoy your meal!" },
   ];
 
   const currentStepIndex = steps.findIndex(s => s.id === status);
+  const currentStep = currentStepIndex !== -1 ? steps[currentStepIndex] : null;
 
   return (
     <div className="min-h-screen bg-black text-white pb-32">
@@ -90,9 +93,10 @@ export default function OrderStatusPage() {
           <div className="w-24 h-24 bg-orange-500/10 rounded-full flex items-center justify-center mx-auto border-2 border-orange-500/20 mb-6">
             <div className={`w-16 h-16 ${status === 'cancelled' ? 'bg-red-500' : 'bg-orange-500'} rounded-full flex items-center justify-center shadow-2xl ${status === 'cancelled' ? 'shadow-red-500/40' : 'shadow-orange-500/40'} relative`}>
               {status === "pending" && <Check className="w-8 h-8 text-white animate-in zoom-in" />}
+              {status === "accepted" && <Check className="w-8 h-8 text-white animate-in zoom-in" />}
               {status === "preparing" && <ChefHat className="w-8 h-8 text-white animate-bounce" />}
               {status === "ready" && <Utensils className="w-8 h-8 text-white animate-pulse" />}
-              {status === "served" && <Clock className="w-8 h-8 text-white" />}
+              {(status === "served" || status === "completed") && <Clock className="w-8 h-8 text-white" />}
               {status === "cancelled" && <XCircle className="w-8 h-8 text-white" />}
               
               {status !== 'cancelled' && (
@@ -100,8 +104,8 @@ export default function OrderStatusPage() {
               )}
             </div>
           </div>
-          <h2 className="text-3xl font-black">{status === 'cancelled' ? 'Cancelled' : steps[currentStepIndex].label}</h2>
-          <p className="text-neutral-500 font-medium">{status === 'cancelled' ? 'This order has been cancelled and will not be prepared.' : steps[currentStepIndex].description}</p>
+          <h2 className="text-3xl font-black">{status === 'cancelled' ? 'Cancelled' : (currentStep?.label || 'Processing...')}</h2>
+          <p className="text-neutral-500 font-medium">{status === 'cancelled' ? 'This order has been cancelled and will not be prepared.' : (currentStep?.description || 'We are updating your order status.')}</p>
         </div>
 
         {status !== 'cancelled' && (

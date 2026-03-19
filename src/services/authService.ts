@@ -17,6 +17,7 @@ export interface AuthUser {
 export interface UserSyncData {
   email: string;
   name?: string;
+  requestedRole?: AuthUser['role'];
 }
 
 export async function requestOTP(email: string) {
@@ -64,7 +65,7 @@ export async function requestOTP(email: string) {
   }
 }
 
-export async function verifyOTP(email: string, otp: string) {
+export async function verifyOTP(email: string, otp: string, requestedRole?: AuthUser['role']) {
   try {
     await connectToDatabase();
     const normalizedEmail = email.toLowerCase();
@@ -79,15 +80,16 @@ export async function verifyOTP(email: string, otp: string) {
     await OTPModel.deleteOne({ _id: otpRecord._id });
 
     // Sync user and create session
-    const syncResult = await syncUser({ email });
+    const syncResult = await syncUser({ email, requestedRole });
     
-    if (syncResult.success) {
+    if (syncResult.success && syncResult.user) {
       const user = syncResult.user;
+      // Use the role returned by syncUser (which respects requestedRole if authorized)
       const sessionToken = JSON.stringify(user);
-      
       const cookieName = `menu_qr_${user.role}_session`;
       
-      (await cookies()).set(cookieName, sessionToken, { 
+      const cookieStore = await cookies();
+      cookieStore.set(cookieName, sessionToken, { 
         httpOnly: true, 
         secure: process.env.NODE_ENV === "production",
         maxAge: 7 * 24 * 60 * 60, // 1 week
@@ -108,7 +110,7 @@ export async function syncUser(data: UserSyncData) {
   try {
     await connectToDatabase();
     const email = data.email.toLowerCase();
-    const { name } = data;
+    const { name, requestedRole } = data;
     const superadminEmail = process.env.SUPERADMIN_EMAIL;
     
     // 1. Check if Superadmin
@@ -120,21 +122,44 @@ export async function syncUser(data: UserSyncData) {
     // 3. Find existing user
     let user = await UserModel.findOne({ email });
 
+    // Role Precedence: superadmin > admin > waiter > customer
+    const rolePrecedence: Record<string, number> = {
+      'superadmin': 4,
+      'admin': 3,
+      'waiter': 2,
+      'customer': 1
+    };
+
+    // Determine the "True" maximum role this user is entitled to
+    let maxRole: AuthUser['role'] = 'customer';
+    if (isSuperAdminMatch) maxRole = 'superadmin';
+    else if (restaurant) maxRole = 'admin';
+    else if (user) maxRole = user.role;
+
+    // Determine the role to return for THIS session
+    // If a specific role was requested and the user is authorized for at least that level, use it.
+    // Otherwise fallback to maxRole.
+    let sessionRole: AuthUser['role'] = maxRole;
+    if (requestedRole && rolePrecedence[maxRole] >= rolePrecedence[requestedRole]) {
+      sessionRole = requestedRole as AuthUser['role'];
+    }
+
+    // Update or create user in DB, but PROTECT higher roles
     if (isSuperAdminMatch) {
       if (user) {
+        // Only update if current role is lower or equal (should stay superadmin)
         user.role = 'superadmin';
         if (name) user.name = name;
         await user.save();
       } else {
-        user = await UserModel.create({
-          email,
-          name: name || "SuperAdmin",
-          role: 'superadmin'
-        });
+        user = await UserModel.create({ email, name: name || "SuperAdmin", role: 'superadmin' });
       }
     } else if (restaurant) {
       if (user) {
-        user.role = 'admin';
+        // PROTECT SUPERADMIN: do not demote to admin if they are already superadmin
+        if (user.role !== 'superadmin') {
+          user.role = 'admin';
+        }
         user.restaurantId = restaurant._id;
         if (name) user.name = name;
         await user.save();
@@ -147,17 +172,14 @@ export async function syncUser(data: UserSyncData) {
         });
       }
     } else if (user) {
-      // User exists (could be waiter or customer added by admin)
+      // User exists (waiter/customer).
       if (name) {
         user.name = name;
         await user.save();
       }
     } else {
       // Not in whitelist and doesn't exist
-      return {
-        success: false,
-        error: "Access Denied: Your email is not registered as an authorized user."
-      };
+      return { success: false, error: "Access Denied: Your email is not registered." };
     }
 
     return {
@@ -166,33 +188,47 @@ export async function syncUser(data: UserSyncData) {
         id: user._id.toString(),
         email: user.email,
         name: user.name,
-        role: user.role,
+        role: sessionRole, // Return the role appropriate for THIS session
         restaurantId: user.restaurantId?.toString(),
         restaurantName: restaurant?.name || (user.restaurantId ? (await RestaurantModel.findById(user.restaurantId))?.name : undefined)
       }
     };
+
   } catch (error: any) {
     console.error("[AUTH] Sync User Critical Error:", error.message);
     throw error;
   }
 }
 
-export async function getSession(role?: string) {
-  const cookieNames = role 
-    ? [`menu_qr_${role}_session`]
-    : ["menu_qr_admin_session", "menu_qr_superadmin_session", "menu_qr_waiter_session", "menu_qr_customer_session"];
-
-  const cookieStore = await cookies();
+export async function getSession(role?: string): Promise<AuthUser | null> {
+  const allCookieNames = ["menu_qr_admin_session", "menu_qr_superadmin_session", "menu_qr_waiter_session", "menu_qr_customer_session"];
   
-  for (const name of cookieNames) {
-    const sessionCookie = cookieStore.get(name);
-    if (sessionCookie) {
-      try {
-        return JSON.parse(sessionCookie.value);
-      } catch {
-        continue;
+  // Create a search list: if role is provided, put its cookie first
+  let searchList = [...allCookieNames];
+  if (role) {
+    const roleCookiePath = `menu_qr_${role}_session`;
+    searchList = [roleCookiePath, ...allCookieNames.filter(name => name !== roleCookiePath)];
+  }
+
+  try {
+    const cookieStore = await cookies();
+    
+    for (const name of searchList) {
+      const sessionCookie = cookieStore.get(name);
+      if (sessionCookie) {
+        try {
+          if (!sessionCookie.value || sessionCookie.value.trim() === '') {
+            continue;
+          }
+          return JSON.parse(sessionCookie.value) as AuthUser;
+        } catch (e) {
+          console.error(`[AUTH] Failed to parse session cookie ${name}:`, e);
+          continue;
+        }
       }
     }
+  } catch (error) {
+    console.error("[AUTH] getSession error:", error);
   }
 
   return null;

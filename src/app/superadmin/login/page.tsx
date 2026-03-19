@@ -98,7 +98,7 @@ export default function SuperAdminLoginPage() {
     setSuccess("");
 
     try {
-      const res = await verifyOTP(email, otp);
+      const res = await verifyOTP(email, otp, 'superadmin');
       if (res.success && res.user) {
         if (res.user.role !== 'superadmin') {
           setError("Access denied: You do not have SuperAdmin privileges.");
