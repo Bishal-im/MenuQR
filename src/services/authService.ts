@@ -5,6 +5,15 @@ import { UserModel, OTPModel, RestaurantModel } from "@/models/Schemas";
 import { sendEmail } from "@/lib/emailer";
 import { cookies } from "next/headers";
 
+export interface AuthUser {
+  id: string;
+  email: string;
+  name: string | null;
+  role: 'superadmin' | 'admin' | 'waiter' | 'customer';
+  restaurantId?: string;
+  restaurantName?: string;
+}
+
 export interface UserSyncData {
   email: string;
   name?: string;
@@ -157,6 +166,7 @@ export async function syncUser(data: UserSyncData) {
         name: user.name,
         role: user.role,
         restaurantId: user.restaurantId?.toString(),
+        restaurantName: restaurant?.name || (user.restaurantId ? (await RestaurantModel.findById(user.restaurantId))?.name : undefined)
       }
     };
   } catch (error: any) {

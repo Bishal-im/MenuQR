@@ -96,6 +96,7 @@ const OTPSchema = new Schema({
 const UserSchema = new Schema({
   email: { type: String, required: true, unique: true },
   name: { type: String },
+  phone: { type: String },
   role: { 
     type: String, 
     enum: ['superadmin', 'admin', 'waiter', 'customer'],

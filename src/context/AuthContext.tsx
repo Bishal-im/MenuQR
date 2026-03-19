@@ -9,6 +9,7 @@ interface AuthUser {
   name: string | null;
   role: 'superadmin' | 'admin' | 'waiter' | 'customer';
   restaurantId?: string;
+  restaurantName?: string;
 }
 
 interface AuthContextType {
