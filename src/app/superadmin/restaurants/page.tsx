@@ -13,8 +13,10 @@ import {
   ExternalLink, 
   Power,
   ChevronRight,
-  ChevronLeft
+  ChevronLeft,
+  Trash2
 } from "lucide-react";
+import { deleteRestaurant } from "@/services/superAdminService";
 
 import RestaurantModal from "@/components/superadmin/RestaurantModal";
 
@@ -29,6 +31,19 @@ export default function RestaurantManagement() {
     const data = await getRestaurants();
     setRestaurants(data);
     setLoading(false);
+  };
+
+  const handleDelete = async (id: string, name: string) => {
+    if (confirm(`Are you sure you want to delete "${name}"? This will also remove all its users and orders. This action cannot be undone.`)) {
+      setLoading(true);
+      const res = await deleteRestaurant(id);
+      if (res.success) {
+        await fetchData();
+      } else {
+        alert(res.error || "Failed to delete restaurant");
+        setLoading(false);
+      }
+    }
   };
 
   useEffect(() => {
@@ -136,8 +151,11 @@ export default function RestaurantManagement() {
                   <span className="text-sm font-black text-white">{res.planId === 'p2' ? 'Pro SaaS' : 'Basic SaaS'}</span>
                 </div>
                 <div className="flex gap-2">
-                  <button className="p-3 bg-neutral-900 border border-neutral-800 rounded-xl text-neutral-400 hover:text-orange-500 hover:border-orange-500/50 transition-all">
-                    <Power className="w-5 h-5" />
+                  <button 
+                    onClick={() => handleDelete(res.id, res.name)}
+                    className="p-3 bg-neutral-900 border border-neutral-800 rounded-xl text-neutral-400 hover:text-red-500 hover:border-red-500/50 transition-all"
+                  >
+                    <Trash2 className="w-5 h-5" />
                   </button>
                   <button className="flex items-center gap-2 px-4 py-3 bg-neutral-900 border border-neutral-800 rounded-xl text-white font-black text-xs hover:bg-orange-500 hover:border-orange-400 transition-all">
                     Control Panel <ExternalLink className="w-4 h-4" />

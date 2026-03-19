@@ -1,7 +1,7 @@
 "use server";
 
 import { connectToDatabase } from "@/lib/db";
-import { PlatformStatsModel, RestaurantModel, PlanModel, UserModel } from "@/models/Schemas";
+import { PlatformStatsModel, RestaurantModel, PlanModel, UserModel, OrderModel } from "@/models/Schemas";
 
 export interface PlatformStats {
   totalRestaurants: number;
@@ -156,6 +156,24 @@ export async function getUsers(): Promise<User[]> {
     restaurantId: u.restaurantId?.toString() || '',
     createdAt: u.createdAt ? u.createdAt.toISOString().split('T')[0] : '',
   }));
+}
+
+export async function deleteRestaurant(id: string) {
+  await connectToDatabase();
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return { success: false, error: "Invalid Restaurant ID" };
+  }
+  
+  // 1. Delete associated orders
+  await OrderModel.deleteMany({ restaurantId: id });
+  
+  // 2. Delete associated users (admins, waiters, etc.)
+  await UserModel.deleteMany({ restaurantId: id });
+  
+  // 3. Delete the restaurant itself
+  await RestaurantModel.findByIdAndDelete(id);
+  
+  return { success: true };
 }
 
 // Server actions must only export async functions.
