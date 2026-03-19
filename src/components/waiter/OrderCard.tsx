@@ -60,12 +60,6 @@ export default function OrderCard({ order, onStatusUpdate }: OrderCardProps) {
             </p>
           </div>
         </div>
-        <div className={`px-3 py-1.5 rounded-full flex items-center gap-1.5 ${getStatusColor()} bg-opacity-10 border border-opacity-20 ${getStatusColor().replace('bg-', 'border-')}`}>
-           <div className={`w-1.5 h-1.5 rounded-full ${getStatusColor()}`} />
-           <span className={`text-[10px] font-black uppercase tracking-widest ${getStatusColor().replace('bg-', 'text-')}`}>
-             {order.status}
-           </span>
-        </div>
       </div>
 
       {/* Items List */}
@@ -91,17 +85,12 @@ export default function OrderCard({ order, onStatusUpdate }: OrderCardProps) {
       {/* Actions */}
       <div className="flex gap-3 relative z-10">
         {isNew && (
-          <>
-            <button 
-              onClick={() => onStatusUpdate(order.id, 'preparing')}
-              className="flex-grow flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 active:scale-95 text-white py-4 rounded-2xl font-black text-sm shadow-xl shadow-primary/20 transition-all"
-            >
-              <Check className="w-5 h-5" /> Accept Order
-            </button>
-            <button className="p-4 bg-neutral-800 text-neutral-500 hover:text-red-500 hover:bg-red-500/10 rounded-2xl transition-all">
-              <XCircle className="w-6 h-6" />
-            </button>
-          </>
+          <button 
+            onClick={() => onStatusUpdate(order.id, 'preparing')}
+            className="flex-grow flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 active:scale-95 text-white py-4 rounded-2xl font-black text-sm shadow-xl shadow-primary/20 transition-all"
+          >
+            <Check className="w-5 h-5" /> Accept Order
+          </button>
         )}
         {isPreparing && (
           <button 
@@ -119,12 +108,21 @@ export default function OrderCard({ order, onStatusUpdate }: OrderCardProps) {
             <Check className="w-5 h-5" /> Mark Served
           </button>
         )}
+        {order.status === 'cancelled' && (
+          <div className="flex-grow flex items-center justify-center gap-2 bg-red-500/10 border border-red-500/50 text-red-500 py-4 rounded-2xl font-black text-sm uppercase tracking-widest animate-pulse">
+            <XCircle className="w-5 h-5" /> Cancelled
+          </div>
+        )}
       </div>
 
-      {/* Visual Indicator for Delayed Item */}
-      {Math.floor((Date.now() - new Date(order.createdAt).getTime()) / 60000) > 20 && (
-        <div className="absolute top-4 right-20 animate-pulse">
-          <AlertCircle className="w-5 h-5 text-red-500" />
+
+      {/* Visual Indicator for Delayed Item (Pending only) */}
+      {isNew && Math.floor((Date.now() - new Date(order.createdAt).getTime()) / 60000) > 10 && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+          <div className="relative w-24 h-24 flex items-center justify-center">
+            <div className="absolute inset-0 bg-red-500/20 rounded-full blur-2xl animate-pulse" />
+            <AlertCircle className="w-16 h-16 text-red-500/40 animate-bounce" />
+          </div>
         </div>
       )}
     </div>

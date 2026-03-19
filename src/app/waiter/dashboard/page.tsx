@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { getOrders, updateStatus, WaiterOrder, OrderStatus } from "@/services/waiterService";
 import OrderCard from "@/components/waiter/OrderCard";
+import { useSearchParams, useRouter } from "next/navigation";
 import { 
   Bell, 
   ChefHat, 
@@ -11,14 +12,25 @@ import {
   Filter, 
   RefreshCcw,
   Zap,
-  Volume2
+  Volume2,
+  Loader2
 } from "lucide-react";
 
-export default function WaiterDashboard() {
+import { Suspense } from "react";
+
+function WaiterDashboardContent() {
   const [orders, setOrders] = useState<WaiterOrder[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<OrderStatus | 'all' | 'history'>('pending');
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const activeTab = (searchParams.get('tab') as OrderStatus | 'all' | 'history') || 'pending';
   const [searchQuery, setSearchQuery] = useState("");
+
+  const setActiveTab = (tab: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tab', tab);
+    router.push(`?${params.toString()}`);
+  };
 
   const fetchOrders = async () => {
     const data = await getOrders();
@@ -47,6 +59,9 @@ export default function WaiterDashboard() {
       matchesTab = ['pending', 'preparing', 'ready'].includes(o.status);
     } else if (activeTab === 'history') {
       matchesTab = ['completed', 'cancelled'].includes(o.status);
+    } else if (activeTab === 'pending') {
+      const isRecentCancellation = o.status === 'cancelled' && (Date.now() - new Date(o.updatedAt).getTime()) < 60000;
+      matchesTab = o.status === 'pending' || isRecentCancellation;
     } else {
       matchesTab = o.status === activeTab;
     }
@@ -82,8 +97,6 @@ export default function WaiterDashboard() {
             { label: "New", value: 'pending', color: 'orange' },
             { label: "Prep", value: 'preparing', color: 'blue' },
             { label: "Ready", value: 'ready', color: 'green' },
-            { label: "History", value: 'history', color: 'neutral' },
-            { label: "All", value: 'all', color: 'neutral' },
           ].map((tab) => (
             <button
               key={tab.value}
@@ -152,5 +165,17 @@ export default function WaiterDashboard() {
         <p className="text-[10px] text-neutral-600 font-black tracking-widest uppercase">Sync: Just Now</p>
       </footer>
     </div>
+  );
+}
+
+export default function WaiterDashboard() {
+  return (
+    <Suspense fallback={
+      <div className="flex-grow flex items-center justify-center bg-neutral-950">
+        <Loader2 className="w-10 h-10 text-primary animate-spin" />
+      </div>
+    }>
+      <WaiterDashboardContent />
+    </Suspense>
   );
 }
