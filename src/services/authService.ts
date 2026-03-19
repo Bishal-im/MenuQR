@@ -101,7 +101,7 @@ export async function syncUser(data: UserSyncData) {
     const superadminEmail = process.env.SUPERADMIN_EMAIL;
     
     // 1. Check if Superadmin
-    const isSuperAdminMatch = superadminEmail && email === superadminEmail.toLowerCase();
+    const isSuperAdminMatch = superadminEmail?.split(',').map(e => e.trim().toLowerCase()).includes(email);
     
     // 2. Check if Restaurant Owner (Admin)
     const restaurant = await RestaurantModel.findOne({ email });
