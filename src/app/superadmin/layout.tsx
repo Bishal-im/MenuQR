@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import SuperAdminSidebar from "@/components/superadmin/Sidebar";
 import { Search, Bell, User, Loader2, LogOut } from "lucide-react";
@@ -13,12 +13,17 @@ export default function SuperAdminLayout({
 }) {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+
+  const isLoginPage = pathname === '/superadmin/login';
 
   useEffect(() => {
-    if (!loading && (!user || user.role !== 'superadmin')) {
+    if (!loading && !isLoginPage && (!user || user.role !== 'superadmin')) {
       router.push('/superadmin/login');
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, isLoginPage]);
+
+  if (isLoginPage) return <>{children}</>;
 
   if (loading || !user || user.role !== 'superadmin') {
     return (

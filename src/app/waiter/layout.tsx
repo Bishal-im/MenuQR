@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { 
   Bell, 
@@ -21,12 +21,17 @@ export default function WaiterLayout({
 }) {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+
+  const isLoginPage = pathname === '/waiter/login';
 
   useEffect(() => {
-    if (!loading && (!user || user.role !== 'waiter')) {
+    if (!loading && !isLoginPage && (!user || user.role !== 'waiter')) {
       router.push('/waiter/login');
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, isLoginPage]);
+
+  if (isLoginPage) return <>{children}</>;
 
   if (loading || !user || user.role !== 'waiter') {
     return (
