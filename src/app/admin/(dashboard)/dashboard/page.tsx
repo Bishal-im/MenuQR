@@ -8,40 +8,71 @@ import {
   IndianRupee,
   Clock,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  Loader2
 } from "lucide-react";
-
-const stats = [
-  { label: "Revenue Today", value: "Rs. 18,420", trend: "+12%", trendUp: true, icon: IndianRupee },
-  { label: "Orders Today", value: "47", trend: "+5 new", trendUp: true, icon: ShoppingBag },
-  { label: "Avg. Order Value", value: "Rs. 392", trend: "-3%", trendUp: false, icon: TrendingUp },
-  { label: "Active Tables", value: "8 / 14", trend: "6 empty", trendUp: true, icon: Users },
-];
-
-const recentOrders = [
-  { id: "#024", table: "Table 3", items: "Momo ×2, Thali", status: "Preparing", statusColor: "text-amber-500 bg-amber-500/10" },
-  { id: "#023", table: "Table 9", items: "Dal Bhat ×4", status: "Pending", statusColor: "text-blue-500 bg-blue-500/10" },
-  { id: "#022", table: "Table 5", items: "Thukpa ×2, Sekwa", status: "Ready", statusColor: "text-emerald-500 bg-emerald-500/10" },
-  { id: "#021", table: "Table 2", items: "Momo ×2, Chai", status: "Completed", statusColor: "text-zinc-500 bg-zinc-500/10" },
-];
+import { getAdminDashboardStats } from "@/services/adminService";
+import { useState, useEffect } from "react";
+import Link from "next/link";
 
 export default function DashboardPage() {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      const stats = await getAdminDashboardStats();
+      if (stats) {
+        setData(stats);
+      }
+      setLoading(false);
+    }
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <Loader2 className="h-8 w-8 text-primary animate-spin" />
+        <p className="text-sm text-neutral-500 font-medium">Loading dashboard...</p>
+      </div>
+    );
+  }
+
+  const statsCards = [
+    { label: "Revenue Today", value: `Rs. ${data?.revenueToday?.toLocaleString() || 0}`, trend: data?.revenueTrend || "+0%", trendUp: data?.revenueTrendUp, icon: IndianRupee },
+    { label: "Orders Today", value: data?.ordersToday?.toString() || "0", trend: data?.ordersTrend || "+0%", trendUp: data?.ordersTrendUp, icon: ShoppingBag },
+    { label: "Avg. Order Value", value: `Rs. ${data?.avgOrderValue?.toLocaleString() || 0}`, trend: "Today", trendUp: true, icon: IndianRupee },
+    { label: "Active Tables", value: data?.tablesActive || "0 / 0", trend: "Live", trendUp: true, icon: Users },
+  ];
+
+  const currentDate = new Date().toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+
   return (
     <div className="space-y-8">
       <header className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Good morning, Binod! 👋</h2>
-          <p className="text-muted mt-1 text-sm">Sunday, March 18 • Restaurant is <span className="text-emerald-500 font-medium">Open</span></p>
+          <h2 className="text-3xl font-bold tracking-tight">Good morning, {data?.userName || 'Admin'}! 👋</h2>
+          <p className="text-muted mt-1 text-sm">{currentDate} • Restaurant is <span className={data?.restaurantStatus === 'Open' ? 'text-emerald-500 font-medium' : 'text-red-500 font-medium'}>{data?.restaurantStatus || 'Open'}</span></p>
         </div>
         <div className="flex gap-3">
-          <button className="rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium hover:bg-secondary transition">Download Report</button>
-          <button className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-black hover:bg-amber-500 transition shadow-lg shadow-primary/20">+ New Item</button>
+          <button className="rounded-xl border border-neutral-800 bg-neutral-900 px-4 py-2 text-sm font-medium hover:bg-neutral-800 transition">Download Report</button>
+          <Link 
+            href="/admin/menu?action=add"
+            className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-black hover:bg-amber-500 transition shadow-lg shadow-primary/20"
+          >
+            + New Item
+          </Link>
         </div>
       </header>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat, i) => (
+        {statsCards.map((stat, i) => (
           <motion.div 
             key={i}
             initial={{ opacity: 0, y: 20 }}
@@ -69,22 +100,22 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         {/* Recent Orders */}
         <div className="rounded-2xl border border-border bg-card overflow-hidden">
-          <div className="flex items-center justify-between p-6 border-b border-border">
+          <div className="flex items-center justify-between p-6 border-b border-neutral-800">
             <h3 className="font-bold">Live Orders</h3>
-            <button className="text-xs text-primary font-medium hover:underline">View All</button>
+            <Link href="/admin/orders" className="text-xs text-primary font-medium hover:underline">View All</Link>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="border-b border-border bg-background/30">
-                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted">ID</th>
-                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted">Table</th>
-                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted">Items</th>
-                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted text-right">Status</th>
+                <tr className="border-b border-neutral-800 bg-neutral-950/30">
+                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-neutral-500">ID</th>
+                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-neutral-500">Table</th>
+                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-neutral-500">Items</th>
+                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-neutral-500 text-right">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border/50">
-                {recentOrders.map((order, i) => (
+              <tbody className="divide-y divide-neutral-800/50">
+                {(data?.liveOrders || []).map((order: any, i: number) => (
                   <tr key={i} className="group hover:bg-white/5 transition">
                     <td className="px-6 py-4 text-sm font-medium text-primary">{order.id}</td>
                     <td className="px-6 py-4 text-sm font-medium">{order.table}</td>
@@ -105,12 +136,12 @@ export default function DashboardPage() {
         <div className="rounded-2xl border border-border bg-card p-6">
           <h3 className="font-bold mb-6">Popular Items Today</h3>
           <div className="space-y-6">
-            {[
-              { name: "Steamed Chicken Momo", count: 34, percent: 85 },
-              { name: "Dal Bhat Thali", count: 28, percent: 65 },
-              { name: "Buff Sekuwa", count: 19, percent: 45 },
-              { name: "Thukpa Special", count: 11, percent: 25 },
-            ].map((dish, i) => (
+            {(data?.popularItems || [
+              { name: "Steamed Chicken Momo", count: 0, percent: 0 },
+              { name: "Dal Bhat Thali", count: 0, percent: 0 },
+              { name: "Buff Sekuwa", count: 0, percent: 0 },
+              { name: "Thukpa Special", count: 0, percent: 0 },
+            ]).map((dish: any, i: number) => (
               <div key={i} className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="font-medium">{dish.name}</span>

@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { Plus, Search, Filter, Edit2, Trash2, Eye, EyeOff, MoreVertical, Image as ImageIcon, Loader2, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import DeleteConfirmationModal from "@/components/common/DeleteConfirmationModal";
+import { useSearchParams } from "next/navigation";
 import { 
   getMenuData, 
   deleteMenuItem, 
@@ -14,7 +15,8 @@ import {
   updateMenuItem
 } from "@/services/adminService";
 
-export default function MenuManagementPage() {
+function MenuContent() {
+  const searchParams = useSearchParams();
   const [menuItems, setMenuItems] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [activeCategory, setActiveCategory] = useState("all");
@@ -41,6 +43,13 @@ export default function MenuManagementPage() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (searchParams.get('action') === 'add') {
+      setEditingItem(null);
+      setIsItemModalOpen(true);
+    }
+  }, [searchParams]);
 
   const handleDelete = async () => {
     if (!deleteModal.id) return;
@@ -261,6 +270,19 @@ export default function MenuManagementPage() {
         categories={categories}
       />
     </div>
+  );
+}
+
+export default function MenuManagementPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col items-center justify-center py-20 gap-4">
+        <Loader2 className="h-8 w-8 text-primary animate-spin" />
+        <p className="text-sm text-neutral-500 font-medium">Loading menu...</p>
+      </div>
+    }>
+      <MenuContent />
+    </Suspense>
   );
 }
 

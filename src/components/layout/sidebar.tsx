@@ -15,7 +15,7 @@ import {
   Users
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
@@ -34,6 +34,28 @@ export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const router = useRouter();
   const { logout } = useAuth();
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    async function fetchBadge() {
+       const { getAdminDashboardStats } = await import("@/services/adminService");
+       const stats = await getAdminDashboardStats();
+       if (stats) setPendingCount(stats.pendingCount);
+    }
+    fetchBadge();
+    const interval = setInterval(fetchBadge, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const menuWithBadges = [
+    { icon: LayoutDashboard, label: "Dashboard", href: "/admin/dashboard" },
+    { icon: ShoppingBag, label: "Orders", href: "/admin/orders", badge: pendingCount > 0 ? pendingCount : undefined },
+    { icon: MenuIcon, label: "Menu Management", href: "/admin/menu" },
+    { icon: Hash, label: "Tables & QR", href: "/admin/tables" },
+    { icon: BarChart3, label: "Analytics", href: "/admin/analytics" },
+    { icon: Users, label: "Staff", href: "/admin/staff" },
+    { icon: Settings, label: "Settings", href: "/admin/settings" },
+  ];
 
   const handleLogout = async () => {
     try {
@@ -72,7 +94,7 @@ export function Sidebar() {
       </button>
 
       <div className="mt-8 flex flex-col gap-2 px-3">
-        {menuItems.map((item) => {
+        {menuWithBadges.map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link
