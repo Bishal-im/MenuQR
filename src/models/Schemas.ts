@@ -3,9 +3,10 @@ import mongoose, { Schema, model, models } from 'mongoose';
 // Category Schema
 const CategorySchema = new Schema({
   name: { type: String, required: true },
+  restaurantId: { type: Schema.Types.ObjectId, ref: 'Restaurant', required: true },
 });
 
-export const CategoryModel = models.Category || model('Category', CategorySchema);
+
 
 // MenuItem Schema
 const MenuItemSchema = new Schema({
@@ -14,12 +15,13 @@ const MenuItemSchema = new Schema({
   price: { type: Number, required: true },
   image: { type: String },
   category: { type: Schema.Types.ObjectId, ref: 'Category' },
+  restaurantId: { type: Schema.Types.ObjectId, ref: 'Restaurant', required: true },
   isVeg: { type: Boolean, default: false },
   isAvailable: { type: Boolean, default: true },
   isPopular: { type: Boolean, default: false },
 });
 
-export const MenuItemModel = models.MenuItem || model('MenuItem', MenuItemSchema);
+
 
 // PlatformStats Schema
 const PlatformStatsSchema = new Schema({
@@ -29,7 +31,7 @@ const PlatformStatsSchema = new Schema({
   restaurantGrowth: Number,
 });
 
-export const PlatformStatsModel = models.PlatformStats || model('PlatformStats', PlatformStatsSchema);
+
 
 
 
@@ -44,7 +46,7 @@ const RestaurantSchema = new Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-export const RestaurantModel = models.Restaurant || model('Restaurant', RestaurantSchema);
+
 
 // Order Schema
 const OrderItemSchema = new Schema({
@@ -73,7 +75,7 @@ const OrderSchema = new Schema({
   updatedAt: { type: Date, default: Date.now },
 });
 
-export const OrderModel = models.Order || model('Order', OrderSchema);
+
 
 // Table Schema
 const TableSchema = new Schema({
@@ -111,6 +113,15 @@ const UserSchema = new Schema({
 // Force refresh the models in development to avoid stale schema errors
 if (models.User) delete (mongoose as any).models.User;
 if (models.OTP) delete (mongoose as any).models.OTP;
+if (models.Category) delete (mongoose as any).models.Category;
+if (models.MenuItem) delete (mongoose as any).models.MenuItem;
+if (models.Restaurant) delete (mongoose as any).models.Restaurant;
+if (models.Order) delete (mongoose as any).models.Order;
 
-export const UserModel = model('User', UserSchema);
-export const OTPModel = model('OTP', OTPSchema);
+export const UserModel = models.User || model('User', UserSchema);
+export const OTPModel = models.OTP || model('OTP', OTPSchema);
+export const CategoryModel = models.Category || model('Category', CategorySchema);
+export const MenuItemModel = models.MenuItem || model('MenuItem', MenuItemSchema);
+export const RestaurantModel = models.Restaurant || model('Restaurant', RestaurantSchema);
+export const OrderModel = models.Order || model('Order', OrderSchema);
+export const PlatformStatsModel = models.PlatformStats || model('PlatformStats', PlatformStatsSchema);

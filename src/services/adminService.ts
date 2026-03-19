@@ -126,8 +126,13 @@ export async function deleteStaff(id: string) {
 export async function getMenuData() {
   try {
     await connectToDatabase();
-    const categories = await CategoryModel.find().lean();
-    const menuItems = await MenuItemModel.find().populate('category').lean();
+    const session = await getSession();
+    if (!session || !session.restaurantId) throw new Error("Unauthorized");
+    
+    const restaurantId = new mongoose.Types.ObjectId(session.restaurantId);
+    
+    const categories = await CategoryModel.find({ restaurantId }).lean();
+    const menuItems = await MenuItemModel.find({ restaurantId }).populate('category').lean();
 
     return {
       categories: categories.map((c: any) => ({ id: c._id.toString(), name: c.name })),
@@ -149,10 +154,54 @@ export async function getMenuData() {
   }
 }
 
+export async function addCategory(name: string) {
+  try {
+    await connectToDatabase();
+    const session = await getSession();
+    if (!session || !session.restaurantId) throw new Error("Unauthorized");
+    
+    await CategoryModel.create({
+      name,
+      restaurantId: new mongoose.Types.ObjectId(session.restaurantId)
+    });
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function deleteCategory(id: string) {
+  try {
+    await connectToDatabase();
+    const session = await getSession();
+    if (!session || !session.restaurantId) throw new Error("Unauthorized");
+    
+    // Check if category has items
+    const itemcount = await MenuItemModel.countDocuments({ category: new mongoose.Types.ObjectId(id) });
+    if (itemcount > 0) {
+      return { success: false, error: "Cannot delete category with items. Move or delete them first." };
+    }
+    
+    await CategoryModel.deleteOne({ 
+      _id: new mongoose.Types.ObjectId(id),
+      restaurantId: new mongoose.Types.ObjectId(session.restaurantId)
+    });
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
 export async function addMenuItem(data: any) {
   try {
     await connectToDatabase();
-    await MenuItemModel.create(data);
+    const session = await getSession();
+    if (!session || !session.restaurantId) throw new Error("Unauthorized");
+
+    await MenuItemModel.create({
+      ...data,
+      restaurantId: new mongoose.Types.ObjectId(session.restaurantId)
+    });
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -162,7 +211,13 @@ export async function addMenuItem(data: any) {
 export async function updateMenuItem(id: string, data: any) {
   try {
     await connectToDatabase();
-    await MenuItemModel.findByIdAndUpdate(id, data);
+    const session = await getSession();
+    if (!session || !session.restaurantId) throw new Error("Unauthorized");
+
+    await MenuItemModel.findOneAndUpdate(
+      { _id: new mongoose.Types.ObjectId(id), restaurantId: new mongoose.Types.ObjectId(session.restaurantId) },
+      data
+    );
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -172,7 +227,13 @@ export async function updateMenuItem(id: string, data: any) {
 export async function deleteMenuItem(id: string) {
   try {
     await connectToDatabase();
-    await MenuItemModel.findByIdAndDelete(id);
+    const session = await getSession();
+    if (!session || !session.restaurantId) throw new Error("Unauthorized");
+
+    await MenuItemModel.deleteOne({
+      _id: new mongoose.Types.ObjectId(id),
+      restaurantId: new mongoose.Types.ObjectId(session.restaurantId)
+    });
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getStats, PlatformStats } from "@/services/superAdminService";
+import { getStats, getRecentSignups, PlatformStats, Restaurant } from "@/services/superAdminService";
 import { 
   Store, 
   CreditCard, 
@@ -16,12 +16,17 @@ import {
 
 export default function SuperAdminDashboard() {
   const [stats, setStats] = useState<PlatformStats | null>(null);
+  const [recentSignups, setRecentSignups] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
-      const data = await getStats();
-      setStats(data);
+      const [statsData, signupsData] = await Promise.all([
+        getStats(),
+        getRecentSignups(5)
+      ]);
+      setStats(statsData);
+      setRecentSignups(signupsData);
       setLoading(false);
     };
     fetchData();
@@ -37,6 +42,18 @@ export default function SuperAdminDashboard() {
     { label: "Total Restaurants", value: stats?.totalRestaurants, icon: Store, growth: "+8.2%", color: "orange" },
     { label: "Total Orders", value: stats?.totalOrders, icon: TrendingUp, growth: "+22.5%", color: "purple" },
   ];
+
+  const formatJoinedDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return "Joined today";
+    if (diffDays === 1) return "Joined yesterday";
+    if (diffDays < 7) return `Joined ${diffDays} days ago`;
+    return `Joined on ${date.toLocaleDateString()}`;
+  };
 
   return (
     <div className="space-y-10 max-w-7xl mx-auto">
@@ -86,29 +103,39 @@ export default function SuperAdminDashboard() {
           </div>
           
           <div className="space-y-6">
-            {[1, 2, 3].map((_, i) => (
-              <div key={i} className="flex items-center justify-between p-5 rounded-3xl hover:bg-neutral-900/50 border border-transparent hover:border-neutral-800/50 transition-all group">
-                <div className="flex items-center gap-5">
-                  <div className="w-14 h-14 bg-neutral-950 rounded-2xl flex items-center justify-center font-black text-lg text-white border border-neutral-800">
-                    {i === 0 ? "GD" : i === 1 ? "PP" : "KC"}
+            {recentSignups.length > 0 ? (
+              recentSignups.map((res, i) => (
+                <div key={res.id} className="flex items-center justify-between p-5 rounded-3xl hover:bg-neutral-900/50 border border-transparent hover:border-neutral-800/50 transition-all group">
+                  <div className="flex items-center gap-5">
+                    <div className="w-14 h-14 bg-neutral-950 rounded-2xl flex items-center justify-center font-black text-lg text-white border border-neutral-800 shadow-md group-hover:bg-orange-500 group-hover:border-orange-400 transition-all duration-300">
+                      {res.name.split(' ').map(w => w[0]).join('').substr(0, 2)}
+                    </div>
+                    <div>
+                      <h4 className="text-base font-bold text-white tracking-tight group-hover:text-orange-500 transition-colors">
+                        {res.name}
+                      </h4>
+                      <p className="text-xs text-neutral-500 font-medium mt-0.5">
+                        {formatJoinedDate(res.createdAt)} • {res.address}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-base font-bold text-white tracking-tight group-hover:text-orange-500 transition-colors">
-                      {i === 0 ? "The Grand Dhaba" : i === 1 ? "Pizza Palace" : "King Cuisine"}
-                    </h4>
-                    <p className="text-xs text-neutral-500 font-medium mt-0.5">Joined 2 days ago • Mumbai, IN</p>
+                  <div className="flex items-center gap-6">
+                    <div className="text-right">
+                      <p className={`text-[10px] font-black uppercase tracking-tighter ${res.status === 'active' ? 'text-green-500' : 'text-neutral-500'}`}>
+                        {res.status}
+                      </p>
+                    </div>
+                    <div className="w-12 h-12 bg-neutral-900 rounded-2xl flex items-center justify-center text-neutral-400 group-hover:text-orange-500 transition-colors cursor-pointer">
+                      <ExternalLink className="w-5 h-5" />
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-6">
-                  <div className="text-right">
-                    <p className="text-[10px] text-green-500 font-black uppercase tracking-tighter">Active</p>
-                  </div>
-                  <div className="w-12 h-12 bg-neutral-900 rounded-2xl flex items-center justify-center text-neutral-400 group-hover:text-orange-500 transition-colors">
-                    <ExternalLink className="w-5 h-5" />
-                  </div>
-                </div>
+              ))
+            ) : (
+              <div className="py-10 text-center border border-dashed border-neutral-800 rounded-3xl">
+                <p className="text-neutral-500 font-medium text-sm">No recent signups found.</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
 
