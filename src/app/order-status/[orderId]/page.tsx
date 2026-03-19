@@ -1,17 +1,21 @@
 "use client";
 
-import { getOrder } from "@/services/customerService";
-import { ChevronLeft, Clock, ChefHat, Check, Utensils, HelpCircle, Phone, ArrowUpRight } from "lucide-react";
+import { getOrder, cancelOrder } from "@/services/customerService";
+import { ChevronLeft, Clock, ChefHat, Check, Utensils, HelpCircle, Phone, ArrowUpRight, XCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import CancelConfirmationModal from "@/components/common/CancelConfirmationModal";
 
-type OrderStatus = "pending" | "preparing" | "ready" | "served";
+type OrderStatus = "pending" | "preparing" | "ready" | "served" | "cancelled";
 
 export default function OrderStatusPage() {
   const { orderId } = useParams();
+  const router = useRouter();
   const [status, setStatus] = useState<OrderStatus>("pending");
   const [loading, setLoading] = useState(true);
+  const [cancelling, setCancelling] = useState(false);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [orderData, setOrderData] = useState<any>(null);
 
   useEffect(() => {
@@ -30,14 +34,25 @@ export default function OrderStatusPage() {
 
     fetchOrder();
 
-    // Mock real-time updates
-    const timers = [
-      setTimeout(() => setStatus("preparing"), 10000),
-      setTimeout(() => setStatus("ready"), 25000),
-    ];
+    // Poll for status updates every 10 seconds
+    const interval = setInterval(fetchOrder, 10000);
 
-    return () => timers.forEach(clearTimeout);
+    return () => clearInterval(interval);
   }, [orderId]);
+
+  const handleCancelOrder = async () => {
+    if (!orderId || typeof orderId !== 'string') return;
+    
+    setCancelling(true);
+    const res = await cancelOrder(orderId);
+    if (res.success) {
+      setStatus("cancelled");
+      setIsCancelModalOpen(false);
+    } else {
+      alert(res.error || "Failed to cancel order");
+    }
+    setCancelling(false);
+  };
 
   if (loading) return (
     <div className="min-h-screen bg-black flex items-center justify-center">
@@ -46,7 +61,7 @@ export default function OrderStatusPage() {
   );
 
   const steps = [
-    { id: "pending", label: "Confirmed", icon: Check, description: "Your order is in the queue" },
+    { id: "pending", label: "Confirmed", icon: Check, description: status === 'cancelled' ? "Order was cancelled" : "Your order is in the queue" },
     { id: "preparing", label: "Preparing", icon: ChefHat, description: "Chef is cooking your meal" },
     { id: "ready", label: "Ready", icon: Utensils, description: "Picking up from kitchen" },
     { id: "served", label: "Served", icon: Clock, description: "Enjoy your meal!" },
@@ -73,52 +88,75 @@ export default function OrderStatusPage() {
         {/* Status Hero */}
         <div className="text-center space-y-4">
           <div className="w-24 h-24 bg-orange-500/10 rounded-full flex items-center justify-center mx-auto border-2 border-orange-500/20 mb-6">
-            <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center shadow-2xl shadow-orange-500/40 relative">
+            <div className={`w-16 h-16 ${status === 'cancelled' ? 'bg-red-500' : 'bg-orange-500'} rounded-full flex items-center justify-center shadow-2xl ${status === 'cancelled' ? 'shadow-red-500/40' : 'shadow-orange-500/40'} relative`}>
               {status === "pending" && <Check className="w-8 h-8 text-white animate-in zoom-in" />}
               {status === "preparing" && <ChefHat className="w-8 h-8 text-white animate-bounce" />}
               {status === "ready" && <Utensils className="w-8 h-8 text-white animate-pulse" />}
               {status === "served" && <Clock className="w-8 h-8 text-white" />}
+              {status === "cancelled" && <XCircle className="w-8 h-8 text-white" />}
               
-              <div className="absolute -inset-2 border-2 border-orange-500/30 rounded-full animate-ping opacity-20" />
+              {status !== 'cancelled' && (
+                <div className="absolute -inset-2 border-2 border-orange-500/30 rounded-full animate-ping opacity-20" />
+              )}
             </div>
           </div>
-          <h2 className="text-3xl font-black">{steps[currentStepIndex].label}</h2>
-          <p className="text-neutral-500 font-medium">{steps[currentStepIndex].description}</p>
+          <h2 className="text-3xl font-black">{status === 'cancelled' ? 'Cancelled' : steps[currentStepIndex].label}</h2>
+          <p className="text-neutral-500 font-medium">{status === 'cancelled' ? 'This order has been cancelled and will not be prepared.' : steps[currentStepIndex].description}</p>
         </div>
 
-        {/* Progress Timeline */}
-        <div className="relative pl-8 space-y-12 before:absolute before:left-[15px] before:top-2 before:bottom-2 before:w-[2px] before:bg-neutral-800">
-          {steps.map((step, idx) => {
-            const isCompleted = idx < currentStepIndex;
-            const isCurrent = idx === currentStepIndex;
-            const StepIcon = step.icon;
+        {status !== 'cancelled' && (
+          <div className="relative pl-8 space-y-12 before:absolute before:left-[15px] before:top-2 before:bottom-2 before:w-[2px] before:bg-neutral-800">
+            {steps.map((step, idx) => {
+              const isCompleted = idx < currentStepIndex;
+              const isCurrent = idx === currentStepIndex;
+              const StepIcon = step.icon;
 
-            return (
-              <div key={step.id} className="relative group">
-                <div className={`absolute -left-8 top-1.5 w-8 h-8 rounded-full z-10 flex items-center justify-center transition-all duration-500 border-4 border-black ${
-                  isCompleted ? "bg-orange-500" : isCurrent ? "bg-orange-500 animate-pulse" : "bg-neutral-900"
-                }`}>
-                  {isCompleted ? <Check className="w-4 h-4 text-white" /> : <div className={`w-2 h-2 rounded-full ${isCurrent ? "bg-white" : "bg-neutral-700"}`} />}
+              return (
+                <div key={step.id} className="relative group">
+                  <div className={`absolute -left-8 top-1.5 w-8 h-8 rounded-full z-10 flex items-center justify-center transition-all duration-500 border-4 border-black ${
+                    isCompleted ? "bg-orange-500" : isCurrent ? "bg-orange-500 animate-pulse" : "bg-neutral-900"
+                  }`}>
+                    {isCompleted ? <Check className="w-4 h-4 text-white" /> : <div className={`w-2 h-2 rounded-full ${isCurrent ? "bg-white" : "bg-neutral-700"}`} />}
+                  </div>
+                  <div className={`transition-all duration-300 ${isCurrent || isCompleted ? "opacity-100" : "opacity-30"}`}>
+                    <h3 className={`text-sm font-black ${isCurrent ? "text-orange-500" : "text-white"}`}>{step.label}</h3>
+                    <p className="text-[10px] text-neutral-500 font-medium uppercase tracking-tighter mt-0.5">{step.description}</p>
+                  </div>
                 </div>
-                <div className={`transition-all duration-300 ${isCurrent || isCompleted ? "opacity-100" : "opacity-30"}`}>
-                  <h3 className={`text-sm font-black ${isCurrent ? "text-orange-500" : "text-white"}`}>{step.label}</h3>
-                  <p className="text-[10px] text-neutral-500 font-medium uppercase tracking-tighter mt-0.5">{step.description}</p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
 
-        {/* Quick Help */}
         <div className="grid grid-cols-2 gap-4 pt-12">
-          <button className="flex items-center justify-center gap-2 p-5 glass rounded-[2rem] border border-neutral-800/50 text-xs font-black shadow-lg">
-            <Phone className="w-4 h-4 text-orange-500" />
-            Call Waiter
-          </button>
-          <button className="flex items-center justify-center gap-2 p-5 glass rounded-[2rem] border border-neutral-800/50 text-xs font-black shadow-lg">
-            <ArrowUpRight className="w-4 h-4 text-orange-500" />
-            Order More
-          </button>
+          {status === 'pending' ? (
+            <button 
+              disabled={cancelling}
+              onClick={() => setIsCancelModalOpen(true)}
+              className="col-span-2 flex items-center justify-center gap-2 p-5 bg-red-500/10 border border-red-500/20 rounded-[2rem] text-xs font-black text-red-500 shadow-lg hover:bg-red-500/20 transition-all uppercase tracking-widest"
+            >
+              <XCircle className="w-4 h-4" />
+              Cancel Order
+            </button>
+          ) : status === 'cancelled' ? (
+            <Link 
+              href="/menu"
+              className="col-span-2 flex items-center justify-center gap-2 p-5 bg-orange-500 border border-orange-600 rounded-[2rem] text-xs font-black text-black shadow-lg hover:bg-orange-600 transition-all uppercase tracking-widest"
+            >
+              Back to Menu
+            </Link>
+          ) : (
+            <>
+              <button className="flex items-center justify-center gap-2 p-5 glass rounded-[2rem] border border-neutral-800/50 text-xs font-black shadow-lg">
+                <Phone className="w-4 h-4 text-orange-500" />
+                Call Waiter
+              </button>
+              <button className="flex items-center justify-center gap-2 p-5 glass rounded-[2rem] border border-neutral-800/50 text-xs font-black shadow-lg">
+                <ArrowUpRight className="w-4 h-4 text-orange-500" />
+                Order More
+              </button>
+            </>
+          )}
         </div>
       </main>
 
@@ -141,6 +179,13 @@ export default function OrderStatusPage() {
           </div>
         </div>
       </footer>
+
+      <CancelConfirmationModal 
+        isOpen={isCancelModalOpen}
+        onClose={() => setIsCancelModalOpen(false)}
+        onConfirm={handleCancelOrder}
+        isLoading={cancelling}
+      />
     </div>
   );
 }

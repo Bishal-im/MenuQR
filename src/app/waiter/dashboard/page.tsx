@@ -29,8 +29,8 @@ export default function WaiterDashboard() {
   useEffect(() => {
     fetchOrders();
     
-    // In a real app, use SWR or React Query for polling
-    const interval = setInterval(fetchOrders, 30000);
+    // Polling for new orders/cancellations every 15 seconds
+    const interval = setInterval(fetchOrders, 15000);
     return () => clearInterval(interval);
   }, []);
 

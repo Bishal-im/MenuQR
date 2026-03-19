@@ -114,5 +114,29 @@ export async function getOrder(orderId: string) {
   };
 }
 
+export async function cancelOrder(orderId: string) {
+  await connectToDatabase();
+  
+  if (!mongoose.Types.ObjectId.isValid(orderId)) {
+    return { success: false, error: "Invalid Order ID" };
+  }
+
+  const order = await OrderModel.findById(orderId);
+  if (!order) {
+    return { success: false, error: "Order not found" };
+  }
+
+  if (order.status !== 'pending') {
+    return { success: false, error: "Cannot cancel order that has already been accepted or prepared." };
+  }
+
+  await OrderModel.findByIdAndUpdate(orderId, { 
+    status: 'cancelled',
+    updatedAt: new Date()
+  });
+
+  return { success: true };
+}
+
 // Server actions must only export async functions.
 // Types and interfaces are also allowed.
