@@ -19,18 +19,30 @@ export const metadata: Metadata = {
 };
 
 import { AuthProvider } from "@/context/AuthContext";
+import { getSession } from "@/services/authService";
+import { headers } from "next/headers";
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headersList = await headers();
+  const url = headersList.get('x-url') || '';
+  
+  let role: string | undefined = undefined;
+  if (url.includes('/admin')) role = 'admin';
+  else if (url.includes('/superadmin')) role = 'superadmin';
+  else if (url.includes('/waiter')) role = 'waiter';
+  
+  const session = await getSession(role);
+
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AuthProvider>
+        <AuthProvider initialSession={session}>
           <CartProvider>
             {children}
           </CartProvider>

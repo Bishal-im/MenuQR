@@ -85,7 +85,9 @@ export async function verifyOTP(email: string, otp: string) {
       const user = syncResult.user;
       const sessionToken = JSON.stringify(user);
       
-      (await cookies()).set("menu_qr_session", sessionToken, { 
+      const cookieName = `menu_qr_${user.role}_session`;
+      
+      (await cookies()).set(cookieName, sessionToken, { 
         httpOnly: true, 
         secure: process.env.NODE_ENV === "production",
         maxAge: 7 * 24 * 60 * 60, // 1 week
@@ -175,19 +177,36 @@ export async function syncUser(data: UserSyncData) {
   }
 }
 
-export async function getSession() {
-  const sessionCookie = (await cookies()).get("menu_qr_session");
-  if (!sessionCookie) return null;
+export async function getSession(role?: string) {
+  const cookieNames = role 
+    ? [`menu_qr_${role}_session`]
+    : ["menu_qr_admin_session", "menu_qr_superadmin_session", "menu_qr_waiter_session", "menu_qr_customer_session"];
 
-  try {
-    return JSON.parse(sessionCookie.value);
-  } catch {
-    return null;
+  const cookieStore = await cookies();
+  
+  for (const name of cookieNames) {
+    const sessionCookie = cookieStore.get(name);
+    if (sessionCookie) {
+      try {
+        return JSON.parse(sessionCookie.value);
+      } catch {
+        continue;
+      }
+    }
   }
+
+  return null;
 }
 
-export async function logout() {
-  (await cookies()).delete("menu_qr_session");
+export async function logout(role?: string) {
+  const cookieStore = await cookies();
+  if (role) {
+    cookieStore.delete(`menu_qr_${role}_session`);
+  } else {
+    ["admin", "superadmin", "waiter", "customer"].forEach(r => {
+      cookieStore.delete(`menu_qr_${r}_session`);
+    });
+  }
   return { success: true };
 }
 

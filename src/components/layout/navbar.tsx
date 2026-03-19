@@ -12,7 +12,7 @@ export function Navbar() {
   const router = useRouter();
 
   const handleLogout = async () => {
-    await logout();
+    await logout('admin');
     router.push("/admin/login");
   };
 

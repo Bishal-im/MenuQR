@@ -15,8 +15,8 @@ interface AuthUser {
 interface AuthContextType {
   user: AuthUser | null;
   loading: boolean;
-  logout: () => Promise<void>;
-  refreshUser: () => Promise<void>;
+  logout: (role?: string) => Promise<void>;
+  refreshUser: (role?: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -28,19 +28,25 @@ const AuthContext = createContext<AuthContextType>({
 
 export const useAuth = () => useContext(AuthContext);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [loading, setLoading] = useState(true);
+export const AuthProvider: React.FC<{ children: React.ReactNode; initialSession?: AuthUser | null }> = ({ 
+  children, 
+  initialSession = null 
+}) => {
+  const [user, setUser] = useState<AuthUser | null>(initialSession);
+  const [loading, setLoading] = useState(!initialSession);
 
-  const refreshUser = async () => {
+  const refreshUser = async (role?: string) => {
+    // If we already have a session from the server, we don't need to fetch it again on mount
+    // unless we want to force a refresh.
+    if (initialSession && loading && !role) {
+       setLoading(false);
+       return;
+    }
+
     setLoading(true);
     try {
-      const session = await getSession();
-      if (session) {
-        setUser(session as AuthUser);
-      } else {
-        setUser(null);
-      }
+      const session = await getSession(role);
+      setUser(session as AuthUser | null);
     } catch (error) {
       console.error("Error fetching session:", error);
       setUser(null);
@@ -50,11 +56,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    refreshUser();
-  }, []);
+    if (!initialSession) {
+      refreshUser();
+    } else {
+      setLoading(false);
+    }
+  }, [initialSession]);
 
-  const logout = async () => {
-    await apiLogout();
+  const logout = async (role?: string) => {
+    await apiLogout(role);
     setUser(null);
   };
 
