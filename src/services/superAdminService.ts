@@ -1,7 +1,7 @@
 "use server";
 
 import { connectToDatabase } from "@/lib/db";
-import { PlatformStatsModel, RestaurantModel, UserModel, OrderModel } from "@/models/Schemas";
+import { RestaurantModel, UserModel, OrderModel } from "@/models/Schemas";
 
 export interface PlatformStats {
   totalRestaurants: number;
@@ -39,18 +39,23 @@ import mongoose from "mongoose";
 
 export async function getStats(): Promise<PlatformStats> {
   await connectToDatabase();
-  const stats = await PlatformStatsModel.findOne();
+  const totalRestaurants = await RestaurantModel.countDocuments();
+  const totalOrders = await OrderModel.countDocuments();
+  
+  // You can implement more complex growth logic here if needed.
+  // For now, we'll return these counts.
+  
   return {
-    totalRestaurants: stats?.totalRestaurants || 0,
-    totalOrders: stats?.totalOrders || 0,
-    revenueGrowth: stats?.revenueGrowth || 0,
-    restaurantGrowth: stats?.restaurantGrowth || 0,
+    totalRestaurants,
+    totalOrders,
+    revenueGrowth: 0,
+    restaurantGrowth: 0,
   };
 }
 
 export async function getRestaurants(): Promise<Restaurant[]> {
   await connectToDatabase();
-  const restaurants = await RestaurantModel.find().lean();
+  const restaurants = await RestaurantModel.find().sort({ createdAt: -1 }).lean();
   return restaurants.map((r: any) => ({
     id: r._id.toString(),
     name: r.name,
@@ -59,7 +64,22 @@ export async function getRestaurants(): Promise<Restaurant[]> {
     phone: r.phone,
     address: r.address,
     status: r.status,
-    createdAt: r.createdAt.toISOString().split('T')[0],
+    createdAt: r.createdAt ? r.createdAt.toISOString().split('T')[0] : '',
+  }));
+}
+
+export async function getRecentSignups(limit: number = 5): Promise<Restaurant[]> {
+  await connectToDatabase();
+  const restaurants = await RestaurantModel.find().sort({ createdAt: -1 }).limit(limit).lean();
+  return restaurants.map((r: any) => ({
+    id: r._id.toString(),
+    name: r.name,
+    ownerName: r.ownerName,
+    email: r.email,
+    phone: r.phone,
+    address: r.address,
+    status: r.status,
+    createdAt: r.createdAt ? r.createdAt.toISOString() : '',
   }));
 }
 

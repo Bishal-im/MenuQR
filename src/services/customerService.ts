@@ -46,8 +46,8 @@ export async function getMenu(restaurantId: string) {
     restaurant = await RestaurantModel.findOne();
   }
 
-  const categories = await CategoryModel.find();
-  const menuItems = await MenuItemModel.find();
+  const categories = await CategoryModel.find({ restaurantId: restaurant?._id });
+  const menuItems = await MenuItemModel.find({ restaurantId: restaurant?._id });
 
   return {
     restaurantName: restaurant?.name || "The Grand Dhaba",
