@@ -70,7 +70,7 @@ function MenuContent() {
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mb-4" />
+        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
         <h2 className="text-xl font-bold text-white">Loading Menu...</h2>
         <p className="text-neutral-500 mt-2">Preparing fresh flavors for you</p>
       </div>
@@ -80,11 +80,11 @@ function MenuContent() {
   return (
     <div className="min-h-screen bg-black text-neutral-100 pb-32">
       {/* Header Section */}
-      <header className="p-6 pt-12 bg-gradient-to-b from-orange-500/20 to-transparent">
+      <header className="p-6 pt-12 bg-gradient-to-b from-primary/20 to-transparent">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-black text-white tracking-tight flex items-center gap-2">
-              <UtensilsCrossed className="w-8 h-8 text-orange-500" />
+              <UtensilsCrossed className="w-8 h-8 text-primary" />
               {restaurantName}
             </h1>
             <p className="text-neutral-500 text-sm font-medium flex items-center gap-1 mt-1">
@@ -97,7 +97,7 @@ function MenuContent() {
             </p>
           </div>
           <div className="w-12 h-12 rounded-full bg-neutral-900 border border-neutral-800 flex items-center justify-center shadow-2xl">
-            <Sparkles className="w-6 h-6 text-orange-400" />
+            <Sparkles className="w-6 h-6 text-primary" />
           </div>
         </div>
 
@@ -109,7 +109,7 @@ function MenuContent() {
             placeholder="Search for dishes..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-neutral-900/50 backdrop-blur-md border border-neutral-800 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none rounded-2xl py-4 pl-12 pr-4 text-white transition-all placeholder:text-neutral-600"
+            className="w-full bg-neutral-900/50 backdrop-blur-md border border-neutral-800 focus:border-primary focus:ring-1 focus:ring-primary outline-none rounded-2xl py-4 pl-12 pr-4 text-white transition-all placeholder:text-neutral-600"
           />
         </div>
       </header>
@@ -128,7 +128,7 @@ function MenuContent() {
           {activeCategory === "all" && !searchQuery && (
             <section>
               <h2 className="text-xl font-black text-white mb-6 flex items-center gap-2">
-                <Flame className="w-6 h-6 text-orange-500" />
+                <Flame className="w-6 h-6 text-primary" />
                 Popular Choice
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -177,7 +177,7 @@ export default function MenuPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-12 h-12 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-12 h-12 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     }>
       <MenuContent />

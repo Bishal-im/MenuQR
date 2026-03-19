@@ -1,0 +1,13 @@
+﻿[dotenv@17.3.1] injecting env (5) from .env -- tip: ΓÜÖ∩╕Å  specify custom .env file path with { path: '/custom/path/.env' }
+Current Platform Settings in DB: {
+  "_id": "69bbad3bc302784f005c9119",
+  "platformName": "MenuQR",
+  "primaryColor": "#22c55e",
+  "layout": "modern",
+  "platformFee": 0,
+  "currency": "INR",
+  "allowNewSignups": true,
+  "maintenanceMode": false,
+  "lastUpdated": "2026-03-19T08:00:59.945Z",
+  "__v": 0
+}

@@ -62,7 +62,7 @@ export default function ItemModal({ item, onClose }: ItemModalProps) {
               </span>
             )}
             {item.isPopular && (
-              <span className="px-3 py-1 bg-orange-500/90 backdrop-blur-md rounded-full text-[10px] font-black text-white uppercase tracking-tighter shadow-lg">
+              <span className="px-3 py-1 bg-primary/90 backdrop-blur-md rounded-full text-[10px] font-black text-white uppercase tracking-tighter shadow-lg">
                 🔥 Popular
               </span>
             )}
@@ -72,7 +72,7 @@ export default function ItemModal({ item, onClose }: ItemModalProps) {
         <div className="p-8">
           <div className="flex justify-between items-start mb-4">
             <h2 className="text-2xl font-black text-white">{item.name}</h2>
-            <p className="text-2xl font-black text-orange-500">₹{item.price}</p>
+            <p className="text-2xl font-black text-primary">₹{item.price}</p>
           </div>
           
           <p className="text-neutral-400 leading-relaxed mb-8">
@@ -100,7 +100,7 @@ export default function ItemModal({ item, onClose }: ItemModalProps) {
 
             <button 
               onClick={handleAddToCart}
-              className="flex-grow flex items-center justify-center gap-3 bg-orange-500 hover:bg-orange-600 active:scale-95 text-white py-4 px-6 rounded-2xl font-black text-lg transition-all shadow-xl shadow-orange-500/20"
+              className="flex-grow flex items-center justify-center gap-3 bg-primary hover:opacity-90 active:scale-95 text-white py-4 px-6 rounded-2xl font-black text-lg transition-all shadow-xl shadow-primary/20"
             >
               <ShoppingBag className="w-6 h-6" />
               Add to Cart

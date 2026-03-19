@@ -43,7 +43,7 @@ export default function SuperAdminSidebar() {
     <aside className="w-72 bg-neutral-900 border-r border-neutral-800 flex flex-col h-screen fixed left-0 top-0 z-50">
       <div className="p-8">
         <div className="flex items-center gap-3 px-2">
-          <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/20">
+          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
             <ShieldCheck className="text-white w-6 h-6" />
           </div>
           <div>
@@ -64,7 +64,7 @@ export default function SuperAdminSidebar() {
               href={item.href}
               className={`flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all duration-300 group ${
                 isActive 
-                  ? "bg-orange-500 text-white shadow-xl shadow-orange-500/20" 
+                  ? "bg-primary text-white shadow-xl shadow-primary/20" 
                   : "text-neutral-400 hover:bg-neutral-800 hover:text-white"
               }`}
             >

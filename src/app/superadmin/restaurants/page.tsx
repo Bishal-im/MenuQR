@@ -107,13 +107,13 @@ export default function RestaurantManagement() {
       {/* Filters & Actions */}
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between glass p-4 rounded-3xl border border-neutral-800/50">
         <div className="relative w-full md:w-96 group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 group-focus-within:text-orange-500 transition-colors" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 group-focus-within:text-primary transition-colors" />
           <input 
             type="text" 
             placeholder="Search by name, owner, or email..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-black/50 border border-neutral-800 rounded-xl py-3 pl-12 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-orange-500 transition-all"
+            className="w-full bg-black/50 border border-neutral-800 rounded-xl py-3 pl-12 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-primary transition-all"
           />
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto">
@@ -135,14 +135,14 @@ export default function RestaurantManagement() {
           ))
         ) : filteredRestaurants.length > 0 ? (
           filteredRestaurants.map((res) => (
-            <div key={res.id} className="glass p-8 rounded-[2rem] border border-neutral-800/50 hover:border-orange-500/30 transition-all group relative">
+            <div key={res.id} className="glass p-8 rounded-[2rem] border border-neutral-800/50 hover:border-primary/30 transition-all group relative">
               <div className="flex justify-between items-start mb-6">
                 <div className="flex items-center gap-5">
-                  <div className="w-16 h-16 bg-neutral-900 rounded-2xl flex items-center justify-center font-black text-2xl text-white border-2 border-neutral-800 shadow-xl group-hover:bg-orange-500 group-hover:border-orange-400 transition-all duration-500">
+                  <div className="w-16 h-16 bg-neutral-900 rounded-2xl flex items-center justify-center font-black text-2xl text-white border-2 border-neutral-800 shadow-xl group-hover:bg-primary group-hover:border-primary/80 transition-all duration-500">
                     {res.name.split(' ').map(w => w[0]).join('').substr(0, 2)}
                   </div>
                   <div>
-                    <h3 className="text-xl font-black text-white tracking-tight group-hover:text-orange-500 transition-colors mb-1">{res.name}</h3>
+                    <h3 className="text-xl font-black text-white tracking-tight group-hover:text-primary transition-colors mb-1">{res.name}</h3>
                     <div className="flex items-center gap-2 px-2.5 py-1 bg-neutral-900 border border-neutral-800 rounded-full w-fit">
                       <div className={`w-1.5 h-1.5 rounded-full ${res.status === 'active' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-neutral-600'}`} />
                       <span className={`text-[10px] font-black uppercase tracking-widest ${res.status === 'active' ? 'text-green-500' : 'text-neutral-500'}`}>
@@ -182,7 +182,7 @@ export default function RestaurantManagement() {
                   <Link 
                     href={`/menu?restaurantId=${res.id}`}
                     target="_blank"
-                    className="flex items-center gap-2 px-4 py-3 bg-neutral-900 border border-neutral-800 rounded-xl text-white font-black text-xs hover:bg-orange-500 hover:border-orange-400 transition-all"
+                    className="flex items-center gap-2 px-4 py-3 bg-neutral-900 border border-neutral-800 rounded-xl text-white font-black text-xs hover:bg-primary hover:border-primary/80 transition-all"
                   >
                     Control Panel <ExternalLink className="w-4 h-4" />
                   </Link>
@@ -193,7 +193,7 @@ export default function RestaurantManagement() {
         ) : (
           <div className="col-span-full py-20 text-center glass rounded-[2.5rem] border border-dashed border-neutral-800">
             <p className="text-neutral-600 font-bold mb-4">No restaurants found matching your criteria.</p>
-            <button className="text-orange-500 font-black uppercase tracking-widest text-xs">Clear Search</button>
+            <button className="text-primary font-black uppercase tracking-widest text-xs">Clear Search</button>
           </div>
         )}
       </div>

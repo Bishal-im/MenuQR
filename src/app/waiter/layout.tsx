@@ -36,7 +36,7 @@ export default function WaiterLayout({
   if (loading || !user || user.role !== 'waiter') {
     return (
       <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
-        <Loader2 className="w-12 h-12 text-orange-500 animate-spin" />
+        <Loader2 className="w-12 h-12 text-primary animate-spin" />
       </div>
     );
   }
@@ -46,7 +46,7 @@ export default function WaiterLayout({
       {/* Top Header */}
       <header className="h-16 bg-neutral-900 border-b border-neutral-800 flex items-center justify-between px-6 sticky top-0 z-50">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center shadow-lg shadow-orange-500/20">
+          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-lg shadow-primary/20">
             <UtensilsCrossed className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -93,12 +93,12 @@ export default function WaiterLayout({
         ].map((tab, i) => (
           <button 
             key={i} 
-            className={`flex flex-col items-center justify-center gap-1 group relative ${i === 0 ? "text-orange-500" : "text-neutral-500"}`}
+            className={`flex flex-col items-center justify-center gap-1 group relative ${i === 0 ? "text-primary" : "text-neutral-500"}`}
           >
             <tab.icon className="w-6 h-6 transition-transform group-active:scale-95" />
             <span className="text-[10px] font-black uppercase tracking-widest">{tab.label}</span>
             {tab.count !== undefined && tab.count > 0 && (
-              <span className={`absolute top-3 right-5 text-[10px] font-black px-1.5 py-0.5 rounded-full text-white ${tab.color === 'orange' ? 'bg-orange-500 shadow-lg shadow-orange-500/30' : 'bg-blue-500'}`}>
+              <span className={`absolute top-3 right-5 text-[10px] font-black px-1.5 py-0.5 rounded-full text-white ${tab.color === 'orange' ? 'bg-primary shadow-lg shadow-primary/30' : 'bg-blue-500'}`}>
                 {tab.count}
               </span>
             )}

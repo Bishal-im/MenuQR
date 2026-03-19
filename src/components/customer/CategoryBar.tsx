@@ -31,7 +31,7 @@ export default function CategoryBar({ categories, activeCategory, onSelect }: Ca
         onClick={() => onSelect("all")}
         className={`px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-300 ${
           activeCategory === "all"
-            ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
+            ? "bg-primary text-white shadow-lg shadow-primary/30"
             : "bg-neutral-900 text-neutral-400 hover:bg-neutral-800"
         }`}
       >
@@ -44,7 +44,7 @@ export default function CategoryBar({ categories, activeCategory, onSelect }: Ca
           onClick={() => onSelect(cat.id)}
           className={`px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-300 ${
             activeCategory === cat.id
-              ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
+              ? "bg-primary text-white shadow-lg shadow-primary/30"
               : "bg-neutral-900 text-neutral-400 hover:bg-neutral-800"
           }`}
         >

@@ -38,7 +38,7 @@ export default function MenuItem({ item, onShowDetails }: MenuItemProps) {
             </span>
             <h3 className="text-base font-bold text-white line-clamp-1">{item.name}</h3>
           </div>
-          <p className="text-orange-500 font-bold">₹{item.price}</p>
+          <p className="text-primary font-bold">₹{item.price}</p>
         </div>
         
         <p className="text-xs text-neutral-400 line-clamp-2 mt-1 mb-3 flex-grow">
@@ -47,21 +47,21 @@ export default function MenuItem({ item, onShowDetails }: MenuItemProps) {
 
         <div className="flex justify-end">
           {cartItem ? (
-            <div className="flex items-center gap-3 bg-orange-500/10 rounded-full px-2 py-1 border border-orange-500/20">
+            <div className="flex items-center gap-3 bg-primary/10 rounded-full px-2 py-1 border border-primary/20">
               <button
                 onClick={() => updateQuantity(item.id, cartItem.quantity - 1)}
-                className="p-1 hover:bg-orange-500/20 rounded-full transition-colors"
+                className="p-1 hover:bg-primary/20 rounded-full transition-colors"
                 aria-label="Decrease quantity"
               >
-                <Minus className="w-4 h-4 text-orange-500" />
+                <Minus className="w-4 h-4 text-primary" />
               </button>
               <span className="text-sm font-bold w-4 text-center">{cartItem.quantity}</span>
               <button
                 onClick={() => updateQuantity(item.id, cartItem.quantity + 1)}
-                className="p-1 hover:bg-orange-500/20 rounded-full transition-colors"
+                className="p-1 hover:bg-primary/20 rounded-full transition-colors"
                 aria-label="Increase quantity"
               >
-                <Plus className="w-4 h-4 text-orange-500" />
+                <Plus className="w-4 h-4 text-primary" />
               </button>
             </div>
           ) : (
@@ -75,7 +75,7 @@ export default function MenuItem({ item, onShowDetails }: MenuItemProps) {
                 isVeg: item.isVeg
               })}
               disabled={!item.isAvailable}
-              className="px-4 py-1.5 bg-orange-500 hover:bg-orange-600 disabled:bg-neutral-700 text-white rounded-full text-sm font-bold transition-all transform active:scale-95 shadow-lg shadow-orange-500/20"
+              className="px-4 py-1.5 bg-primary hover:opacity-90 disabled:bg-neutral-700 text-white rounded-full text-sm font-bold transition-all transform active:scale-95 shadow-lg shadow-primary/20"
             >
               {item.isAvailable ? 'Add' : 'Out of Stock'}
             </button>

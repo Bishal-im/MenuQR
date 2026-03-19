@@ -36,6 +36,7 @@ export interface Plan {
 export interface PlatformSettings {
   platformName: string;
   primaryColor: string;
+  fontFamily: string;
   layout: string;
   platformFee: number;
   currency: string;
@@ -47,6 +48,7 @@ export interface PlatformSettings {
 
 
 import mongoose from "mongoose";
+import { revalidatePath, unstable_noStore as noStore } from "next/cache";
 
 export async function getStats(): Promise<PlatformStats> {
   await connectToDatabase();
@@ -136,6 +138,7 @@ export async function getAnalytics() {
 }
 
 export async function getPlatformSettings(): Promise<PlatformSettings> {
+  noStore();
   await connectToDatabase();
   let settings = await PlatformSettingsModel.findOne().lean();
   
@@ -144,6 +147,7 @@ export async function getPlatformSettings(): Promise<PlatformSettings> {
     settings = await PlatformSettingsModel.create({
       platformName: "MenuQR",
       primaryColor: "#f97316",
+      fontFamily: "Geist Sans",
       layout: "modern",
       platformFee: 0,
       currency: "INR",
@@ -155,6 +159,7 @@ export async function getPlatformSettings(): Promise<PlatformSettings> {
   return {
     platformName: settings.platformName,
     primaryColor: settings.primaryColor,
+    fontFamily: settings.fontFamily || "Geist Sans",
     layout: settings.layout,
     platformFee: settings.platformFee,
     currency: settings.currency,
@@ -165,7 +170,8 @@ export async function getPlatformSettings(): Promise<PlatformSettings> {
 
 export async function updatePlatformSettings(data: Partial<PlatformSettings>) {
   await connectToDatabase();
-  await PlatformSettingsModel.findOneAndUpdate({}, data, { upsert: true });
+  await PlatformSettingsModel.findOneAndUpdate({}, { $set: data }, { upsert: true });
+  revalidatePath("/", "layout"); // Revalidate the whole layout to update CSS variables
   return { success: true };
 }
 

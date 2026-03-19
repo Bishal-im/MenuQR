@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { getPlatformSettings, updatePlatformSettings, PlatformSettings } from "@/services/superAdminService";
 import { 
   Palette, 
@@ -19,7 +20,9 @@ import {
 } from "lucide-react";
 
 export default function BrandingManagement() {
+  const router = useRouter();
   const [primaryColor, setPrimaryColor] = useState("#f97316"); // default orange
+  const [fontFamily, setFontFamily] = useState("Geist Sans");
   const [layout, setLayout] = useState("modern");
   const [previewDevice, setPreviewDevice] = useState<"mobile" | "desktop">("mobile");
   const [loading, setLoading] = useState(true);
@@ -29,19 +32,32 @@ export default function BrandingManagement() {
     const fetchSettings = async () => {
       const settings = await getPlatformSettings();
       setPrimaryColor(settings.primaryColor);
+      setFontFamily(settings.fontFamily || "Geist Sans");
       setLayout(settings.layout);
       setLoading(false);
     };
     fetchSettings();
   }, []);
 
+  const fontMap: Record<string, string> = {
+    "Geist Sans": "var(--font-geist-sans)",
+    "Inter": "var(--font-inter)",
+    "Outfit": "var(--font-outfit)",
+    "Roboto": "var(--font-roboto)",
+  };
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
       await updatePlatformSettings({
         primaryColor,
+        fontFamily,
         layout,
       });
+      // Immediately apply the CSS variables to the page
+      document.documentElement.style.setProperty("--primary", primaryColor);
+      document.documentElement.style.setProperty("--font-family", fontMap[fontFamily] || "var(--font-geist-sans)");
+      router.refresh();
       alert("Branding settings saved successfully!");
     } catch (error) {
       console.error("Failed to save branding:", error);
@@ -54,19 +70,29 @@ export default function BrandingManagement() {
   const handleReset = async () => {
     const settings = await getPlatformSettings();
     setPrimaryColor(settings.primaryColor);
+    setFontFamily(settings.fontFamily || "Geist Sans");
     setLayout(settings.layout);
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-10 h-10 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+        <Loader2 className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-10 max-w-7xl mx-auto pb-20">
+    <div 
+      className="space-y-10 max-w-7xl mx-auto pb-20"
+      style={{ 
+        '--primary': primaryColor,
+        '--font-family': fontFamily === "Geist Sans" ? "var(--font-geist-sans)" : 
+                         fontFamily === "Inter" ? "var(--font-inter)" :
+                         fontFamily === "Outfit" ? "var(--font-outfit)" :
+                         fontFamily === "Roboto" ? "var(--font-roboto)" : "var(--font-geist-sans)"
+      } as React.CSSProperties}
+    >
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
@@ -83,7 +109,7 @@ export default function BrandingManagement() {
           <button 
             onClick={handleSave}
             disabled={isSaving}
-            className="flex items-center justify-center gap-2 bg-orange-500 text-white px-8 py-3.5 rounded-2xl font-black text-xs shadow-xl shadow-orange-500/20 hover:bg-orange-600 transition-all group disabled:opacity-50"
+            className="flex items-center justify-center gap-2 bg-primary text-white px-8 py-3.5 rounded-2xl font-black text-xs shadow-xl shadow-primary/20 hover:opacity-90 transition-all group disabled:opacity-50"
           >
             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 group-hover:scale-110 transition-transform" />}
             {isSaving ? "Saving..." : "Save Changes"}
@@ -98,7 +124,7 @@ export default function BrandingManagement() {
           {/* Color Palettes */}
           <div className="glass p-8 rounded-[2.5rem] border border-neutral-800/50">
             <h3 className="text-sm font-black text-white uppercase tracking-widest mb-6 flex items-center gap-2">
-              <Palette className="w-4 h-4 text-orange-500" /> Primary Design System
+              <Palette className="w-4 h-4 text-primary" /> Primary Design System
             </h3>
             <div className="grid grid-cols-5 gap-4 mb-8">
               {[
@@ -127,7 +153,7 @@ export default function BrandingManagement() {
                   type="text" 
                   value={primaryColor}
                   onChange={(e) => setPrimaryColor(e.target.value)}
-                  className="bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm font-black text-white outline-none focus:border-orange-500 transition-all flex-grow"
+                  className="bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm font-black text-white outline-none focus:border-primary transition-all flex-grow"
                 />
                 <div className="w-12 h-12 rounded-xl border border-neutral-800" style={{ backgroundColor: primaryColor }} />
               </div>
@@ -137,7 +163,7 @@ export default function BrandingManagement() {
           {/* Layout Selection */}
           <div className="glass p-8 rounded-[2.5rem] border border-neutral-800/50">
             <h3 className="text-sm font-black text-white uppercase tracking-widest mb-6 flex items-center gap-2">
-              <Layout className="w-4 h-4 text-orange-500" /> UI Layout Presets
+              <Layout className="w-4 h-4 text-primary" /> UI Layout Presets
             </h3>
             <div className="space-y-4">
               {[
@@ -150,12 +176,12 @@ export default function BrandingManagement() {
                   onClick={() => setLayout(item.id)}
                   className={`w-full flex items-center justify-between p-5 rounded-3xl border transition-all ${
                     layout === item.id 
-                      ? "bg-orange-500/10 border-orange-500 outline-none" 
+                      ? "bg-primary/10 border-primary outline-none" 
                       : "bg-neutral-900/50 border-neutral-800 hover:border-neutral-700"
                   }`}
                 >
                   <div className="flex items-center gap-4 text-left">
-                    <div className={`p-3 rounded-2xl ${layout === item.id ? 'bg-orange-500 text-white' : 'bg-neutral-800 text-neutral-500'}`}>
+                    <div className={`p-3 rounded-2xl ${layout === item.id ? 'bg-primary text-white' : 'bg-neutral-800 text-neutral-500'}`}>
                       <item.icon className="w-5 h-5" />
                     </div>
                     <div>
@@ -163,7 +189,7 @@ export default function BrandingManagement() {
                       <p className="text-[10px] text-neutral-500 font-medium">{item.desc}</p>
                     </div>
                   </div>
-                  {layout === item.id && <div className="w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)]" />}
+                  {layout === item.id && <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(249,115,22,0.8)]" />}
                 </button>
               ))}
             </div>
@@ -172,13 +198,28 @@ export default function BrandingManagement() {
           {/* Typography */}
           <div className="glass p-8 rounded-[2.5rem] border border-neutral-800/50">
             <h3 className="text-sm font-black text-white uppercase tracking-widest mb-6 flex items-center gap-2">
-              <Type className="w-4 h-4 text-orange-500" /> Typography
+              <Type className="w-4 h-4 text-primary" /> Typography
             </h3>
             <div className="grid grid-cols-2 gap-4 text-xs font-black">
-              <button className="p-4 bg-white text-black rounded-2xl shadow-xl">Geist Sans</button>
-              <button className="p-4 bg-neutral-900 text-white rounded-2xl border border-neutral-800 hover:bg-neutral-800 transition-all">Inter</button>
-              <button className="p-4 bg-neutral-900 text-white rounded-2xl border border-neutral-800 hover:bg-neutral-800 transition-all">Outfit</button>
-              <button className="p-4 bg-neutral-900 text-white rounded-2xl border border-neutral-800 hover:bg-neutral-800 transition-all">Roboto</button>
+              {[
+                { name: "Geist Sans", variable: "var(--font-geist-sans)" },
+                { name: "Inter", variable: "var(--font-inter)" },
+                { name: "Outfit", variable: "var(--font-outfit)" },
+                { name: "Roboto", variable: "var(--font-roboto)" },
+              ].map((font) => (
+                <button
+                  key={font.name}
+                  onClick={() => setFontFamily(font.name)}
+                  className={`p-4 rounded-2xl border transition-all ${
+                    fontFamily === font.name
+                      ? "bg-white text-black shadow-xl"
+                      : "bg-neutral-900 text-white border-neutral-800 hover:bg-neutral-800"
+                  }`}
+                  style={{ fontFamily: font.variable }}
+                >
+                  {font.name}
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -188,18 +229,18 @@ export default function BrandingManagement() {
           <div className="glass rounded-[3.5rem] border border-neutral-800/50 p-10 h-full min-h-[600px] flex flex-col items-center">
             <div className="flex items-center justify-between w-full mb-12">
               <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
-                <Eye className="w-4 h-4 text-orange-500" /> Live Interface Preview
+                <Eye className="w-4 h-4 text-primary" /> Live Interface Preview
               </h3>
               <div className="flex p-1.5 bg-neutral-900 rounded-2xl border border-neutral-800">
                 <button 
                   onClick={() => setPreviewDevice("mobile")}
-                  className={`p-2.5 rounded-xl transition-all ${previewDevice === 'mobile' ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20' : 'text-neutral-500 hover:text-white'}`}
+                  className={`p-2.5 rounded-xl transition-all ${previewDevice === 'mobile' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-neutral-500 hover:text-white'}`}
                 >
                   <Smartphone className="w-4 h-4" />
                 </button>
                 <button 
                   onClick={() => setPreviewDevice("desktop")}
-                  className={`p-2.5 rounded-xl transition-all ${previewDevice === 'desktop' ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20' : 'text-neutral-500 hover:text-white'}`}
+                  className={`p-2.5 rounded-xl transition-all ${previewDevice === 'desktop' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-neutral-500 hover:text-white'}`}
                 >
                   <Monitor className="w-4 h-4" />
                 </button>
@@ -236,7 +277,7 @@ export default function BrandingManagement() {
                 </div>
 
                 <button 
-                  className="w-full py-4 rounded-2xl text-xs font-black text-white shadow-xl shadow-orange-500/10 transition-all"
+                  className="w-full py-4 rounded-2xl text-xs font-black text-white shadow-xl shadow-primary/10 transition-all"
                   style={{ backgroundColor: primaryColor }}
                 >
                   CONTINUE ORDER

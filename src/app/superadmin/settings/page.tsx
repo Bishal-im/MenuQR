@@ -55,7 +55,7 @@ export default function PlatformSettings() {
   if (loading || !settings) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-10 h-10 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+        <Loader2 className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -93,7 +93,7 @@ export default function PlatformSettings() {
               key={i}
               className={`w-full flex items-center justify-between px-6 py-4 rounded-2xl transition-all ${
                 item.active 
-                  ? "bg-orange-500/10 border border-orange-500/20 text-orange-500 shadow-lg shadow-orange-500/10" 
+                  ? "bg-primary/10 border border-primary/20 text-primary shadow-lg shadow-primary/10" 
                   : "text-neutral-500 hover:text-neutral-300 hover:bg-neutral-900 border border-transparent"
               }`}
             >
@@ -101,7 +101,7 @@ export default function PlatformSettings() {
                 <item.icon className="w-5 h-5" />
                 <span className="text-sm font-black tracking-tight">{item.label}</span>
               </div>
-              {item.active && <div className="w-2 h-2 bg-orange-500 rounded-full" />}
+              {item.active && <div className="w-2 h-2 bg-primary rounded-full" />}
             </button>
           ))}
         </div>
@@ -119,7 +119,7 @@ export default function PlatformSettings() {
                     type="text" 
                     value={settings.platformName}
                     onChange={(e) => updateSetting('platformName', e.target.value)}
-                    className="bg-neutral-950 border border-neutral-900 rounded-2xl px-6 py-4 text-base font-bold text-white outline-none focus:border-orange-500 transition-all"
+                    className="bg-neutral-950 border border-neutral-900 rounded-2xl px-6 py-4 text-base font-bold text-white outline-none focus:border-primary transition-all"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-6">
@@ -129,7 +129,7 @@ export default function PlatformSettings() {
                       type="number" 
                       value={settings.platformFee}
                       onChange={(e) => updateSetting('platformFee', parseFloat(e.target.value))}
-                      className="bg-neutral-950 border border-neutral-900 rounded-2xl px-6 py-4 text-base font-bold text-white outline-none focus:border-orange-500 transition-all"
+                      className="bg-neutral-950 border border-neutral-900 rounded-2xl px-6 py-4 text-base font-bold text-white outline-none focus:border-primary transition-all"
                     />
                   </div>
                   <div className="flex flex-col gap-2">
@@ -138,7 +138,7 @@ export default function PlatformSettings() {
                       type="text" 
                       value={settings.currency}
                       onChange={(e) => updateSetting('currency', e.target.value)}
-                      className="bg-neutral-950 border border-neutral-900 rounded-2xl px-6 py-4 text-base font-bold text-white outline-none focus:border-orange-500 transition-all"
+                      className="bg-neutral-950 border border-neutral-900 rounded-2xl px-6 py-4 text-base font-bold text-white outline-none focus:border-primary transition-all"
                     />
                   </div>
                 </div>
@@ -162,7 +162,7 @@ export default function PlatformSettings() {
                     </div>
                     <button 
                       onClick={() => item.key && updateSetting(item.key as any, !item.status)}
-                      className={`w-14 h-8 rounded-full relative transition-all duration-500 ${item.status ? 'bg-orange-500' : 'bg-neutral-800'}`}
+                      className={`w-14 h-8 rounded-full relative transition-all duration-500 ${item.status ? 'bg-primary' : 'bg-neutral-800'}`}
                     >
                       <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all duration-500 ${item.status ? 'left-7 shadow-lg' : 'left-1'}`} />
                     </button>

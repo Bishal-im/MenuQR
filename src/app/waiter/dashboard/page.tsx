@@ -63,13 +63,13 @@ export default function WaiterDashboard() {
       <div className="p-6 bg-neutral-900/50 border-b border-neutral-800 flex flex-col md:flex-row gap-6 items-center justify-between">
         <div className="flex items-center gap-4 w-full md:w-auto">
           <div className="relative flex-grow md:w-64 group">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 group-focus-within:text-orange-500 transition-colors" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 group-focus-within:text-primary transition-colors" />
             <input 
               type="text" 
               placeholder="Table # or Order ID"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-black/50 border border-neutral-800 rounded-xl py-2.5 pl-10 pr-4 text-sm font-bold focus:outline-none focus:ring-1 focus:ring-orange-500"
+              className="w-full bg-black/50 border border-neutral-800 rounded-xl py-2.5 pl-10 pr-4 text-sm font-bold focus:outline-none focus:ring-1 focus:ring-primary"
             />
           </div>
           <button className="p-2.5 bg-neutral-900 border border-neutral-800 rounded-xl text-neutral-500 hover:text-white transition-all">
@@ -90,7 +90,7 @@ export default function WaiterDashboard() {
               onClick={() => setActiveTab(tab.value as any)}
               className={`flex-grow md:flex-initial px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap ${
                 activeTab === tab.value 
-                  ? "bg-orange-500 text-white shadow-xl shadow-orange-500/20 scale-105" 
+                  ? "bg-primary text-white shadow-xl shadow-primary/20 scale-105" 
                   : "text-neutral-500 hover:text-neutral-300"
               }`}
             >
@@ -104,7 +104,7 @@ export default function WaiterDashboard() {
 
         <button 
           onClick={() => { setLoading(true); fetchOrders(); }}
-          className="p-2.5 bg-orange-500/5 text-orange-500 hover:bg-orange-500/10 rounded-xl border border-orange-500/10 transition-all flex items-center gap-2 group"
+          className="p-2.5 bg-primary/5 text-primary hover:bg-primary/10 rounded-xl border border-primary/10 transition-all flex items-center gap-2 group"
         >
           <RefreshCcw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
           <span className="text-[10px] font-black uppercase">Refresh</span>
@@ -112,7 +112,7 @@ export default function WaiterDashboard() {
       </div>
 
       {/* Orders View */}
-      <div className="flex-grow p-6 overflow-y-auto custom-scrollbar bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-orange-500/5 via-transparent to-transparent">
+      <div className="flex-grow p-6 overflow-y-auto custom-scrollbar bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent">
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map(i => <div key={i} className="h-80 glass rounded-[2rem] border border-neutral-800/50 animate-pulse" />)}

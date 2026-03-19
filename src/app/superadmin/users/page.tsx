@@ -35,7 +35,7 @@ export default function UserManagement() {
   const getRoleColor = (role: string) => {
     switch (role) {
       case 'superadmin': return 'text-purple-500 bg-purple-500/10 border-purple-500/20';
-      case 'admin': return 'text-orange-500 bg-orange-500/10 border-orange-500/20';
+      case 'admin': return 'text-primary bg-primary/10 border-primary/20';
       case 'waiter': return 'text-blue-500 bg-blue-500/10 border-blue-500/20';
       default: return 'text-neutral-500 bg-neutral-500/10 border-neutral-500/20';
     }
@@ -54,13 +54,13 @@ export default function UserManagement() {
       {/* Filters & Search */}
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between glass p-4 rounded-3xl border border-neutral-800/50">
         <div className="relative w-full md:w-96 group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 group-focus-within:text-orange-500 transition-colors" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 group-focus-within:text-primary transition-colors" />
           <input 
             type="text" 
             placeholder="Search by name, email, or role..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-black/50 border border-neutral-800 rounded-xl py-3 pl-12 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-orange-500 transition-all"
+            className="w-full bg-black/50 border border-neutral-800 rounded-xl py-3 pl-12 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-primary transition-all"
           />
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto">
@@ -95,7 +95,7 @@ export default function UserManagement() {
                   <tr key={user.id} className="hover:bg-white/[0.02] transition-colors group">
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-neutral-800 rounded-xl flex items-center justify-center text-orange-500 border border-neutral-700 font-bold group-hover:bg-orange-500 group-hover:text-white transition-all">
+                        <div className="w-10 h-10 bg-neutral-800 rounded-xl flex items-center justify-center text-primary border border-neutral-700 font-bold group-hover:bg-primary group-hover:text-white transition-all">
                           {user.name ? user.name[0].toUpperCase() : <UserIcon className="w-5 h-5" />}
                         </div>
                         <div className="flex flex-col">

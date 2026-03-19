@@ -30,7 +30,7 @@ export default function OrderCard({ order, onStatusUpdate }: OrderCardProps) {
 
   const getStatusColor = () => {
     switch (order.status) {
-      case 'pending': return 'bg-orange-500';
+      case 'pending': return 'bg-primary';
       case 'preparing': return 'bg-blue-500';
       case 'ready': return 'bg-green-500';
       case 'completed': return 'bg-neutral-500';
@@ -42,7 +42,7 @@ export default function OrderCard({ order, onStatusUpdate }: OrderCardProps) {
   return (
     <div className={`p-6 rounded-[2rem] border transition-all duration-500 relative overflow-hidden group ${
       isNew 
-        ? "bg-orange-500/5 border-orange-500/50 shadow-2xl shadow-orange-500/10 animate-in fade-in" 
+        ? "bg-primary/5 border-primary/50 shadow-2xl shadow-primary/10 animate-in fade-in" 
         : isHistory 
           ? "bg-neutral-900 border-neutral-800/50 opacity-80"
           : "bg-neutral-900 border-neutral-800 hover:border-neutral-700 shadow-xl"
@@ -50,7 +50,7 @@ export default function OrderCard({ order, onStatusUpdate }: OrderCardProps) {
       {/* Table Badge */}
       <div className="flex justify-between items-start mb-6">
         <div className="flex items-center gap-4">
-          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-black text-2xl text-white border-2 border-neutral-800 transition-all ${isNew ? 'bg-orange-500 border-orange-400 scale-105' : 'bg-neutral-950'}`}>
+          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-black text-2xl text-white border-2 border-neutral-800 transition-all ${isNew ? 'bg-primary border-primary/70 scale-105' : 'bg-neutral-950'}`}>
             {order.tableId}
           </div>
           <div>
@@ -94,7 +94,7 @@ export default function OrderCard({ order, onStatusUpdate }: OrderCardProps) {
           <>
             <button 
               onClick={() => onStatusUpdate(order.id, 'preparing')}
-              className="flex-grow flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 active:scale-95 text-white py-4 rounded-2xl font-black text-sm shadow-xl shadow-orange-500/20 transition-all"
+              className="flex-grow flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 active:scale-95 text-white py-4 rounded-2xl font-black text-sm shadow-xl shadow-primary/20 transition-all"
             >
               <Check className="w-5 h-5" /> Accept Order
             </button>

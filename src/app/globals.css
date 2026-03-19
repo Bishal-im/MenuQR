@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
-@theme {
+@theme inline {
   --color-background: #0a0a0b;
   --color-foreground: #fafafa;
-  --color-primary: #f59e0b;
+  --color-primary: var(--primary, #f97316);
   --color-secondary: #262626;
   --color-muted: #737373;
   --color-card: #141415;
@@ -21,7 +21,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans);
+  font-family: var(--font-family, var(--font-geist-sans));
 }
 
 @layer utilities {

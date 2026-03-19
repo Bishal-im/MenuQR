@@ -37,7 +37,7 @@ export default function SuperAdminDashboard() {
 
   if (loading) return (
     <div className="flex items-center justify-center h-full">
-      <div className="w-10 h-10 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+      <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin" />
     </div>
   );
 
@@ -74,7 +74,7 @@ export default function SuperAdminDashboard() {
         </div>
         <button 
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 active:scale-95 text-white px-6 py-3.5 rounded-2xl font-black text-sm shadow-xl shadow-orange-500/20 transition-all group"
+          className="flex items-center gap-2 bg-primary hover:opacity-90 active:scale-95 text-white px-6 py-3.5 rounded-2xl font-black text-sm shadow-xl shadow-primary/20 transition-all group"
         >
           <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform" />
           Onboard Restaurant
@@ -84,10 +84,10 @@ export default function SuperAdminDashboard() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
         {CARDS.map((card, i) => (
-          <div key={i} className="glass p-8 rounded-[2rem] border border-neutral-800/50 hover:border-orange-500/30 transition-all group relative overflow-hidden h-full flex flex-col justify-between">
+          <div key={i} className="glass p-8 rounded-[2rem] border border-neutral-800/50 hover:border-primary/30 transition-all group relative overflow-hidden h-full flex flex-col justify-between">
             <div className="flex justify-between items-start mb-4">
-              <div className={`p-4 rounded-2xl bg-neutral-900 border border-neutral-800 group-hover:bg-orange-500/10 transition-colors`}>
-                <card.icon className="w-6 h-6 text-orange-500" />
+              <div className={`p-4 rounded-2xl bg-neutral-900 border border-neutral-800 group-hover:bg-primary/10 transition-colors`}>
+                <card.icon className="w-6 h-6 text-primary" />
               </div>
               <div className={`flex items-center gap-1 text-xs font-black ${card.growth.startsWith('+') ? 'text-green-500' : 'text-red-500'}`}>
                 {card.growth.startsWith('+') ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
@@ -99,7 +99,7 @@ export default function SuperAdminDashboard() {
               <h3 className="text-3xl font-black text-white leading-none">{card.value}</h3>
             </div>
             {/* Sub decoration */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
         ))}
       </div>
@@ -111,7 +111,7 @@ export default function SuperAdminDashboard() {
             <h2 className="text-xl font-black text-white tracking-tight">Recent Signups</h2>
             <button 
               onClick={() => router.push('/superadmin/restaurants')}
-              className="text-xs font-black text-orange-500 uppercase tracking-widest hover:text-orange-400 transition-colors flex items-center gap-1"
+              className="text-xs font-black text-primary uppercase tracking-widest hover:opacity-80 transition-colors flex items-center gap-1"
             >
               View All <ArrowUpRight className="w-3 h-3" />
             </button>
@@ -126,11 +126,11 @@ export default function SuperAdminDashboard() {
                   className="flex items-center justify-between p-5 rounded-3xl hover:bg-neutral-900/50 border border-transparent hover:border-neutral-800/50 transition-all group cursor-pointer"
                 >
                   <div className="flex items-center gap-5">
-                    <div className="w-14 h-14 bg-neutral-950 rounded-2xl flex items-center justify-center font-black text-lg text-white border border-neutral-800 shadow-md group-hover:bg-orange-500 group-hover:border-orange-400 transition-all duration-300">
+                    <div className="w-14 h-14 bg-neutral-950 rounded-2xl flex items-center justify-center font-black text-lg text-white border border-neutral-800 shadow-md group-hover:bg-primary group-hover:border-primary/80 transition-all duration-300">
                       {res.name.split(' ').map(w => w[0]).join('').substr(0, 2)}
                     </div>
                     <div>
-                      <h4 className="text-base font-bold text-white tracking-tight group-hover:text-orange-500 transition-colors">
+                      <h4 className="text-base font-bold text-white tracking-tight group-hover:text-primary transition-colors">
                         {res.name}
                       </h4>
                       <p className="text-xs text-neutral-500 font-medium mt-0.5">
@@ -144,7 +144,7 @@ export default function SuperAdminDashboard() {
                         {res.status}
                       </p>
                     </div>
-                    <div className="w-12 h-12 bg-neutral-900 rounded-2xl flex items-center justify-center text-neutral-400 group-hover:text-orange-500 transition-colors">
+                    <div className="w-12 h-12 bg-neutral-900 rounded-2xl flex items-center justify-center text-neutral-400 group-hover:text-primary transition-colors">
                       <ExternalLink className="w-5 h-5" />
                     </div>
                   </div>
