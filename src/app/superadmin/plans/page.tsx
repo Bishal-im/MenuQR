@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { getPlans, Plan } from "@/services/superAdminService";
@@ -47,7 +47,7 @@ export default function PlansManagement() {
           <h1 className="text-5xl font-black text-white tracking-tighter leading-none mb-4">Pricing Plans</h1>
           <p className="text-neutral-500 text-lg font-medium">Define and manage subscription packages for the platform.</p>
         </div>
-        <button className="flex items-center justify-center gap-3 bg-orange-500 text-white hover:bg-orange-600 active:scale-95 px-8 py-4 rounded-[2rem] font-black text-sm shadow-2xl shadow-orange-500/30 transition-all group">
+        <button className="flex items-center justify-center gap-3 bg-primary text-white hover:bg-primary/90 active:scale-95 px-8 py-4 rounded-[2rem] font-black text-sm shadow-2xl shadow-primary/30 transition-all group">
           <Plus className="w-6 h-6 group-hover:rotate-90 transition-transform" />
           Create New Plan
         </button>
@@ -58,11 +58,11 @@ export default function PlansManagement() {
         {loading ? (
           [1, 2].map(i => <div key={i} className="h-[500px] glass rounded-[3rem] border border-neutral-800/50 animate-pulse" />)
         ) : plans.map((plan) => (
-          <div key={plan.id} className="glass p-10 rounded-[3rem] border border-neutral-800/50 hover:border-orange-500/30 transition-all group flex flex-col relative overflow-hidden">
+          <div key={plan.id} className="glass p-10 rounded-[3rem] border border-neutral-800/50 hover:border-primary/30 transition-all group flex flex-col relative overflow-hidden">
             {/* Header */}
             <div className="flex justify-between items-start mb-10">
               <div>
-                <h3 className="text-3xl font-black text-white tracking-tight mb-2 group-hover:text-orange-500 transition-colors uppercase">{plan.name}</h3>
+                <h3 className="text-3xl font-black text-white tracking-tight mb-2 group-hover:text-primary transition-colors uppercase">{plan.name}</h3>
                 <p className="text-neutral-500 font-medium">Platform License Plan</p>
               </div>
               <div className="text-right">
@@ -73,11 +73,11 @@ export default function PlansManagement() {
 
             {/* Features List */}
             <div className="space-y-6 mb-12 flex-grow">
-              <p className="text-[10px] text-orange-500 font-black uppercase tracking-widest border-b border-orange-500/10 pb-2">Includes Features</p>
+              <p className="text-[10px] text-primary font-black uppercase tracking-widest border-b border-primary/10 pb-2">Includes Features</p>
               {plan.features.map((feature: string, i: number) => (
                 <div key={i} className="flex items-center gap-4 group/item">
-                  <div className="w-6 h-6 rounded-full bg-orange-500/10 flex items-center justify-center border border-orange-500/20 group-hover/item:bg-orange-500 transition-all">
-                    <Check className="w-3.5 h-3.5 text-orange-500 group-hover/item:text-white" />
+                  <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 group-hover/item:bg-primary transition-all">
+                    <Check className="w-3.5 h-3.5 text-primary group-hover/item:text-white" />
                   </div>
                   <span className="text-neutral-400 font-medium text-sm group-hover/item:text-white transition-colors">{feature}</span>
                 </div>
@@ -96,13 +96,13 @@ export default function PlansManagement() {
                 <p className="text-[10px] text-neutral-500 font-black uppercase tracking-widest">Menu Items</p>
                 <p className="text-xl font-black text-white">{plan.maxMenuItems}+</p>
               </div>
-              <div className={`p-6 rounded-3xl border transition-all ${plan.hasAnalytics ? 'bg-orange-500/5 border-orange-500/20' : 'bg-neutral-950 border-neutral-800 opacity-50'}`}>
-                <PieChart className={`w-6 h-6 mb-3 ${plan.hasAnalytics ? 'text-orange-500' : 'text-neutral-600'}`} />
+              <div className={`p-6 rounded-3xl border transition-all ${plan.hasAnalytics ? 'bg-primary/5 border-primary/20' : 'bg-neutral-950 border-neutral-800 opacity-50'}`}>
+                <PieChart className={`w-6 h-6 mb-3 ${plan.hasAnalytics ? 'text-primary' : 'text-neutral-600'}`} />
                 <p className="text-[10px] text-neutral-500 font-black uppercase tracking-widest">Analytics</p>
                 <p className="text-sm font-black text-white">{plan.hasAnalytics ? 'Enabled' : 'Disabled'}</p>
               </div>
-              <div className={`p-6 rounded-3xl border transition-all ${plan.hasBranding ? 'bg-orange-500/5 border-orange-500/20' : 'bg-neutral-950 border-neutral-800 opacity-50'}`}>
-                <Palette className={`w-6 h-6 mb-3 ${plan.hasBranding ? 'text-orange-500' : 'text-neutral-600'}`} />
+              <div className={`p-6 rounded-3xl border transition-all ${plan.hasBranding ? 'bg-primary/5 border-primary/20' : 'bg-neutral-950 border-neutral-800 opacity-50'}`}>
+                <Palette className={`w-6 h-6 mb-3 ${plan.hasBranding ? 'text-primary' : 'text-neutral-600'}`} />
                 <p className="text-[10px] text-neutral-500 font-black uppercase tracking-widest">Branding</p>
                 <p className="text-sm font-black text-white">{plan.hasBranding ? 'Enabled' : 'Disabled'}</p>
               </div>
@@ -124,13 +124,13 @@ export default function PlansManagement() {
             {/* Highlight for Pro */}
             {plan.id === 'p2' && (
               <div className="absolute -top-1 -right-1">
-                <div className="bg-orange-500 text-white text-[10px] font-black uppercase tracking-widest px-8 py-2 rotate-45 translate-x-3 translate-y-2 shadow-xl">
+                <div className="bg-primary text-white text-[10px] font-black uppercase tracking-widest px-8 py-2 rotate-45 translate-x-3 translate-y-2 shadow-xl">
                   Most Popular
                 </div>
               </div>
             )}
             
-            <div className="absolute -bottom-8 -right-8 w-64 h-64 bg-orange-500/5 rounded-full blur-[80px] opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="absolute -bottom-8 -right-8 w-64 h-64 bg-primary/5 rounded-full blur-[80px] opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
         ))}
       </div>
@@ -144,7 +144,7 @@ export default function PlansManagement() {
       />
 
       {/* Pro Help */}
-      <div className="glass p-12 rounded-[3.5rem] border border-orange-500/10 bg-gradient-to-tr from-orange-500/10 via-transparent to-transparent flex flex-col md:flex-row items-center justify-between gap-8 group">
+      <div className="glass p-12 rounded-[3.5rem] border border-primary/10 bg-gradient-to-tr from-primary/10 via-transparent to-transparent flex flex-col md:flex-row items-center justify-between gap-8 group">
         <div className="text-center md:text-left">
           <h2 className="text-3xl font-black text-white tracking-tight mb-2">Need a custom enterprise plan?</h2>
           <p className="text-neutral-500 font-medium">Contact our architects to build a solution for large restaurant chains.</p>

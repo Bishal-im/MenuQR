@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { X, Loader2, Store, User, Mail, Phone, MapPin, Globe } from "lucide-react";
@@ -52,7 +52,7 @@ export default function RestaurantModal({ isOpen, onClose, onSuccess }: Restaura
       <div className="bg-neutral-900 border border-neutral-800 w-full max-w-2xl rounded-[2.5rem] overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300">
         <div className="p-8 border-b border-neutral-800 flex justify-between items-center bg-neutral-900/50">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-orange-500 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/20">
+            <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20">
               <Store className="text-white w-6 h-6" />
             </div>
             <div>
@@ -71,23 +71,23 @@ export default function RestaurantModal({ isOpen, onClose, onSuccess }: Restaura
             <div className="space-y-4">
               <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-500 ml-1">Restaurant Details</label>
               <div className="relative group">
-                <Store className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 group-focus-within:text-orange-500 transition-colors" />
+                <Store className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 group-focus-within:text-primary transition-colors" />
                 <input 
                   type="text" 
                   placeholder="Restaurant Name"
                   required
-                  className="w-full bg-black/50 border border-neutral-800 focus:border-orange-500 text-white rounded-xl py-3 pl-12 pr-4 outline-none transition-all text-sm font-medium"
+                  className="w-full bg-black/50 border border-neutral-800 focus:border-primary text-white rounded-xl py-3 pl-12 pr-4 outline-none transition-all text-sm font-medium"
                   value={formData.name}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
                 />
               </div>
               <div className="relative group">
-                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 group-focus-within:text-orange-500 transition-colors" />
+                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 group-focus-within:text-primary transition-colors" />
                 <input 
                   type="text" 
                   placeholder="Full Address"
                   required
-                  className="w-full bg-black/50 border border-neutral-800 focus:border-orange-500 text-white rounded-xl py-3 pl-12 pr-4 outline-none transition-all text-sm font-medium"
+                  className="w-full bg-black/50 border border-neutral-800 focus:border-primary text-white rounded-xl py-3 pl-12 pr-4 outline-none transition-all text-sm font-medium"
                   value={formData.address}
                   onChange={(e) => setFormData({...formData, address: e.target.value})}
                 />
@@ -98,34 +98,34 @@ export default function RestaurantModal({ isOpen, onClose, onSuccess }: Restaura
             <div className="space-y-4">
               <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-500 ml-1">Owner Information (Whitelist)</label>
               <div className="relative group">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 group-focus-within:text-orange-500 transition-colors" />
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 group-focus-within:text-primary transition-colors" />
                 <input 
                   type="text" 
                   placeholder="Legal Owner Name"
                   required
-                  className="w-full bg-black/50 border border-neutral-800 focus:border-orange-500 text-white rounded-xl py-3 pl-12 pr-4 outline-none transition-all text-sm font-medium"
+                  className="w-full bg-black/50 border border-neutral-800 focus:border-primary text-white rounded-xl py-3 pl-12 pr-4 outline-none transition-all text-sm font-medium"
                   value={formData.ownerName}
                   onChange={(e) => setFormData({...formData, ownerName: e.target.value})}
                 />
               </div>
               <div className="relative group">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 group-focus-within:text-orange-500 transition-colors" />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 group-focus-within:text-primary transition-colors" />
                 <input 
                   type="email" 
                   placeholder="Authorized Login Email"
                   required
-                  className="w-full bg-black/50 border border-neutral-800 focus:border-orange-500 text-white rounded-xl py-3 pl-12 pr-4 outline-none transition-all text-sm font-medium"
+                  className="w-full bg-black/50 border border-neutral-800 focus:border-primary text-white rounded-xl py-3 pl-12 pr-4 outline-none transition-all text-sm font-medium"
                   value={formData.email}
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
                 />
               </div>
               <div className="relative group">
-                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 group-focus-within:text-orange-500 transition-colors" />
+                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 group-focus-within:text-primary transition-colors" />
                 <input 
                   type="text" 
                   placeholder="Contact Phone Number"
                   required
-                  className="w-full bg-black/50 border border-neutral-800 focus:border-orange-500 text-white rounded-xl py-3 pl-12 pr-4 outline-none transition-all text-sm font-medium"
+                  className="w-full bg-black/50 border border-neutral-800 focus:border-primary text-white rounded-xl py-3 pl-12 pr-4 outline-none transition-all text-sm font-medium"
                   value={formData.phone}
                   onChange={(e) => setFormData({...formData, phone: e.target.value})}
                 />

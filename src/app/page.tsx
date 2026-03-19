@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -14,7 +14,7 @@ export default function RootPage() {
 
   return (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-4">
-      <Loader2 className="w-12 h-12 text-orange-500 animate-spin" />
+      <Loader2 className="w-12 h-12 text-primary animate-spin" />
       <p className="text-neutral-500 font-medium animate-pulse">Redirecting to Admin Portal...</p>
     </div>
   );

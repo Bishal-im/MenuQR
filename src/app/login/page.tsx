@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -13,7 +13,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center">
-      <Loader2 className="w-12 h-12 text-orange-500 animate-spin" />
+      <Loader2 className="w-12 h-12 text-primary animate-spin" />
     </div>
   );
 }

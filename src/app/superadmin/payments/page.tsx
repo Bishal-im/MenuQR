@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { 
   CreditCard, 
@@ -38,7 +38,7 @@ export default function PaymentsManagement() {
           <div key={i} className="glass p-6 rounded-[2rem] border border-neutral-800/50 flex flex-col justify-between">
             <div className="flex justify-between items-center mb-4">
               <div className="p-3 rounded-xl bg-neutral-900 border border-neutral-800">
-                <item.icon className="w-5 h-5 text-orange-500" />
+                <item.icon className="w-5 h-5 text-primary" />
               </div>
               {item.growth && <span className="text-[10px] font-black text-green-500">{item.growth} ↑</span>}
             </div>
@@ -53,11 +53,11 @@ export default function PaymentsManagement() {
       {/* Search & Filter */}
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between glass p-4 rounded-3xl border border-neutral-800/50">
         <div className="relative w-full md:w-96 group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 group-focus-within:text-orange-500 transition-colors" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 group-focus-within:text-primary transition-colors" />
           <input 
             type="text" 
             placeholder="Search by Transaction ID or Restaurant..."
-            className="w-full bg-black/50 border border-neutral-800 rounded-xl py-3 pl-12 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-orange-500 transition-all"
+            className="w-full bg-black/50 border border-neutral-800 rounded-xl py-3 pl-12 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-primary transition-all"
           />
         </div>
         <div className="flex items-center gap-3">
@@ -89,7 +89,7 @@ export default function PaymentsManagement() {
                 </td>
                 <td className="px-8 py-6">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-[10px] font-black text-orange-500">RD</div>
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-[10px] font-black text-primary">RD</div>
                     <span className="text-xs font-bold text-white">The Royal Diner</span>
                   </div>
                 </td>

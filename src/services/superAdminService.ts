@@ -36,8 +36,6 @@ export interface Plan {
 export interface PlatformSettings {
   platformName: string;
   primaryColor: string;
-  fontFamily: string;
-  layout: string;
   platformFee: number;
   currency: string;
   allowNewSignups: boolean;
@@ -137,6 +135,20 @@ export async function getAnalytics() {
   };
 }
 
+export async function getSubscriptions() {
+  return [
+    {
+      id: "1",
+      restaurantName: "The Grand Dhaba",
+      planName: "PRO SaaS",
+      startDate: "2023-10-01",
+      expiryDate: "2024-10-01",
+      status: "Active",
+      paymentStatus: "Paid"
+    }
+  ];
+}
+
 export async function getPlatformSettings(): Promise<PlatformSettings> {
   noStore();
   await connectToDatabase();
@@ -147,8 +159,6 @@ export async function getPlatformSettings(): Promise<PlatformSettings> {
     settings = await PlatformSettingsModel.create({
       platformName: "MenuQR",
       primaryColor: "#f97316",
-      fontFamily: "Geist Sans",
-      layout: "modern",
       platformFee: 0,
       currency: "INR",
       allowNewSignups: true,
@@ -159,8 +169,6 @@ export async function getPlatformSettings(): Promise<PlatformSettings> {
   return {
     platformName: settings.platformName,
     primaryColor: settings.primaryColor,
-    fontFamily: settings.fontFamily || "Geist Sans",
-    layout: settings.layout,
     platformFee: settings.platformFee,
     currency: settings.currency,
     allowNewSignups: settings.allowNewSignups,

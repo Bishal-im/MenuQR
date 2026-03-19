@@ -427,11 +427,11 @@ export async function getAdminDashboardStats() {
       .sort((a: any, b: any) => b[1] - a[1])
       .slice(0, 4);
 
-    const maxCount = sortedItems[0]?.[1] || 1;
+    const maxCount = Number(sortedItems[0]?.[1]) || 1;
     const popularItems = sortedItems.map(([name, count]: any) => ({
       name,
       count,
-      percent: Math.round((count / maxCount) * 100)
+      percent: Math.round((Number(count) / maxCount) * 100)
     }));
 
     // 4. Trends (Compare with yesterday)

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { getSubscriptions } from "@/services/superAdminService";
@@ -67,14 +67,14 @@ export default function SubscriptionsManagement() {
                   <tr key={sub.id} className="hover:bg-neutral-900/30 transition-all group">
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-neutral-800 rounded-xl flex items-center justify-center font-black text-white text-xs border border-neutral-700 group-hover:bg-orange-500 transition-all">
+                        <div className="w-10 h-10 bg-neutral-800 rounded-xl flex items-center justify-center font-black text-white text-xs border border-neutral-700 group-hover:bg-primary transition-all">
                           GD
                         </div>
                         <span className="text-sm font-black text-white">The Grand Dhaba</span>
                       </div>
                     </td>
                     <td className="px-8 py-6">
-                      <span className="text-xs font-bold text-orange-500 px-3 py-1 bg-orange-500/10 rounded-full border border-orange-500/20">PRO SaaS</span>
+                      <span className="text-xs font-bold text-primary px-3 py-1 bg-primary/10 rounded-full border border-primary/20">PRO SaaS</span>
                     </td>
                     <td className="px-8 py-6 text-xs text-neutral-400 font-medium">{sub.startDate}</td>
                     <td className="px-8 py-6">
@@ -107,14 +107,14 @@ export default function SubscriptionsManagement() {
 
       {/* Expiry Alerts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
-        <div className="glass p-8 rounded-[2.5rem] border border-orange-500/10 bg-gradient-to-br from-orange-500/5 to-transparent flex items-start gap-6">
-          <div className="p-4 bg-orange-500/10 rounded-2xl border border-orange-500/20">
-            <AlertCircle className="w-6 h-6 text-orange-500" />
+        <div className="glass p-8 rounded-[2.5rem] border border-primary/10 bg-gradient-to-br from-primary/5 to-transparent flex items-start gap-6">
+          <div className="p-4 bg-primary/10 rounded-2xl border border-primary/20">
+            <AlertCircle className="w-6 h-6 text-primary" />
           </div>
           <div>
             <h3 className="text-lg font-black text-white mb-2">Upcoming Expirations</h3>
             <p className="text-neutral-500 text-sm font-medium mb-6">12 restaurants are expiring in the next 7 days. Action required.</p>
-            <button className="flex items-center gap-2 text-xs font-black text-orange-500 uppercase tracking-widest hover:text-orange-400 transition-colors">
+            <button className="flex items-center gap-2 text-xs font-black text-primary uppercase tracking-widest hover:text-primary/80 transition-colors">
               Send Reminder Batch <ArrowUpRight className="w-4 h-4" />
             </button>
           </div>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCart } from "@/context/CartContext";
 import { createOrder } from "@/services/customerService";
@@ -51,7 +51,7 @@ export default function CartPage() {
         <p className="text-neutral-500 mb-8 max-w-xs">Looks like you haven't added anything to your cart yet.</p>
         <Link 
           href="/menu" 
-          className="bg-orange-500 text-white px-8 py-4 rounded-2xl font-black shadow-xl shadow-orange-500/20 active:scale-95 transition-all"
+          className="bg-primary text-white px-8 py-4 rounded-2xl font-black shadow-xl shadow-primary/20 active:scale-95 transition-all"
         >
           Browse Menu
         </Link>
@@ -70,12 +70,12 @@ export default function CartPage() {
 
       <main className="pt-28 px-6 space-y-8">
         {/* Table Info */}
-        <div className="flex items-center gap-3 p-4 bg-orange-500/10 border border-orange-500/20 rounded-2xl">
-          <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center font-black">
+        <div className="flex items-center gap-3 p-4 bg-primary/10 border border-primary/20 rounded-2xl">
+          <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center font-black">
             {tableId || "T"}
           </div>
           <div>
-            <p className="text-[10px] uppercase font-black text-orange-500 tracking-wider">Ordering for Table</p>
+            <p className="text-[10px] uppercase font-black text-primary tracking-wider">Ordering for Table</p>
             <p className="text-sm font-bold">Table {tableId || "12"} • The Grand Dhaba</p>
           </div>
         </div>
@@ -96,7 +96,7 @@ export default function CartPage() {
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className="text-sm font-bold line-clamp-1">{item.name}</h3>
-                      <p className="text-xs text-orange-500 font-bold mt-0.5">₹{item.price}</p>
+                      <p className="text-xs text-primary font-bold mt-0.5">₹{item.price}</p>
                     </div>
                     <button 
                       onClick={() => removeFromCart(item.id)}
@@ -142,7 +142,7 @@ export default function CartPage() {
           </div>
           <div className="flex justify-between items-center px-4 py-5 bg-neutral-900/50 rounded-2xl border border-neutral-800">
             <span className="text-lg font-black">To Pay</span>
-            <span className="text-2xl font-black text-orange-500">₹{totalAmount}</span>
+            <span className="text-2xl font-black text-primary">₹{totalAmount}</span>
           </div>
         </div>
 
@@ -157,7 +157,7 @@ export default function CartPage() {
         <button
           onClick={handlePlaceOrder}
           disabled={isPlacing}
-          className="w-full max-w-md mx-auto flex items-center justify-center gap-3 bg-orange-500 text-white py-5 rounded-2xl font-black text-lg shadow-2xl shadow-orange-500/40 active:scale-95 transition-all disabled:opacity-50 disabled:active:scale-100 group"
+          className="w-full max-w-md mx-auto flex items-center justify-center gap-3 bg-primary text-white py-5 rounded-2xl font-black text-lg shadow-2xl shadow-primary/40 active:scale-95 transition-all disabled:opacity-50 disabled:active:scale-100 group"
         >
           {isPlacing ? (
             <>

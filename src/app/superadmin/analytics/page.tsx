@@ -45,7 +45,7 @@ export default function PlatformAnalytics() {
 
   if (loading) return (
     <div className="flex items-center justify-center h-full">
-      <div className="w-10 h-10 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+      <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin" />
     </div>
   );
 
@@ -63,7 +63,7 @@ export default function PlatformAnalytics() {
           </button>
           <button 
             onClick={handleExport}
-            className="flex items-center justify-center gap-2 bg-orange-500 text-white px-8 py-3.5 rounded-2xl font-black text-xs shadow-xl shadow-orange-500/20 hover:bg-orange-600 transition-all group"
+            className="flex items-center justify-center gap-2 bg-primary text-white px-8 py-3.5 rounded-2xl font-black text-xs shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all group"
           >
             <Download className="w-4 h-4" /> Export JSON
           </button>
@@ -78,7 +78,7 @@ export default function PlatformAnalytics() {
           <div className="flex justify-between items-start mb-12">
             <div>
               <h3 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
-                <TrendingUp className="w-6 h-6 text-orange-500" /> Revenue Growth
+                <TrendingUp className="w-6 h-6 text-primary" /> Revenue Growth
               </h3>
               <p className="text-xs text-neutral-500 font-bold uppercase tracking-widest mt-1">Platform monthly recurring revenue (MRR)</p>
             </div>
@@ -96,7 +96,7 @@ export default function PlatformAnalytics() {
             {[40, 65, 45, 80, 55, 95, 75].map((h, i) => (
               <div key={i} className="flex-grow flex flex-col items-center group/bar">
                 <div 
-                  className={`w-full rounded-t-xl transition-all duration-700 relative overflow-hidden ${i === 5 ? 'bg-orange-500' : 'bg-neutral-800 group-hover/bar:bg-neutral-700'}`}
+                  className={`w-full rounded-t-xl transition-all duration-700 relative overflow-hidden ${i === 5 ? 'bg-primary' : 'bg-neutral-800 group-hover/bar:bg-neutral-700'}`}
                   style={{ height: `${h}%` }}
                 >
                   {i === 5 && <div className="absolute inset-0 bg-white/10 animate-pulse" />}
@@ -110,7 +110,7 @@ export default function PlatformAnalytics() {
         {/* User Distribution */}
         <div className="glass rounded-[3rem] border border-neutral-800/50 p-10 flex flex-col group">
           <h3 className="text-xl font-black text-white tracking-tight mb-2 flex items-center gap-2">
-            <Users className="w-6 h-6 text-orange-500" /> User Density
+            <Users className="w-6 h-6 text-primary" /> User Density
           </h3>
           <p className="text-[10px] text-neutral-500 font-black uppercase tracking-widest mb-10">Active orders per restaurant</p>
           
@@ -128,38 +128,14 @@ export default function PlatformAnalytics() {
 
                 <div className="w-full h-2 bg-neutral-900 rounded-full overflow-hidden border border-neutral-800">
                   <div 
-                    className={`h-full transition-all duration-1000 ${item.color === 'orange' ? 'bg-orange-500' : 'bg-neutral-700'}`}
+                    className={`h-full transition-all duration-1000 ${item.color === 'orange' ? 'bg-primary' : 'bg-neutral-700'}`}
                     style={{ width: `${item.percent}%` }}
                   />
                 </div>
               </div>
             ))}
           </div>
-          
-          <div className="mt-8 p-6 bg-orange-500/5 border border-orange-500/20 rounded-[2rem] text-center">
-            <p className="text-xs font-black text-orange-500 uppercase tracking-widest mb-1">Top Region</p>
-            <p className="text-sm font-bold text-white">Mumbai Central (MH)</p>
-          </div>
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {[
-          { label: "Conversion Rate", value: "3.2%", icon: BarChart3, color: "blue" },
-          { label: "Retention", value: "94%", icon: Layers, color: "green" },
-          { label: "Churn Rate", value: "1.5%", icon: PieChart, color: "red" },
-          { label: "Search Volume", value: "85K", icon: Search, color: "orange" },
-        ].map((item, i) => (
-          <div key={i} className="glass p-8 rounded-[2.5rem] border border-neutral-800/50 hover:border-orange-500/30 transition-all flex items-center gap-6">
-            <div className={`p-4 rounded-2xl bg-neutral-900 border border-neutral-800 group-hover:bg-orange-500/10`}>
-              <item.icon className="w-6 h-6 text-orange-500" />
-            </div>
-            <div>
-              <p className="text-[10px] text-neutral-500 font-extrabold uppercase tracking-widest mb-1">{item.label}</p>
-              <h4 className="text-2xl font-black text-white leading-none">{item.value}</h4>
-            </div>
-          </div>
-        ))}
       </div>
     </div>
   );

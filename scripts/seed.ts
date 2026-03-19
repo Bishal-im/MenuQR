@@ -2,10 +2,9 @@ import { connectToDatabase } from '../src/lib/db';
 import { 
   CategoryModel, 
   MenuItemModel, 
-  PlatformStatsModel, 
-  PlanModel, 
-  RestaurantModel, 
-  OrderModel 
+  PlatformStatsModel,
+  RestaurantModel,
+  OrderModel
 } from '../src/models/Schemas';
 import mongoose from 'mongoose';
 
@@ -64,28 +63,7 @@ const MOCK_STATS = {
   restaurantGrowth: 8.2,
 };
 
-const MOCK_PLANS = [
-  {
-    name: 'Basic',
-    price: 999,
-    billingCycle: 'monthly',
-    features: ['Up to 10 tables', 'Basic Menu', 'Email Support'],
-    maxTables: 10,
-    maxMenuItems: 50,
-    hasAnalytics: false,
-    hasBranding: false,
-  },
-  {
-    name: 'Pro',
-    price: 2499,
-    billingCycle: 'monthly',
-    features: ['Unlimited tables', 'Full Analytics', 'Custom Branding', 'Priority Support'],
-    maxTables: 100,
-    maxMenuItems: 500,
-    hasAnalytics: true,
-    hasBranding: true,
-  },
-];
+
 
 const MOCK_RESTAURANTS = [
   {
@@ -118,7 +96,6 @@ async function seed() {
       CategoryModel.deleteMany({}),
       MenuItemModel.deleteMany({}),
       PlatformStatsModel.deleteMany({}),
-      PlanModel.deleteMany({}),
       RestaurantModel.deleteMany({}),
       OrderModel.deleteMany({}),
     ]);
@@ -143,16 +120,10 @@ async function seed() {
     await PlatformStatsModel.create(MOCK_STATS);
     console.log('Platform stats seeded.');
 
-    // Seed Plans
-    console.log('Seeding plans...');
-    const plans = await PlanModel.insertMany(MOCK_PLANS);
-    console.log(`${plans.length} plans seeded.`);
-
     // Seed Restaurants
     console.log('Seeding restaurants...');
     const restaurantsWithPlan = MOCK_RESTAURANTS.map((rest, index) => ({
       ...rest,
-      planId: plans[index % plans.length]._id,
     }));
     const restaurants = await RestaurantModel.insertMany(restaurantsWithPlan);
     console.log(`${restaurants.length} restaurants seeded.`);

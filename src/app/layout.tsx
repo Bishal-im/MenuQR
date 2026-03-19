@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Inter, Outfit, Roboto } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import { CartProvider } from "@/context/CartContext";
 import "./globals.css";
 
@@ -10,22 +10,6 @@ const geistSans = Geist({
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
-
-const outfit = Outfit({
-  variable: "--font-outfit",
-  subsets: ["latin"],
-});
-
-const roboto = Roboto({
-  variable: "--font-roboto",
-  weight: ["400", "700", "900"],
   subsets: ["latin"],
 });
 
@@ -58,21 +42,12 @@ export default async function RootLayout({
     getPlatformSettings()
   ]);
 
-  const fontMap: Record<string, string> = {
-    "Geist Sans": "var(--font-geist-sans)",
-    "Inter": "var(--font-inter)",
-    "Outfit": "var(--font-outfit)",
-    "Roboto": "var(--font-roboto)",
-  };
-
-  const selectedFont = fontMap[settings.fontFamily] || "var(--font-geist-sans)";
-
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${outfit.variable} ${roboto.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ThemeProvider primaryColor={settings.primaryColor} fontFamily={settings.fontFamily} />
+        <ThemeProvider primaryColor={settings.primaryColor} />
         <AuthProvider initialSession={session} role={role}>
           <CartProvider>
             {children}

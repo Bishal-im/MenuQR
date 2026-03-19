@@ -112,8 +112,6 @@ const UserSchema = new Schema({
 const PlatformSettingsSchema = new Schema({
   platformName: { type: String, default: "MenuQR" },
   primaryColor: { type: String, default: "#f97316" },
-  fontFamily: { type: String, default: "Geist Sans" },
-  layout: { type: String, default: "modern" },
   platformFee: { type: Number, default: 0 },
   currency: { type: String, default: "INR" },
   allowNewSignups: { type: Boolean, default: true },

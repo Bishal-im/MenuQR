@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { CheckCircle2, ShoppingBag, ArrowRight, Share2, Star } from "lucide-react";
 import Link from "next/link";
@@ -19,9 +19,9 @@ function SuccessContent() {
     <div className="min-h-screen bg-black text-white flex flex-col items-center px-6 py-12 text-center">
       {/* Success Animation Area */}
       <div className="relative mb-12 flex items-center justify-center">
-        <div className="absolute w-40 h-40 bg-orange-500/20 rounded-full animate-ping" />
-        <div className="absolute w-32 h-32 bg-orange-500/10 rounded-full animate-pulse" />
-        <div className="w-24 h-24 bg-orange-500 rounded-full flex items-center justify-center z-10 shadow-2xl shadow-orange-500/50">
+        <div className="absolute w-40 h-40 bg-primary/20 rounded-full animate-ping" />
+        <div className="absolute w-32 h-32 bg-primary/10 rounded-full animate-pulse" />
+        <div className="w-24 h-24 bg-primary rounded-full flex items-center justify-center z-10 shadow-2xl shadow-primary/50">
           <CheckCircle2 className="w-12 h-12 text-white" />
         </div>
       </div>
@@ -42,8 +42,8 @@ function SuccessContent() {
               <p className="text-[10px] uppercase font-black text-neutral-500 tracking-widest mb-1">Order ID</p>
               <p className="text-sm font-black text-white">#{orderId?.split('_')[1] || "5K9X2J"}</p>
             </div>
-            <div className="bg-orange-500/10 p-3 rounded-2xl">
-              <ShoppingBag className="w-6 h-6 text-orange-500" />
+            <div className="bg-primary/10 p-3 rounded-2xl">
+              <ShoppingBag className="w-6 h-6 text-primary" />
             </div>
           </div>
 
@@ -75,7 +75,7 @@ function SuccessContent() {
       {/* Bottom Actions */}
       <div className="grid grid-cols-2 gap-4 w-full max-w-sm mt-auto">
         <button className="flex items-center justify-center gap-2 p-4 glass rounded-2xl border border-neutral-800/50 text-xs font-bold hover:bg-neutral-900 transition-all active:scale-95">
-          <Share2 className="w-4 h-4 text-orange-500" />
+          <Share2 className="w-4 h-4 text-primary" />
           Share Bill
         </button>
         <button className="flex items-center justify-center gap-2 p-4 glass rounded-2xl border border-neutral-800/50 text-xs font-bold hover:bg-neutral-900 transition-all active:scale-95">
@@ -84,7 +84,7 @@ function SuccessContent() {
         </button>
       </div>
 
-      <Link href="/menu" className="mt-8 text-neutral-500 text-xs font-black uppercase tracking-widest hover:text-orange-500 transition-colors pb-8">
+      <Link href="/menu" className="mt-8 text-neutral-500 text-xs font-black uppercase tracking-widest hover:text-primary transition-colors pb-8">
         Order More Items
       </Link>
     </div>
@@ -95,7 +95,7 @@ export default function SuccessPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-12 h-12 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-12 h-12 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     }>
       <SuccessContent />

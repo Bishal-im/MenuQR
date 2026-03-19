@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -121,24 +121,24 @@ export default function WaiterLoginPage() {
   if (authLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <Loader2 className="w-12 h-12 text-orange-500 animate-spin" />
+        <Loader2 className="w-12 h-12 text-primary animate-spin" />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4 relative overflow-hidden font-sans">
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-orange-500/5 blur-[120px] rounded-full" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-orange-600/5 blur-[120px] rounded-full" />
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/5 blur-[120px] rounded-full" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-primary/90/5 blur-[120px] rounded-full" />
       
       <div className="w-full max-w-md z-10">
         <div className="bg-neutral-900/40 backdrop-blur-3xl border border-neutral-800/50 p-10 rounded-[3rem] shadow-2xl relative">
-          <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-24 h-24 bg-orange-500 rounded-[2rem] flex items-center justify-center shadow-2xl shadow-orange-500/20 -rotate-6">
+          <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-24 h-24 bg-primary rounded-[2rem] flex items-center justify-center shadow-2xl shadow-primary/20 -rotate-6">
             <Utensils className="w-12 h-12 text-black rotate-6" />
           </div>
 
           <div className="text-center mt-8 mb-10">
-            <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-500 text-[10px] font-black uppercase tracking-widest">
+            <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-widest">
               <ShieldCheck className="w-3 h-3" /> Staff Protected Area
             </div>
             <h1 className="text-3xl font-black text-white mb-2 tracking-tighter uppercase">
@@ -154,11 +154,11 @@ export default function WaiterLoginPage() {
           <form onSubmit={step === "email" ? handleEmailSubmit : handleOTPSubmit} className="space-y-4">
             {step === "email" ? (
               <div className="relative group">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500 group-focus-within:text-orange-500 transition-colors" />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500 group-focus-within:text-primary transition-colors" />
                 <input 
                   type="email" 
                   placeholder="Staff Email"
-                  className="w-full bg-black/40 border border-neutral-800 focus:border-orange-500 text-white rounded-2xl py-4 pl-12 pr-4 outline-none transition-all font-medium"
+                  className="w-full bg-black/40 border border-neutral-800 focus:border-primary text-white rounded-2xl py-4 pl-12 pr-4 outline-none transition-all font-medium"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -167,11 +167,11 @@ export default function WaiterLoginPage() {
             ) : (
               <>
                 <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500 group-focus-within:text-orange-500 transition-colors" />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500 group-focus-within:text-primary transition-colors" />
                   <input 
                     type="text" 
                     placeholder="Verification Code"
-                    className="w-full bg-black/40 border border-neutral-800 focus:border-orange-500 text-white rounded-2xl py-4 pl-12 pr-4 outline-none transition-all font-medium text-center tracking-[0.5em]"
+                    className="w-full bg-black/40 border border-neutral-800 focus:border-primary text-white rounded-2xl py-4 pl-12 pr-4 outline-none transition-all font-medium text-center tracking-[0.5em]"
                     value={otp}
                     onChange={(e) => setOtp(e.target.value)}
                     maxLength={6}
@@ -181,7 +181,7 @@ export default function WaiterLoginPage() {
                 
                 <div className="flex items-center justify-between px-2">
                   <p className="text-[10px] font-black uppercase tracking-widest text-neutral-600">
-                    Expires in: <span className={timer < 30 ? "text-red-500" : "text-orange-500"}>
+                    Expires in: <span className={timer < 30 ? "text-red-500" : "text-primary"}>
                       {Math.floor(timer / 60)}:{(timer % 60).toString().padStart(2, '0')}
                     </span>
                   </p>
@@ -189,7 +189,7 @@ export default function WaiterLoginPage() {
                     type="button"
                     onClick={handleResendOTP}
                     disabled={timer > 0 || loading}
-                    className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-orange-500 hover:text-orange-400 disabled:opacity-30 transition-colors"
+                    className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-primary hover:text-primary/80 disabled:opacity-30 transition-colors"
                   >
                     <RefreshCcw className={`w-3 h-3 ${loading ? "animate-spin" : ""}`} />
                     Resend Code
