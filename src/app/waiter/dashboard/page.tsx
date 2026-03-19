@@ -17,7 +17,7 @@ import {
 export default function WaiterDashboard() {
   const [orders, setOrders] = useState<WaiterOrder[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<OrderStatus | 'all'>('pending');
+  const [activeTab, setActiveTab] = useState<OrderStatus | 'all' | 'history'>('pending');
   const [searchQuery, setSearchQuery] = useState("");
 
   const fetchOrders = async () => {
@@ -42,7 +42,15 @@ export default function WaiterDashboard() {
   };
 
   const filteredOrders = orders.filter(o => {
-    const matchesTab = activeTab === 'all' || o.status === activeTab;
+    let matchesTab = false;
+    if (activeTab === 'all') {
+      matchesTab = ['pending', 'preparing', 'ready'].includes(o.status);
+    } else if (activeTab === 'history') {
+      matchesTab = ['completed', 'cancelled'].includes(o.status);
+    } else {
+      matchesTab = o.status === activeTab;
+    }
+    
     const matchesSearch = o.tableId.includes(searchQuery) || o.id.includes(searchQuery);
     return matchesTab && matchesSearch;
   });
@@ -74,6 +82,7 @@ export default function WaiterDashboard() {
             { label: "New", value: 'pending', color: 'orange' },
             { label: "Prep", value: 'preparing', color: 'blue' },
             { label: "Ready", value: 'ready', color: 'green' },
+            { label: "History", value: 'history', color: 'neutral' },
             { label: "All", value: 'all', color: 'neutral' },
           ].map((tab) => (
             <button
@@ -86,7 +95,7 @@ export default function WaiterDashboard() {
               }`}
             >
               {tab.label}
-              {tab.value !== 'all' && getTabCount(tab.value as OrderStatus) > 0 && (
+              {tab.value !== 'all' && tab.value !== 'history' && getTabCount(tab.value as OrderStatus) > 0 && (
                 <span className="ml-2 px-1.5 py-0.5 bg-black/30 rounded text-[8px]">{getTabCount(tab.value as OrderStatus)}</span>
               )}
             </button>

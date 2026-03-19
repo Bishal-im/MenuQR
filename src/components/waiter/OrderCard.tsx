@@ -21,6 +21,7 @@ export default function OrderCard({ order, onStatusUpdate }: OrderCardProps) {
   const isNew = order.status === 'pending';
   const isPreparing = order.status === 'preparing';
   const isReady = order.status === 'ready';
+  const isHistory = order.status === 'completed' || order.status === 'cancelled';
 
   const timeAgo = (dateStr: string) => {
     const mins = Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000);
@@ -32,6 +33,8 @@ export default function OrderCard({ order, onStatusUpdate }: OrderCardProps) {
       case 'pending': return 'bg-orange-500';
       case 'preparing': return 'bg-blue-500';
       case 'ready': return 'bg-green-500';
+      case 'completed': return 'bg-neutral-500';
+      case 'cancelled': return 'bg-red-500';
       default: return 'bg-neutral-800';
     }
   };
@@ -40,7 +43,9 @@ export default function OrderCard({ order, onStatusUpdate }: OrderCardProps) {
     <div className={`p-6 rounded-[2rem] border transition-all duration-500 relative overflow-hidden group ${
       isNew 
         ? "bg-orange-500/5 border-orange-500/50 shadow-2xl shadow-orange-500/10 animate-in fade-in" 
-        : "bg-neutral-900 border-neutral-800 hover:border-neutral-700 shadow-xl"
+        : isHistory 
+          ? "bg-neutral-900 border-neutral-800/50 opacity-80"
+          : "bg-neutral-900 border-neutral-800 hover:border-neutral-700 shadow-xl"
     }`}>
       {/* Table Badge */}
       <div className="flex justify-between items-start mb-6">
@@ -88,7 +93,7 @@ export default function OrderCard({ order, onStatusUpdate }: OrderCardProps) {
         {isNew && (
           <>
             <button 
-              onClick={() => onStatusUpdate(order.id, 'accepted')}
+              onClick={() => onStatusUpdate(order.id, 'preparing')}
               className="flex-grow flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 active:scale-95 text-white py-4 rounded-2xl font-black text-sm shadow-xl shadow-orange-500/20 transition-all"
             >
               <Check className="w-5 h-5" /> Accept Order
@@ -103,7 +108,7 @@ export default function OrderCard({ order, onStatusUpdate }: OrderCardProps) {
             onClick={() => onStatusUpdate(order.id, 'ready')}
             className="flex-grow flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 active:scale-95 text-white py-4 rounded-2xl font-black text-sm shadow-xl shadow-blue-500/20 transition-all"
           >
-            <ChefHat className="w-5 h-5" /> Mark as Ready
+            <Check className="w-5 h-5" /> Mark Done
           </button>
         )}
         {isReady && (
