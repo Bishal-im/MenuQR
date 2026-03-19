@@ -104,7 +104,7 @@ export default function DashboardPage() {
             <h3 className="font-bold">Live Orders</h3>
             <Link href="/admin/orders" className="text-xs text-primary font-medium hover:underline">View All</Link>
           </div>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto max-h-[400px] custom-scrollbar">
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-neutral-800 bg-neutral-950/30">

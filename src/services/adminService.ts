@@ -396,7 +396,7 @@ export async function getAdminDashboardStats() {
     const liveOrdersData = await OrderModel.find({
       restaurantId,
       status: { $in: ['pending', 'preparing', 'ready'] }
-    }).sort({ createdAt: -1 }).limit(5).lean();
+    }).sort({ createdAt: 1 }).limit(10).lean();
 
     const liveOrders = liveOrdersData.map(o => ({
       id: `#${o._id.toString().slice(-3).toUpperCase()}`,
