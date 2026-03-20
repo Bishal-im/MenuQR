@@ -32,13 +32,14 @@ function MenuContent() {
   useEffect(() => {
     const tableId = searchParams.get("tableId");
     const restaurantId = searchParams.get("restaurantId");
+    const storageKey = `menuqr_call_${restaurantId}`;
 
     if (tableId && restaurantId) {
       setSession(tableId, restaurantId);
     }
 
-    // Load active service call from localStorage
-    const savedCall = localStorage.getItem("menuqr_active_service_call");
+    // Load active service call from localStorage (restaurant-scoped)
+    const savedCall = localStorage.getItem(storageKey);
     if (savedCall) {
       setActiveServiceOrderId(savedCall);
       setWaiterNotified(true);
@@ -61,13 +62,18 @@ function MenuContent() {
               setWaiterNotified(false);
               setWaiterAccepted(false);
               setActiveServiceOrderId(null);
-              localStorage.removeItem("menuqr_active_service_call");
+              localStorage.removeItem(storageKey);
             } else {
               setWaiterAccepted(!!order.waiterAccepted);
               setWaiterNotified(!!order.callWaiter);
             }
           } catch (err) {
-            console.error("Check saved call failed", err);
+            console.error("Check saved call failed, clearing stale state", err);
+            // If the order can't be found or any other error, assume it's stale
+            setWaiterNotified(false);
+            setWaiterAccepted(false);
+            setActiveServiceOrderId(null);
+            localStorage.removeItem(storageKey);
           }
         }
       } catch (e) {
@@ -100,6 +106,8 @@ function MenuContent() {
   // Polling for waiter acceptance
   useEffect(() => {
     if (!activeServiceOrderId) return;
+    const restaurantId = searchParams.get("restaurantId");
+    const storageKey = `menuqr_call_${restaurantId}`;
 
     const pollStatus = async () => {
       try {
@@ -113,20 +121,25 @@ function MenuContent() {
           setWaiterNotified(false);
           setWaiterAccepted(false);
           setActiveServiceOrderId(null);
-          localStorage.removeItem("menuqr_active_service_call");
+          localStorage.removeItem(storageKey);
         }
       } catch (e) {
-        console.error("Polling failed", e);
+        console.error("Polling failed, assuming stale", e);
+        // On recurring failure, clear the state to prevent UI getting stuck
+        setWaiterNotified(false);
+        setActiveServiceOrderId(null);
+        localStorage.removeItem(storageKey);
       }
     };
 
     const interval = setInterval(pollStatus, 5000);
     return () => clearInterval(interval);
-  }, [activeServiceOrderId]);
+  }, [activeServiceOrderId, searchParams]);
 
   const handleCallWaiter = async () => {
     const tableId = searchParams.get("tableId") || "12";
     const restaurantId = searchParams.get("restaurantId") || "default_rid";
+    const storageKey = `menuqr_call_${restaurantId}`;
     
     setIsCallingWaiter(true);
     try {
@@ -134,7 +147,7 @@ function MenuContent() {
       if (res.success) {
         setWaiterNotified(true);
         setActiveServiceOrderId(res.orderId);
-        localStorage.setItem("menuqr_active_service_call", res.orderId);
+        localStorage.setItem(storageKey, res.orderId);
       }
     } catch (e) {
       console.error("Failed to call waiter", e);
@@ -144,12 +157,15 @@ function MenuContent() {
   };
 
   const handleDismissAcknowledgment = async () => {
+    const restaurantId = searchParams.get("restaurantId");
+    const storageKey = `menuqr_call_${restaurantId}`;
+
     if (activeServiceOrderId) {
       await clearWaiterAccepted(activeServiceOrderId);
     }
     setWaiterAccepted(false);
     setActiveServiceOrderId(null);
-    localStorage.removeItem("menuqr_active_service_call");
+    localStorage.removeItem(storageKey);
   };
 
   if (loading) {
