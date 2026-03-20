@@ -8,12 +8,10 @@ import {
   Bell, 
   ChefHat, 
   CheckCircle2, 
-  ClipboardList, 
   User, 
   LogOut,
   UtensilsCrossed,
-  Loader2,
-  Zap
+  Loader2
 } from "lucide-react";
 
 export default function WaiterLayout({
@@ -25,8 +23,6 @@ export default function WaiterLayout({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const activeTab = searchParams.get('tab') || 'pending';
-
   const isLoginPage = pathname === '/waiter/login';
 
   useEffect(() => {
@@ -88,23 +84,6 @@ export default function WaiterLayout({
       <main className="flex-grow flex flex-col overflow-hidden">
         {children}
       </main>
-
-      {/* Mobile-style bottom nav for quick status filtering on tablets/phones */}
-      <div className="h-20 bg-neutral-900 border-t border-neutral-800 grid grid-cols-4 px-4 sticky bottom-0 z-50">
-        {[
-          { icon: Zap, label: "Home", value: "pending", color: "orange" },
-          { icon: ClipboardList, label: "History", value: "history", color: "neutral" },
-        ].map((tab, i) => (
-          <button 
-            key={i} 
-            onClick={() => router.push(`/waiter/dashboard?tab=${tab.value}`)}
-            className={`flex flex-col items-center justify-center gap-1 group relative ${activeTab === tab.value ? "text-primary scale-110" : "text-neutral-500 hover:text-neutral-400"}`}
-          >
-            <tab.icon className="w-6 h-6 transition-transform group-active:scale-95" />
-            <span className="text-[10px] font-black uppercase tracking-widest">{tab.label}</span>
-          </button>
-        ))}
-      </div>
     </div>
   );
 }
