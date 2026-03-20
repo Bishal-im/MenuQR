@@ -78,8 +78,78 @@ export default function TablesPage() {
     return `${baseUrl}/menu?restaurantId=${user?.restaurantId}&tableId=${tableNumber}`;
   };
 
+  const handleDownloadQR = (tableNumber: string) => {
+    const svg = document.getElementById(`qr-code-${tableNumber}`) as any;
+    if (svg) {
+      const svgData = new XMLSerializer().serializeToString(svg);
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      const img = new Image();
+      
+      const svgSize = 1024; // High res
+      canvas.width = svgSize;
+      canvas.height = svgSize;
+
+      img.onload = () => {
+        if (ctx) {
+          // Fill background with white
+          ctx.fillStyle = "white";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, svgSize, svgSize);
+          
+          const pngFile = canvas.toDataURL("image/png", 1.0);
+          const downloadLink = document.createElement("a");
+          downloadLink.download = `Table-${tableNumber}-QR.png`;
+          downloadLink.href = `${pngFile}`;
+          downloadLink.click();
+        }
+      };
+      
+      // Use URL.createObjectURL for better reliability
+      const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      img.src = url;
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {/* Hidden QR Codes for background downloading */}
+      <div className="hidden">
+        {tables.map(table => (
+          <svg 
+            key={`hidden-qr-${table.id}`}
+            id={`qr-code-${table.number}`}
+            width="1024" 
+            height="1024" 
+            viewBox="0 0 1024 1024"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect width="1024" height="1024" fill="white" />
+            <g transform="translate(212, 112)">
+              <QRCodeSVG 
+                value={getQRUrl(table.number)}
+                size={600}
+                level="H"
+                includeMargin={false}
+              />
+            </g>
+            <text 
+              x="512" 
+              y="850" 
+              fontFamily="sans-serif"
+              fontSize="40" 
+              fontWeight="bold" 
+              fill="#71717a" 
+              textAnchor="middle"
+              style={{ textTransform: 'uppercase', letterSpacing: '0.1em' }}
+            >
+              Table {table.number} • MenuQR
+            </text>
+          </svg>
+        ))}
+      </div>
+
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Tables & QR Codes</h2>
@@ -129,7 +199,10 @@ export default function TablesPage() {
                >
                   <QrCode className="h-3.5 w-3.5 group-hover/btn:scale-110 transition" /> View QR
                </button>
-               <button className="flex items-center justify-center gap-2 rounded-xl border border-border bg-background py-2 text-xs font-bold transition hover:bg-white/5">
+               <button 
+                 onClick={() => handleDownloadQR(table.number)}
+                 className="flex items-center justify-center gap-2 rounded-xl border border-border bg-background py-2 text-xs font-bold transition hover:bg-white/5 active:scale-95 transition-all"
+               >
                   <Download className="h-3.5 w-3.5" /> Save
                </button>
             </div>
@@ -215,6 +288,7 @@ export default function TablesPage() {
               <div className="flex flex-col items-center">
                  <div className="mb-6 rounded-2xl bg-white p-6 shadow-xl relative overflow-hidden group">
                     <QRCodeSVG 
+                      id={`qr-modal-${showQRModal}`}
                       value={getQRUrl(showQRModal)}
                       size={200}
                       level="H"
@@ -233,30 +307,11 @@ export default function TablesPage() {
                     </div>
                  </div>
                  <h3 className="text-xl font-bold">Table {showQRModal} QR Code</h3>
-                 <p className="mt-2 text-sm text-muted mb-8 italic italic">SCAN TO VIEW MENU & ORDER</p>
+                 <p className="mt-2 text-sm text-muted mb-8 italic italic italic">SCAN TO VIEW MENU & ORDER</p>
                  
                  <div className="flex w-full gap-3">
                     <button 
-                      onClick={() => {
-                        const canvas = document.querySelector('svg');
-                        if (canvas) {
-                          const svgData = new XMLSerializer().serializeToString(canvas);
-                          const canvasEl = document.createElement("canvas");
-                          const ctx = canvasEl.getContext("2d");
-                          const img = new Image();
-                          img.onload = () => {
-                            canvasEl.width = img.width;
-                            canvasEl.height = img.height;
-                            ctx?.drawImage(img, 0, 0);
-                            const pngFile = canvasEl.toDataURL("image/png");
-                            const downloadLink = document.createElement("a");
-                            downloadLink.download = `Table-${showQRModal}-QR.png`;
-                            downloadLink.href = `${pngFile}`;
-                            downloadLink.click();
-                          };
-                          img.src = `data:image/svg+xml;base64,${btoa(svgData)}`;
-                        }
-                      }}
+                      onClick={() => handleDownloadQR(showQRModal)}
                       className="flex-1 rounded-xl bg-primary py-3 text-sm font-bold text-black transition hover:bg-amber-500"
                     >
                        Download PNG
@@ -273,6 +328,7 @@ export default function TablesPage() {
            </motion.div>
         </div>
       )}
+
 
       <DeleteConfirmationModal
         isOpen={deleteModal.isOpen}
