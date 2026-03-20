@@ -309,22 +309,6 @@ function WaiterDashboardContent() {
           </div>
         )}
       </div>
-
-      {/* Status Bar */}
-      <footer className="h-10 bg-neutral-900 border-t border-neutral-800 px-6 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)]" />
-            <span className="text-[10px] text-neutral-500 font-black uppercase tracking-widest">Network Connected</span>
-          </div>
-          <div className="w-[1px] h-4 bg-neutral-800" />
-          <div className="flex items-center gap-2">
-            <Volume2 className="w-3.5 h-3.5 text-neutral-500" />
-            <span className="text-[10px] text-neutral-500 font-black uppercase tracking-widest">Alerts ON</span>
-          </div>
-        </div>
-        <p className="text-[10px] text-neutral-600 font-black tracking-widest uppercase">Sync: Just Now</p>
-      </footer>
     </div>
   );
 }
