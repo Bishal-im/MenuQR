@@ -86,12 +86,14 @@ function MenuContent() {
     const pollStatus = async () => {
       try {
         const data = await getOrder(activeServiceOrderId);
-        setWaiterNotified(!!data.callWaiter);
         setWaiterAccepted(!!data.waiterAccepted);
+        setWaiterNotified(!!data.callWaiter);
         
-        if (data.waiterAccepted) {
-          // If accepted, we can stop the local "notified" spinner/state
-          // but we keep the activeServiceOrderId until they dismiss the modal
+        // If the call is no longer active (notified is false) AND not accepted (so no modal will show)
+        // then we can safely clear the activeServiceOrderId and localStorage
+        if (!data.callWaiter && !data.waiterAccepted) {
+          setActiveServiceOrderId(null);
+          localStorage.removeItem("menuqr_active_service_call");
         }
       } catch (e) {
         console.error("Polling failed", e);
