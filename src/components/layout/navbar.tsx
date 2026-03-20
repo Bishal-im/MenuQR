@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Search, User, LogOut, Menu, ChevronRight, ShoppingBag } from "lucide-react";
+import { Bell, User, LogOut, Menu, ChevronRight, ShoppingBag } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter, usePathname } from "next/navigation";
@@ -76,14 +76,6 @@ export function Navbar() {
       </div>
 
       <div className="flex items-center gap-3 md:gap-6">
-        <div className="relative hidden md:block">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-          <input
-            type="text"
-            placeholder="Search orders..."
-            className="h-9 w-64 rounded-lg border border-border bg-background px-10 text-xs transition focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-          />
-        </div>
 
         <div className="relative" ref={dropdownRef}>
           <button 

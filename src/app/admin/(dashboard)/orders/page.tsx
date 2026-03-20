@@ -23,6 +23,7 @@ export default function OrdersPage() {
   const [activeFilter, setActiveFilter] = useState("All");
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -49,9 +50,15 @@ export default function OrdersPage() {
 
   const statusFilters = ["All", "Pending", "Preparing", "Ready", "Completed", "Cancelled"];
 
-  const filteredOrders = activeFilter === "All" 
-    ? orders 
-    : orders.filter(o => o.status === activeFilter);
+  const filteredOrders = orders.filter(order => {
+    const matchesStatus = activeFilter === "All" || order.status === activeFilter;
+    const matchesSearch = 
+      searchQuery === "" || 
+      order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.table.toString().toLowerCase().includes(searchQuery.toLowerCase());
+    
+    return matchesStatus && matchesSearch;
+  });
 
   const getStatusStyle = (status: string) => {
     switch (status.toLowerCase()) {
@@ -86,6 +93,8 @@ export default function OrdersPage() {
             <input 
               type="text" 
               placeholder="Search table or ID..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="h-10 w-full rounded-xl border border-border bg-card pl-10 pr-4 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary sm:w-64"
             />
           </div>
