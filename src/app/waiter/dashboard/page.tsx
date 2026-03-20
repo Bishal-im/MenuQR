@@ -16,7 +16,8 @@ import {
   Zap,
   Volume2,
   Loader2,
-  Trash2
+  Trash2,
+  X
 } from "lucide-react";
 
 import { Suspense } from "react";
@@ -103,8 +104,8 @@ function WaiterDashboardContent() {
     }
   };
 
-  const handleResolveCall = async (id: string) => {
-    const success = await resolveWaiterCall(id);
+  const handleResolveCall = async (id: string, notifyCustomer: boolean = true) => {
+    const success = await resolveWaiterCall(id, notifyCustomer);
     if (success) {
       setOrders(prev => prev.map(o => o.id === id ? { ...o, callWaiter: false } : o));
       setPrevOrders(prev => prev.map(o => o.id === id ? { ...o, callWaiter: false } : o));
@@ -115,8 +116,8 @@ function WaiterDashboardContent() {
     }
   };
 
-  const handleResolveAll = async () => {
-    const success = await resolveAllServiceCalls();
+  const handleResolveAll = async (notifyCustomer: boolean = false) => {
+    const success = await resolveAllServiceCalls(notifyCustomer);
     if (success) {
       setOrders(prev => prev.map(o => ({ ...o, callWaiter: false })));
       setPrevOrders(prev => prev.map(o => ({ ...o, callWaiter: false })));
@@ -223,8 +224,12 @@ function WaiterDashboardContent() {
 
       <WaiterCallModal 
         order={currentModalCall}
-        onAcknowledge={(id) => {
-          handleResolveCall(id);
+        onAccept={(id) => {
+          handleResolveCall(id, true);
+          setCurrentModalCall(null);
+        }}
+        onSilence={(id) => {
+          handleResolveCall(id, false);
           setCurrentModalCall(null);
         }}
         onDismiss={() => setCurrentModalCall(null)}
@@ -240,25 +245,34 @@ function WaiterDashboardContent() {
             </div>
             <div className="flex items-center gap-3">
               {activeCalls.map((order) => (
-                <div key={order.id} className="bg-red-500 rounded-lg px-3 py-1.5 flex items-center gap-3 shadow-lg shadow-red-500/20">
+                <div key={order.id} className="bg-red-500 rounded-lg px-3 py-1.5 flex items-center gap-3 shadow-lg shadow-red-500/20 group/alert">
                   <div className="flex flex-col">
                     <span className="text-[10px] font-black text-white uppercase whitespace-nowrap leading-none">Table {order.tableId}</span>
                     <span className="text-[8px] font-bold text-white/70 uppercase tracking-tighter mt-0.5">{timeAgo(order.updatedAt)}</span>
                   </div>
                   <div className="w-[1px] h-4 bg-white/20" />
-                  <button 
-                    onClick={() => handleResolveCall(order.id)} 
-                    className="flex items-center gap-1.5 bg-white text-red-500 px-2 py-1 rounded-md text-[9px] font-black uppercase hover:bg-neutral-100 active:scale-95 transition-all shadow-sm"
-                  >
-                    <Check className="w-2.5 h-2.5" />
-                    Accept
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button 
+                      onClick={() => handleResolveCall(order.id, true)} 
+                      className="flex items-center gap-1.5 bg-white text-red-500 px-2 py-1 rounded-md text-[9px] font-black uppercase hover:bg-neutral-100 active:scale-95 transition-all shadow-sm"
+                    >
+                      <Check className="w-2.5 h-2.5" />
+                      Accept
+                    </button>
+                    <button 
+                      onClick={() => handleResolveCall(order.id, false)} 
+                      className="p-1 text-white/50 hover:text-white transition-colors"
+                      title="Silence alert only"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
           <button 
-            onClick={handleResolveAll}
+            onClick={() => handleResolveAll(false)}
             className="ml-4 px-4 py-2 border-b-2 border-transparent hover:border-red-500 text-red-500 text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap"
           >
             Clear All

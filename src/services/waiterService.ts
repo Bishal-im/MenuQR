@@ -120,7 +120,7 @@ export async function updateStatus(orderId: string, status: OrderStatus): Promis
   }
 }
 
-export async function resolveWaiterCall(orderId: string): Promise<boolean> {
+export async function resolveWaiterCall(orderId: string, notifyCustomer: boolean = true): Promise<boolean> {
   try {
     await connectToDatabase();
     const session = await getSession('waiter') || await getSession();
@@ -133,7 +133,7 @@ export async function resolveWaiterCall(orderId: string): Promise<boolean> {
       { _id: new mongoose.Types.ObjectId(orderId), restaurantId: new mongoose.Types.ObjectId(session.restaurantId) },
       { 
         callWaiter: false,
-        waiterAccepted: true,
+        waiterAccepted: notifyCustomer,
         updatedAt: new Date()
       }
     );
@@ -144,7 +144,7 @@ export async function resolveWaiterCall(orderId: string): Promise<boolean> {
   }
 }
 
-export async function resolveAllServiceCalls(): Promise<boolean> {
+export async function resolveAllServiceCalls(notifyCustomer: boolean = false): Promise<boolean> {
   try {
     await connectToDatabase();
     const session = await getSession('waiter') || await getSession();
@@ -165,7 +165,11 @@ export async function resolveAllServiceCalls(): Promise<boolean> {
 
     const result = await OrderModel.updateMany(
       query,
-      { callWaiter: false, waiterAccepted: true, updatedAt: new Date() }
+      { 
+        callWaiter: false, 
+        waiterAccepted: notifyCustomer, 
+        updatedAt: new Date() 
+      }
     );
     return result.modifiedCount > 0;
   } catch (error) {

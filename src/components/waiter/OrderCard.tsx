@@ -43,21 +43,12 @@ export default function OrderCard({ order, onStatusUpdate, onResolveCall }: Orde
 
   return (
     <div className={`p-6 rounded-[2rem] border transition-all duration-500 relative overflow-hidden group ${
-      order.callWaiter
-        ? "bg-red-500/10 border-red-500 shadow-2xl shadow-red-500/20 animate-pulse"
-        : isNew 
-          ? "bg-primary/5 border-primary/50 shadow-2xl shadow-primary/10 animate-in fade-in" 
-          : isHistory 
-            ? "bg-neutral-900 border-neutral-800/50 opacity-80"
-            : "bg-neutral-900 border-neutral-800 hover:border-neutral-700 shadow-xl"
+      isNew 
+        ? "bg-primary/5 border-primary/50 shadow-2xl shadow-primary/10 animate-in fade-in" 
+        : isHistory 
+          ? "bg-neutral-900 border-neutral-800/50 opacity-80"
+          : "bg-neutral-900 border-neutral-800 hover:border-neutral-700 shadow-xl"
     }`}>
-      {/* Waiter Call Overlay */}
-      {order.callWaiter && (
-        <div className="absolute top-0 left-0 right-0 bg-red-500 text-white text-[10px] font-black uppercase tracking-widest py-1 flex items-center justify-center gap-2 z-20">
-          <BellRing className="w-3 h-3 animate-bounce" />
-          Waiter Called!
-        </div>
-      )}
       {/* Table Badge */}
       <div className="flex justify-between items-start mb-6">
         <div className="flex items-center gap-4">
@@ -95,15 +86,6 @@ export default function OrderCard({ order, onStatusUpdate, onResolveCall }: Orde
 
       {/* Actions */}
       <div className="flex flex-col gap-3 relative z-10">
-        {order.callWaiter && (
-          <button 
-            onClick={() => onResolveCall(order.id)}
-            className="flex items-center justify-center gap-2 bg-white text-red-600 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl ring-2 ring-red-500/50 hover:bg-neutral-100 transition-all mb-1"
-          >
-            <Check className="w-4 h-4" /> Acknowledge Call
-          </button>
-        )}
-        
         <div className="flex gap-3">
           {isNew && (
             <button 

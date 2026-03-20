@@ -5,11 +5,12 @@ import { BellRing, X, Check, Bell } from "lucide-react";
 
 interface WaiterCallModalProps {
   order: WaiterOrder | null;
-  onAcknowledge: (id: string) => void;
+  onAccept: (id: string) => void;
+  onSilence: (id: string) => void;
   onDismiss: () => void;
 }
 
-export default function WaiterCallModal({ order, onAcknowledge, onDismiss }: WaiterCallModalProps) {
+export default function WaiterCallModal({ order, onAccept, onSilence, onDismiss }: WaiterCallModalProps) {
   if (!order) return null;
 
   return (
@@ -42,16 +43,22 @@ export default function WaiterCallModal({ order, onAcknowledge, onDismiss }: Wai
           {/* Actions */}
           <div className="w-full space-y-3">
             <button
-              onClick={() => onAcknowledge(order.id)}
+              onClick={() => onAccept(order.id)}
               className="w-full bg-red-500 hover:bg-red-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-red-500/20 active:scale-95 transition-all uppercase tracking-widest text-xs"
             >
-              Acknowledge Now
+              Accept & Go
+            </button>
+            <button
+              onClick={() => onSilence(order.id)}
+              className="w-full bg-neutral-800 hover:bg-neutral-700 text-neutral-400 font-black py-4 rounded-2xl active:scale-95 transition-all uppercase tracking-widest text-xs border border-neutral-700/50"
+            >
+              Silence Alert
             </button>
             <button
               onClick={onDismiss}
-              className="w-full bg-neutral-800 hover:bg-neutral-700 text-neutral-400 font-black py-4 rounded-2xl active:scale-95 transition-all uppercase tracking-widest text-xs"
+              className="w-full text-neutral-500 hover:text-neutral-300 font-black py-2 active:scale-95 transition-all uppercase tracking-widest text-[10px]"
             >
-              Later
+              Remind me later
             </button>
           </div>
         </div>
