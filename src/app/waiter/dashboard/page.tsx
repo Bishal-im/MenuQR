@@ -32,6 +32,7 @@ function WaiterDashboardContent() {
   const [prevOrders, setPrevOrders] = useState<WaiterOrder[]>([]);
   const [currentModalCall, setCurrentModalCall] = useState<WaiterOrder | null>(null);
   const [isAlertMenuOpen, setIsAlertMenuOpen] = useState(false);
+  const [selectedTableId, setSelectedTableId] = useState<string>('all');
   
   const shownCallsRef = useRef<Set<string>>(new Set());
   const prevOrdersRef = useRef<WaiterOrder[]>([]);
@@ -127,6 +128,15 @@ function WaiterDashboardContent() {
   };
 
   const activeCalls = orders.filter(o => o.callWaiter);
+  
+  // Extract unique table IDs
+  const uniqueTables = Array.from(new Set(orders.map(o => o.tableId))).sort((a, b) => {
+    // Try to sort numerically if possible
+    const aNum = parseInt(a);
+    const bNum = parseInt(b);
+    if (!isNaN(aNum) && !isNaN(bNum)) return aNum - bNum;
+    return a.localeCompare(b);
+  });
 
   const timeAgo = (dateStr: string) => {
     const mins = Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000);
@@ -147,9 +157,10 @@ function WaiterDashboardContent() {
     }
     
     const matchesSearch = o.tableId.includes(searchQuery) || o.id.includes(searchQuery);
+    const matchesTable = selectedTableId === 'all' || o.tableId === selectedTableId;
     const hasItems = o.items && o.items.length > 0;
     
-    return matchesTab && matchesSearch && hasItems;
+    return matchesTab && matchesSearch && matchesTable && hasItems;
   });
 
   // For history, show newest first. For active tabs, show oldest first (chronological) per user request.
@@ -179,31 +190,31 @@ function WaiterDashboardContent() {
               className="w-full bg-black/50 border border-neutral-800 rounded-xl py-2.5 pl-10 pr-4 text-sm font-bold focus:outline-none focus:ring-1 focus:ring-primary"
             />
           </div>
-          <button className="p-2.5 bg-neutral-900 border border-neutral-800 rounded-xl text-neutral-500 hover:text-white transition-all">
-            <Filter className="w-5 h-5 transition-transform active:rotate-180" />
-          </button>
         </div>
 
-        <div className="flex gap-2 w-full md:w-auto p-1 bg-black/50 rounded-2xl border border-neutral-800 overflow-x-auto no-scrollbar">
-          {[
-            { label: "New", value: 'pending' },
-            { label: "Prep", value: 'preparing' },
-            { label: "Ready", value: 'ready' },
-            { label: "History", value: 'history' },
-          ].map((tab) => (
+        {/* Table Selection Bar */}
+        <div className="flex-grow flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+          <button
+            onClick={() => setSelectedTableId('all')}
+            className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap border ${
+              selectedTableId === 'all' 
+                ? "bg-white text-black border-white" 
+                : "bg-neutral-900 border-neutral-800 text-neutral-500 hover:border-neutral-700"
+            }`}
+          >
+            All Tables
+          </button>
+          {uniqueTables.map((tid) => (
             <button
-              key={tab.value}
-              onClick={() => setActiveTabHandler(tab.value)}
-              className={`flex-grow md:flex-initial px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap ${
-                activeTab === tab.value 
-                  ? "bg-primary text-white shadow-xl shadow-primary/20 scale-105" 
-                  : "text-neutral-500 hover:text-neutral-300"
+              key={tid}
+              onClick={() => setSelectedTableId(tid)}
+              className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap border ${
+                selectedTableId === tid 
+                  ? "bg-primary text-white border-primary shadow-lg shadow-primary/20" 
+                  : "bg-neutral-900 border-neutral-800 text-neutral-500 hover:border-neutral-700"
               }`}
             >
-              {tab.label}
-              {getTabCount(tab.value) > 0 && (
-                <span className="ml-2 px-1.5 py-0.5 bg-black/30 rounded text-[8px]">{getTabCount(tab.value)}</span>
-              )}
+              Table {tid}
             </button>
           ))}
         </div>
@@ -313,6 +324,47 @@ function WaiterDashboardContent() {
             <p className="text-sm font-medium text-neutral-500 mt-2">No {activeTab} orders at the moment.</p>
           </div>
         )}
+      </div>
+
+      {/* Bottom Navigation Navbar */}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] md:w-auto z-50">
+        <div className="bg-black/40 backdrop-blur-xl border border-neutral-800 rounded-3xl p-1.5 flex gap-1 shadow-2xl shadow-black">
+          {[
+            { label: "New", value: 'pending', icon: Bell },
+            { label: "Prep", value: 'preparing', icon: ChefHat },
+            { label: "Ready", value: 'ready', icon: Check },
+            { label: "History", value: 'history', icon: Clock },
+          ].map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.value;
+            const count = getTabCount(tab.value);
+            
+            return (
+              <button
+                key={tab.value}
+                onClick={() => setActiveTabHandler(tab.value)}
+                className={`flex items-center gap-2 px-6 py-3 rounded-2xl transition-all duration-300 relative ${
+                  isActive 
+                    ? "bg-primary text-white shadow-lg shadow-primary/20 scale-105" 
+                    : "text-neutral-500 hover:text-neutral-300 hover:bg-white/5"
+                }`}
+              >
+                <Icon className={`w-4 h-4 ${isActive ? "animate-pulse" : ""}`} />
+                <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">{tab.label}</span>
+                {count > 0 && (
+                  <span className={`flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[8px] font-black ${
+                    isActive ? "bg-white text-primary" : "bg-primary text-white"
+                  }`}>
+                    {count}
+                  </span>
+                )}
+                {isActive && (
+                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-white rounded-full" />
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
