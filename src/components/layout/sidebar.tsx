@@ -66,7 +66,7 @@ export function Sidebar() {
 
       <aside 
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex flex-col border-r border-border bg-card transition-all duration-300 ease-in-out lg:static lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex flex-col h-full border-r border-border bg-card transition-all duration-300 ease-in-out lg:static lg:translate-x-0",
           collapsed ? "w-20" : "w-64",
           isOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
         )}

@@ -34,7 +34,7 @@ export default function AdminLayout({
   return (
     <NotificationProvider>
       <SidebarProvider>
-        <div className="flex min-h-screen bg-background text-foreground selection:bg-primary/30 selection:text-primary overflow-hidden">
+        <div className="flex h-screen bg-background text-foreground selection:bg-primary/30 selection:text-primary overflow-hidden">
           <Sidebar />
           <div className="flex flex-1 flex-col min-w-0 overflow-hidden">
             <Navbar />

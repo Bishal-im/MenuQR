@@ -314,6 +314,7 @@ export async function getDashboardAnalytics() {
     
     const totalSales = orders.reduce((sum: number, o: any) => sum + (o.totalAmount || 0), 0);
     const orderCount = orders.length;
+    const avgOrderValue = orderCount > 0 ? Math.round(totalSales / orderCount) : 0;
 
     // 1. Peak hour (most frequent hour)
     const hours = orders.map((o: any) => new Date(o.createdAt).getHours());
@@ -322,20 +323,17 @@ export async function getDashboardAnalytics() {
     const peakHourVal = Object.keys(hourCounts).reduce((a, b) => hourCounts[a] > hourCounts[b] ? a : b, "N/A");
     const peakHour = peakHourVal !== "N/A" ? `${peakHourVal}:00` : "N/A";
 
-    // 2. Payment split
-    const paymentCounts: any = { esewa: 0, khalti: 0, imepay: 0, cash: 0 };
+    // 2. Top Selling Items
+    const itemCounts: any = {};
     orders.forEach((o: any) => {
-      const method = (o.paymentMethod || 'cash').toLowerCase();
-      if (paymentCounts[method] !== undefined) paymentCounts[method]++;
+      o.items.forEach((it: any) => {
+        itemCounts[it.name] = (itemCounts[it.name] || 0) + it.quantity;
+      });
     });
-
-    const totalOrders = orders.length || 1;
-    const paymentSplit = [
-      { label: "eSewa", val: `${Math.round((paymentCounts.esewa / totalOrders) * 100)}%`, color: "bg-primary" },
-      { label: "Khalti", val: `${Math.round((paymentCounts.khalti / totalOrders) * 100)}%`, color: "bg-purple-500" },
-      { label: "IME Pay", val: `${Math.round((paymentCounts.imepay / totalOrders) * 100)}%`, color: "bg-blue-500" },
-      { label: "Cash", val: `${Math.round((paymentCounts.cash / totalOrders) * 100)}%`, color: "bg-zinc-500" },
-    ];
+    const topItems = Object.entries(itemCounts)
+      .map(([name, count]: any) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
 
     // 3. Real Revenue Trend (Last 7 days)
     const trend = [];
@@ -353,37 +351,56 @@ export async function getDashboardAnalytics() {
         })
         .reduce((sum: number, o: any) => sum + (o.totalAmount || 0), 0);
       
-      trend.push(daySales);
+      const dayName = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d.getDay()];
+      trend.push({ label: dayName, value: daySales });
     }
 
-    // Normalize trend to percentages for the UI bar chart
-    const maxSales = Math.max(...trend, 1);
-    const normalizedTrend = trend.map(s => Math.round((s / maxSales) * 100));
+    const maxSales = Math.max(...trend.map(t => t.value), 1);
+    const revenueTrend = trend.map(t => ({
+      ...t,
+      percentage: Math.round((t.value / maxSales) * 100)
+    }));
 
-    // 4. Hourly Orders (Last 24 hours or just today's standard hours)
-    const hourlyOrders = new Array(12).fill(0); // 9am to 8pm (12 hours)
+    // 4. Hourly Orders
+    const hourlyRaw = new Array(12).fill(0); 
     orders.forEach((o: any) => {
-      const hour = new Date(o.createdAt).getHours();
-      if (hour >= 9 && hour <= 20) {
-        hourlyOrders[hour - 9]++;
+      const h = new Date(o.createdAt).getHours();
+      if (h >= 9 && h <= 20) {
+        hourlyRaw[h - 9]++;
       }
     });
     
-    // Normalize hourly orders to percentages
-    const maxHourly = Math.max(...hourlyOrders, 1);
-    const normalizedHourly = hourlyOrders.map(c => Math.round((c / maxHourly) * 100));
+    const maxHourly = Math.max(...hourlyRaw, 1);
+    const hourlyOrders = hourlyRaw.map((count, i) => {
+      const h = i + 9;
+      const label = h > 12 ? `${h-12}pm` : h === 12 ? '12pm' : `${h}am`;
+      return {
+        label,
+        count,
+        percentage: Math.round((count / maxHourly) * 100)
+      };
+    });
 
     return {
       totalSales,
       orderCount,
+      avgOrderValue,
       peakHour,
-      paymentSplit,
-      revenueTrend: normalizedTrend,
-      hourlyOrders: normalizedHourly
+      topItems,
+      revenueTrend,
+      hourlyOrders
     };
   } catch (error) {
     console.error("[ADMIN SERVICE] Analytics Error:", error);
-    return { totalSales: 0, orderCount: 0, peakHour: "N/A", paymentSplit: [], revenueTrend: [] };
+    return { 
+      totalSales: 0, 
+      orderCount: 0, 
+      avgOrderValue: 0, 
+      peakHour: "N/A", 
+      topItems: [], 
+      revenueTrend: [], 
+      hourlyOrders: [] 
+    };
   }
 }
 

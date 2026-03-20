@@ -174,17 +174,10 @@ export function Navbar() {
             
             <div className="absolute right-0 top-full pt-2 opacity-0 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all duration-200 z-50">
               <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-2 w-48 shadow-2xl">
-                <div className="px-3 py-2 border-b border-neutral-800 mb-1 lg:hidden">
+                <div className="px-3 py-2 lg:hidden">
                   <p className="text-xs font-bold text-foreground truncate">{user?.name}</p>
                   <p className="text-[10px] text-muted truncate">{user?.restaurantName}</p>
                 </div>
-                <button 
-                  onClick={handleLogout}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 rounded-lg transition-colors font-medium"
-                >
-                  <LogOut className="w-4 h-4" />
-                  Logout Session
-                </button>
               </div>
             </div>
           </div>
