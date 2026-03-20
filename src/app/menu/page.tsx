@@ -3,12 +3,12 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useCart } from "@/context/CartContext";
-import { getMenu, MenuItem as MenuItemType, Category } from "@/services/customerService";
+import { getMenu, MenuItem as MenuItemType, Category, callWaiterByTable, getOrder, clearWaiterAccepted } from "@/services/customerService";
 import MenuItem from "@/components/customer/MenuItem";
 import CategoryBar from "@/components/customer/CategoryBar";
 import CartStickyButton from "@/components/customer/CartStickyButton";
 import ItemModal from "@/components/customer/ItemModal";
-import { Search, UtensilsCrossed, Star, Sparkles } from "lucide-react";
+import { Search, UtensilsCrossed, Star, Sparkles, Bell, Check, Loader2, Phone } from "lucide-react";
 
 function MenuContent() {
   const searchParams = useSearchParams();
@@ -23,6 +23,11 @@ function MenuContent() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedItem, setSelectedItem] = useState<MenuItemType | null>(null);
+  const [isCallingWaiter, setIsCallingWaiter] = useState(false);
+  const [waiterNotified, setWaiterNotified] = useState(false);
+  const [activeServiceOrderId, setActiveServiceOrderId] = useState<string | null>(null);
+  const [waiterAccepted, setWaiterAccepted] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   useEffect(() => {
     const tableId = searchParams.get("tableId");
@@ -30,6 +35,13 @@ function MenuContent() {
 
     if (tableId && restaurantId) {
       setSession(tableId, restaurantId);
+    }
+
+    // Load active service call from localStorage
+    const savedCall = localStorage.getItem("menuqr_active_service_call");
+    if (savedCall) {
+      setActiveServiceOrderId(savedCall);
+      setWaiterNotified(true);
     }
 
     const loadMenu = async () => {
@@ -67,6 +79,54 @@ function MenuContent() {
     setFilteredItems(filtered);
   }, [activeCategory, searchQuery, menuItems]);
 
+  // Polling for waiter acceptance
+  useEffect(() => {
+    if (!activeServiceOrderId) return;
+
+    const pollStatus = async () => {
+      try {
+        const data = await getOrder(activeServiceOrderId);
+        if (data.waiterAccepted) {
+          setWaiterAccepted(true);
+          setWaiterNotified(false);
+        }
+      } catch (e) {
+        console.error("Polling failed", e);
+      }
+    };
+
+    const interval = setInterval(pollStatus, 5000);
+    return () => clearInterval(interval);
+  }, [activeServiceOrderId]);
+
+  const handleCallWaiter = async () => {
+    const tableId = searchParams.get("tableId") || "12";
+    const restaurantId = searchParams.get("restaurantId") || "default_rid";
+    
+    setIsCallingWaiter(true);
+    try {
+      const res = await callWaiterByTable(tableId, restaurantId);
+      if (res.success) {
+        setWaiterNotified(true);
+        setActiveServiceOrderId(res.orderId);
+        localStorage.setItem("menuqr_active_service_call", res.orderId);
+      }
+    } catch (e) {
+      console.error("Failed to call waiter", e);
+    } finally {
+      setIsCallingWaiter(false);
+    }
+  };
+
+  const handleDismissAcknowledgment = async () => {
+    if (activeServiceOrderId) {
+      await clearWaiterAccepted(activeServiceOrderId);
+    }
+    setWaiterAccepted(false);
+    setActiveServiceOrderId(null);
+    localStorage.removeItem("menuqr_active_service_call");
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center">
@@ -101,18 +161,74 @@ function MenuContent() {
           </div>
         </div>
 
-        {/* Search Bar */}
-        <div className="relative mb-2">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 w-5 h-5" />
-          <input
-            type="text"
-            placeholder="Search for dishes..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-neutral-900/50 backdrop-blur-md border border-neutral-800 focus:border-primary focus:ring-1 focus:ring-primary outline-none rounded-2xl py-4 pl-12 pr-4 text-white transition-all placeholder:text-neutral-600"
-          />
+        {/* Search Bar & Call Waiter */}
+        <div className="flex gap-3 mb-2">
+          <div className={`relative transition-all duration-300 ${isSearchFocused ? "flex-grow" : "flex-grow"}`}>
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 w-5 h-5" />
+            <input
+              type="text"
+              placeholder="Search for dishes..."
+              value={searchQuery}
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-neutral-900/50 backdrop-blur-md border border-neutral-800 focus:border-primary focus:ring-1 focus:ring-primary outline-none rounded-2xl py-4 pl-12 pr-4 text-white transition-all placeholder:text-neutral-600"
+            />
+          </div>
+          <button 
+            onClick={handleCallWaiter}
+            disabled={isCallingWaiter || waiterNotified || waiterAccepted}
+            className={`flex items-center justify-center gap-2 group transition-all duration-300 h-[60px] bg-neutral-900/50 backdrop-blur-md border border-neutral-800 rounded-2xl active:scale-95 ${
+              waiterNotified ? "border-green-500/50 text-green-500 px-5" : "hover:border-primary/50 text-neutral-400 hover:text-primary px-4 md:px-5"
+            } ${isSearchFocused ? "w-[60px] px-0" : "flex-shrink-0"}`}
+          >
+            {isCallingWaiter ? (
+              <Loader2 className="w-5 h-5 animate-spin text-primary" />
+            ) : waiterNotified ? (
+              <>
+                <Check className="w-5 h-5" />
+                {!isSearchFocused && <span className="text-xs font-black uppercase tracking-widest text-green-500">Notified</span>}
+              </>
+            ) : (
+              <>
+                <Bell className={`w-5 h-5 ${isSearchFocused ? "mx-auto" : ""}`} />
+                {!isSearchFocused && (
+                  <span className="text-xs font-black uppercase tracking-widest whitespace-nowrap">Call Waiter</span>
+                )}
+              </>
+            )}
+          </button>
         </div>
       </header>
+
+      {/* Waiter Acknowledgment Popup */}
+      {waiterAccepted && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="w-full max-w-sm bg-neutral-950 border border-neutral-800 rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-primary/10 blur-[80px] pointer-events-none" />
+            
+            <div className="flex flex-col items-center text-center">
+              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6 border border-primary/20">
+                <div className="w-10 h-10 text-primary flex items-center justify-center">
+                  <Phone className="w-8 h-8" />
+                </div>
+              </div>
+
+              <h2 className="text-2xl font-black text-white mb-2 leading-tight tracking-tighter uppercase italic">Waiter is Coming!</h2>
+              <p className="text-neutral-400 text-sm font-medium mb-8">
+                Your request has been accepted. A waiter will be at your table shortly.
+              </p>
+
+              <button
+                onClick={handleDismissAcknowledgment}
+                className="w-full bg-primary hover:bg-primary/90 text-white font-black py-5 rounded-2xl shadow-xl shadow-primary/20 active:scale-95 transition-all uppercase tracking-widest text-xs"
+              >
+                Okay, Thanks!
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <main className="px-5">

@@ -170,5 +170,40 @@ export async function clearWaiterAccepted(orderId: string) {
   return { success: !!result };
 }
 
+export async function callWaiterByTable(tableId: string, restaurantId: string) {
+  await connectToDatabase();
+  
+  // Find a pending order for this table and restaurant
+  const existingOrder = await OrderModel.findOne({
+    tableId,
+    restaurantId: mongoose.Types.ObjectId.isValid(restaurantId) ? restaurantId : undefined,
+    status: 'pending',
+    callWaiter: false // Only pick one that hasn't already called
+  }).sort({ createdAt: -1 });
+
+  if (existingOrder) {
+    existingOrder.callWaiter = true;
+    existingOrder.updatedAt = new Date();
+    await existingOrder.save();
+    return { success: true, orderId: existingOrder._id.toString() };
+  }
+
+  // If no pending order exists, create a "Service Call" order
+  const newOrder = await OrderModel.create({
+    restaurantId: mongoose.Types.ObjectId.isValid(restaurantId) ? restaurantId : undefined,
+    tableId,
+    items: [],
+    totalAmount: 0,
+    status: 'pending',
+    callWaiter: true
+  });
+
+  return { 
+    success: true, 
+    orderId: newOrder._id.toString(),
+    isNew: true 
+  };
+}
+
 // Server actions must only export async functions.
 // Types and interfaces are also allowed.
