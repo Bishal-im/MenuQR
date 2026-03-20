@@ -42,6 +42,9 @@ const RestaurantSchema = new Schema({
   email: { type: String, required: true },
   phone: { type: String, required: true },
   address: { type: String },
+  cuisine: { type: String },
+  website: { type: String },
+  isOpen: { type: Boolean, default: true },
   status: { type: String, enum: ['active', 'inactive'], default: 'active' },
   createdAt: { type: Date, default: Date.now },
 });

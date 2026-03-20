@@ -365,7 +365,20 @@ export async function getAdminDashboardStats() {
   try {
     await connectToDatabase();
     const session = await getSession();
-    if (!session || !session.restaurantId) throw new Error("Unauthorized");
+    if (!session) throw new Error("Unauthorized: No session found");
+    
+    // For superadmin, if restaurantId is missing, we might want to return a special state
+    // But for now, let's just be explicit about what's missing
+    if (!session.restaurantId) {
+      console.warn(`[ADMIN SERVICE] Dashboard access attempted by ${session.role} (${session.email}) but no restaurantId found.`);
+      return { 
+        error: "No restaurant associated with your account.",
+        userName: session.name || "User",
+        restaurantName: "N/A",
+        restaurantStatus: "Closed"
+      };
+    }
+
     const restaurantId = new mongoose.Types.ObjectId(session.restaurantId);
 
     const today = new Date();
@@ -483,9 +496,72 @@ export async function getAdminDashboardStats() {
       restaurantStatus: restaurant?.isOpen ? "Open" : "Closed",
       userName: session.name || "Admin"
     };
-  } catch (error) {
-    console.error("[ADMIN SERVICE] Admin Dashboard Stats Error:", error);
+  } catch (error: any) {
+    console.error("[ADMIN SERVICE] Admin Dashboard Stats Error:", error.message);
     return null;
+  }
+}
+
+// --- Settings Management ---
+
+export async function getRestaurantSettings() {
+  try {
+    await connectToDatabase();
+    const session = await getSession();
+    if (!session || !session.restaurantId) throw new Error("Unauthorized");
+
+    const restaurant = await RestaurantModel.findById(session.restaurantId).lean();
+    if (!restaurant) throw new Error("Restaurant not found");
+
+    return {
+      success: true,
+      data: {
+        id: restaurant._id.toString(),
+        name: restaurant.name,
+        ownerName: restaurant.ownerName,
+        email: restaurant.email,
+        phone: restaurant.phone,
+        address: restaurant.address,
+        cuisine: (restaurant as any).cuisine || "", // Field might not exist yet
+        website: (restaurant as any).website || "",
+        isOpen: (restaurant as any).isOpen ?? true,
+      }
+    };
+  } catch (error: any) {
+    console.error("[ADMIN SERVICE] Get Settings Error:", error.message);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function updateRestaurantSettings(data: any) {
+  try {
+    await connectToDatabase();
+    const session = await getSession();
+    if (!session || !session.restaurantId) throw new Error("Unauthorized");
+
+    const updatedRestaurant = await RestaurantModel.findByIdAndUpdate(
+      session.restaurantId,
+      {
+        $set: {
+          name: data.name,
+          ownerName: data.ownerName,
+          phone: data.phone,
+          address: data.address,
+          cuisine: data.cuisine,
+          website: data.website,
+          isOpen: data.isOpen,
+          updatedAt: new Date()
+        }
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedRestaurant) throw new Error("Failed to update restaurant");
+
+    return { success: true, data: updatedRestaurant };
+  } catch (error: any) {
+    console.error("[ADMIN SERVICE] Update Settings Error:", error.message);
+    return { success: false, error: error.message };
   }
 }
 

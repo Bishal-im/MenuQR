@@ -52,6 +52,26 @@ export default function DashboardPage() {
     day: 'numeric' 
   });
 
+  if (data?.error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 text-center max-w-md mx-auto">
+        <div className="w-20 h-20 bg-amber-500/10 rounded-full flex items-center justify-center">
+          <TrendingUp className="h-10 w-10 text-amber-500" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-bold tracking-tight">Access Restricted</h2>
+          <p className="text-neutral-500 text-sm">{data.error}</p>
+        </div>
+        <Link 
+          href="/admin/settings" 
+          className="rounded-xl bg-primary px-6 py-3 text-sm font-bold text-black hover:bg-amber-500 transition shadow-lg shadow-primary/20"
+        >
+          Check Settings
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       <header className="flex items-center justify-between">
