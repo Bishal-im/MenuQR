@@ -387,13 +387,13 @@ export async function getDashboardAnalytics() {
   }
 }
 
-export async function getAdminDashboardStats() {
+export async function getAdminDashboardStats(restaurantIdOverride?: string) {
   try {
     await connectToDatabase();
     const session = await getSession();
     if (!session) throw new Error("Unauthorized: No session found");
     
-    let restaurantIdRaw = session.restaurantId;
+    let restaurantIdRaw = restaurantIdOverride || session.restaurantId;
 
     // If superadmin has no restaurantId, try to find the first available one to show something useful
     if (!restaurantIdRaw && isSuperAdmin(session.email)) {
@@ -537,7 +537,11 @@ export async function getAdminDashboardStats() {
       latestOrderTime: latestOrder?.createdAt || null,
       restaurantName: restaurant?.name || "Restaurant",
       restaurantStatus: restaurant?.isOpen ? "Open" : "Closed",
-      userName: session.name || "Admin"
+      userName: session.name || "Admin",
+      notificationPreferences: (restaurant as any)?.notificationPreferences || {
+        newOrderAlerts: true,
+        emailSummaries: true
+      }
     };
   } catch (error: any) {
     console.error("[ADMIN SERVICE] Admin Dashboard Stats Error:", error.message);
@@ -585,7 +589,11 @@ export async function getRestaurantSettings() {
           cuisine: "",
           website: "",
           isOpen: true,
-          operatingHours: DEFAULT_HOURS
+          operatingHours: DEFAULT_HOURS,
+          notificationPreferences: {
+            newOrderAlerts: true,
+            emailSummaries: true
+          }
         }
       };
     }
@@ -602,7 +610,11 @@ export async function getRestaurantSettings() {
         cuisine: (restaurant as any).cuisine || "",
         website: (restaurant as any).website || "",
         isOpen: (restaurant as any).isOpen ?? true,
-        operatingHours: (restaurant as any).operatingHours || DEFAULT_HOURS
+        operatingHours: (restaurant as any).operatingHours || DEFAULT_HOURS,
+        notificationPreferences: (restaurant as any).notificationPreferences || {
+          newOrderAlerts: true,
+          emailSummaries: true
+        }
       }
     };
   } catch (error: any) {
@@ -635,6 +647,7 @@ export async function updateRestaurantSettings(data: any) {
       (restaurant as any).website = data.website;
       (restaurant as any).isOpen = data.isOpen;
       (restaurant as any).operatingHours = data.operatingHours;
+      (restaurant as any).notificationPreferences = data.notificationPreferences;
       restaurant.updatedAt = new Date();
       await restaurant.save();
     } else {
@@ -648,7 +661,11 @@ export async function updateRestaurantSettings(data: any) {
         cuisine: data.cuisine,
         website: data.website,
         isOpen: data.isOpen,
-        operatingHours: data.operatingHours || DEFAULT_HOURS
+        operatingHours: data.operatingHours || DEFAULT_HOURS,
+        notificationPreferences: data.notificationPreferences || {
+          newOrderAlerts: true,
+          emailSummaries: true
+        }
       });
 
       // Update user to link this restaurant (optional but good for future sessions)
@@ -661,6 +678,71 @@ export async function updateRestaurantSettings(data: any) {
     return { success: true, data: restaurant };
   } catch (error: any) {
     console.error("[ADMIN SERVICE] Update Settings Error:", error.message);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function sendDailySummary() {
+  try {
+    const session = await getSession();
+    if (!session) throw new Error("Unauthorized");
+    
+    let restaurant;
+    let restaurantId = session.restaurantId;
+
+    if (!restaurantId && isSuperAdmin(session.email)) {
+      const firstRestaurant = await RestaurantModel.findOne({ status: 'active' });
+      if (firstRestaurant) {
+        restaurantId = firstRestaurant._id.toString();
+      }
+    }
+
+    if (restaurantId) {
+      restaurant = await RestaurantModel.findById(restaurantId);
+    } else {
+      restaurant = await RestaurantModel.findOne({ email: session.email });
+    }
+
+    if (!restaurant) throw new Error("Restaurant not found");
+
+    const stats = await getAdminDashboardStats(restaurant._id.toString());
+    if (!stats) throw new Error("Failed to fetch statistics");
+
+    const { sendEmail } = await import("@/lib/emailer");
+    
+    const emailHtml = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+        <h2 style="color: #f97316;">Daily Restaurant Summary: ${restaurant.name}</h2>
+        <p>Hello ${restaurant.ownerName || 'Partner'}, here is your performance for today:</p>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 30px 0;">
+          <div style="background: #f8f8f8; padding: 15px; border-radius: 8px;">
+            <p style="font-size: 12px; color: #666; margin: 0;">Total Revenue</p>
+            <p style="font-size: 24px; font-weight: bold; margin: 5px 0;">Rs. ${stats.revenueToday}</p>
+            <p style="font-size: 12px; color: ${stats.revenueTrendUp ? '#10b981' : '#ef4444'}; margin: 0;">${stats.revenueTrend} vs yesterday</p>
+          </div>
+          <div style="background: #f8f8f8; padding: 15px; border-radius: 8px;">
+            <p style="font-size: 12px; color: #666; margin: 0;">Total Orders</p>
+            <p style="font-size: 24px; font-weight: bold; margin: 5px 0;">${stats.ordersToday}</p>
+            <p style="font-size: 12px; color: ${stats.ordersTrendUp ? '#10b981' : '#ef4444'}; margin: 0;">${stats.ordersTrend} vs yesterday</p>
+          </div>
+        </div>
+
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #999; text-align: center;">
+          <p>This is a summary from MenuQR. You received this because "Email Summaries" is enabled in your settings.</p>
+        </div>
+      </div>
+    `;
+
+    await sendEmail({
+      to: session.email,
+      subject: `Daily Summary - ${restaurant.name}`,
+      html: emailHtml
+    });
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("[ADMIN SERVICE] Email Summary Error:", error.message);
     return { success: false, error: error.message };
   }
 }

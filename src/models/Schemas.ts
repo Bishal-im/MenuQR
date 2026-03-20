@@ -55,6 +55,10 @@ const RestaurantSchema = new Schema({
     saturday: { open: { type: String, default: '09:00 AM' }, close: { type: String, default: '10:00 PM' }, isClosed: { type: Boolean, default: false } },
     sunday: { open: { type: String, default: '09:00 AM' }, close: { type: String, default: '10:00 PM' }, isClosed: { type: Boolean, default: false } },
   },
+  notificationPreferences: {
+    newOrderAlerts: { type: Boolean, default: true },
+    emailSummaries: { type: Boolean, default: true },
+  },
   createdAt: { type: Date, default: Date.now },
 });
 

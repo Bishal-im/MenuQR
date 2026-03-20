@@ -5,8 +5,10 @@ import { Store, MapPin, Phone, Globe, Save, Lock, Bell, Shield, User, Loader2, C
 import { motion, AnimatePresence } from "framer-motion";
 import { getRestaurantSettings, updateRestaurantSettings } from "@/services/adminService";
 import { cn } from "@/lib/utils";
+import { useNotifications } from "@/context/NotificationContext";
 
 export default function SettingsPage() {
+  const { sendTestSummary } = useNotifications();
   const [activeTab, setActiveTab] = useState("profile");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -19,7 +21,11 @@ export default function SettingsPage() {
     website: "",
     ownerName: "",
     isOpen: true,
-    operatingHours: {} as any
+    operatingHours: {} as any,
+    notificationPreferences: {
+      newOrderAlerts: true,
+      emailSummaries: true
+    }
   });
 
   useEffect(() => {
@@ -34,7 +40,11 @@ export default function SettingsPage() {
           website: res.data.website || "",
           ownerName: res.data.ownerName || "",
           isOpen: res.data.isOpen ?? true,
-          operatingHours: res.data.operatingHours || {}
+          operatingHours: res.data.operatingHours || {},
+          notificationPreferences: res.data.notificationPreferences || {
+            newOrderAlerts: true,
+            emailSummaries: true
+          }
         });
       } else {
         setMessage({ type: "error", text: res.error || "Failed to load settings." });
@@ -44,8 +54,8 @@ export default function SettingsPage() {
     loadSettings();
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setSaving(true);
     setMessage({ type: "", text: "" });
 
@@ -67,6 +77,16 @@ export default function SettingsPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleNotificationToggle = (key: string) => {
+    setFormData(prev => ({
+      ...prev,
+      notificationPreferences: {
+        ...prev.notificationPreferences,
+        [key]: !prev.notificationPreferences[key as keyof typeof prev.notificationPreferences]
+      }
+    }));
   };
 
   const handleHourChange = (day: string, field: string, value: any) => {
@@ -236,10 +256,10 @@ export default function SettingsPage() {
                        </div>
                     </div>
 
-                    <div className="pt-4 flex justify-between items-center">
+                    <div className="pt-4 flex justify-between items-center bg-background/50 -mx-6 -mb-6 p-6 rounded-b-2xl border-t border-border mt-4">
                        <div className="flex items-center gap-3">
                           <div className={`w-3 h-3 rounded-full ${formData.isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
-                          <span className="text-sm font-medium">{formData.isOpen ? 'Open for Orders' : 'Closed'}</span>
+                          <span className="text-sm font-medium font-bold">{formData.isOpen ? 'Open for Orders' : 'Closed'}</span>
                           <button 
                             type="button" 
                             onClick={() => setFormData(prev => ({ ...prev, isOpen: !prev.isOpen }))}
@@ -249,11 +269,12 @@ export default function SettingsPage() {
                           </button>
                        </div>
                        <button 
+                        type="submit"
                         disabled={saving}
                         className="flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-bold text-black transition hover:bg-amber-500 shadow-lg shadow-primary/20 disabled:opacity-50 active:scale-95"
                        >
                           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                          Save Changes
+                          Save Profile
                        </button>
                     </div>
                  </form>
@@ -311,6 +332,17 @@ export default function SettingsPage() {
                       );
                     })}
                  </div>
+
+                 <div className="pt-6 flex justify-end border-t border-border mt-6">
+                    <button 
+                      onClick={() => handleSubmit()}
+                      disabled={saving}
+                      className="flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-bold text-black transition hover:bg-amber-500 shadow-lg shadow-primary/20 disabled:opacity-50 active:scale-95"
+                    >
+                       {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                       Update Hours
+                    </button>
+                 </div>
               </section>
             </div>
           )}
@@ -322,25 +354,65 @@ export default function SettingsPage() {
                
                <div className="space-y-6">
                   {[
-                    { title: "New Order Alerts", desc: "Receive sound and visual alerts for incoming orders", icon: Bell },
-                    { title: "Email Summaries", desc: "Get a daily summary of your restaurant's performance", icon: Globe },
-                    { title: "Stock Alerts", desc: "Notifications when items are running low or out of stock", icon: Store },
-                  ].map((item, idx) => (
-                    <div key={idx} className="flex items-center justify-between py-4 border-b border-border/50 last:border-0">
-                       <div className="flex gap-4">
-                          <div className="h-10 w-10 rounded-xl bg-background border border-border flex items-center justify-center text-muted">
-                             <item.icon className="h-5 w-5" />
-                          </div>
-                          <div>
-                             <p className="text-sm font-bold">{item.title}</p>
-                             <p className="text-xs text-muted">{item.desc}</p>
-                          </div>
-                       </div>
-                       <div className="w-12 h-6 rounded-full bg-emerald-500/20 relative cursor-pointer">
-                          <div className="absolute top-1 left-7 w-4 h-4 rounded-full bg-emerald-500 shadow-sm" />
-                       </div>
-                    </div>
-                  ))}
+                    { id: "newOrderAlerts", title: "New Order Alerts", desc: "Receive sound and visual alerts for incoming orders", icon: Bell },
+                    { id: "emailSummaries", title: "Email Summaries", desc: "Get a daily summary of your restaurant's performance", icon: Globe },
+                  ].map((item) => {
+                    const isActive = formData.notificationPreferences[item.id as keyof typeof formData.notificationPreferences];
+                    return (
+                      <div key={item.id} className="flex items-center justify-between py-4 border-b border-border/50 last:border-0">
+                         <div className="flex gap-4">
+                            <div className="h-10 w-10 rounded-xl bg-background border border-border flex items-center justify-center text-muted">
+                               <item.icon className="h-5 w-5" />
+                            </div>
+                            <div>
+                               <p className="text-sm font-bold">{item.title}</p>
+                               <p className="text-xs text-muted">{item.desc}</p>
+                            </div>
+                         </div>
+                         <div 
+                           onClick={() => handleNotificationToggle(item.id)}
+                           className={cn(
+                             "w-12 h-6 rounded-full relative cursor-pointer transition-all duration-300",
+                             isActive ? "bg-emerald-500/20" : "bg-neutral-800"
+                           )}
+                         >
+                            <div className={cn(
+                              "absolute top-1 w-4 h-4 rounded-full transition-all duration-300 shadow-sm",
+                              isActive ? "left-7 bg-emerald-500" : "left-1 bg-neutral-500"
+                            )} />
+                         </div>
+                      </div>
+                    );
+                  })}
+               </div>
+
+               <div className="pt-8 flex justify-between items-center border-t border-border mt-8">
+                  <button 
+                    onClick={async () => {
+                      setSaving(true);
+                      const res = await sendTestSummary();
+                      setSaving(false);
+                      if (res.success) {
+                        setMessage({ type: "success", text: "Test summary email sent!" });
+                        setTimeout(() => setMessage({ type: "", text: "" }), 3000);
+                      } else {
+                        setMessage({ type: "error", text: res.error || "Failed to send test email." });
+                      }
+                    }}
+                    disabled={saving}
+                    className="text-xs font-bold text-primary hover:underline flex items-center gap-2 disabled:opacity-50"
+                  >
+                    <Globe className="h-3 w-3" />
+                    Send Test Summary Email
+                  </button>
+                  <button 
+                    onClick={() => handleSubmit()}
+                    disabled={saving}
+                    className="flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-bold text-black transition hover:bg-amber-500 shadow-lg shadow-primary/20 disabled:opacity-50 active:scale-95"
+                  >
+                     {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                     Update Notifications
+                  </button>
                </div>
             </section>
           )}

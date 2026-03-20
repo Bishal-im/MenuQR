@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { usePathname } from "next/navigation";
 
 interface NotificationContextType {
@@ -9,6 +9,7 @@ interface NotificationContextType {
   latestOrderTime: string | null;
   markAsViewed: () => void;
   refresh: () => Promise<void>;
+  sendTestSummary: () => Promise<{ success: boolean; error?: string }>;
 }
 
 const NotificationContext = createContext<NotificationContextType>({
@@ -17,6 +18,7 @@ const NotificationContext = createContext<NotificationContextType>({
   latestOrderTime: null,
   markAsViewed: () => {},
   refresh: async () => {},
+  sendTestSummary: async () => ({ success: false, error: "Not initialized" })
 });
 
 export const useNotifications = () => useContext(NotificationContext);
@@ -25,6 +27,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const [pendingCount, setPendingCount] = useState(0);
   const [latestOrderTime, setLatestOrderTime] = useState<string | null>(null);
   const [lastViewedTime, setLastViewedTime] = useState<string | null>(null);
+  const [newOrderAlertsEnabled, setNewOrderAlertsEnabled] = useState(true);
+  const previousLatestOrderTimeRef = useRef<string | null>(null);
   const pathname = usePathname();
 
   // Load lastViewedTime from localStorage on mount
@@ -41,6 +45,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       const stats = await getAdminDashboardStats();
       if (stats) {
         setPendingCount(stats.pendingCount ?? 0);
+        setNewOrderAlertsEnabled(stats.notificationPreferences?.newOrderAlerts !== false);
         // Convert Date object to ISO string for comparison if needed
         const orderTime = stats.latestOrderTime ? new Date(stats.latestOrderTime).toISOString() : null;
         setLatestOrderTime(orderTime);
@@ -57,6 +62,37 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     }
   }, [latestOrderTime]);
 
+  const playAlertSound = useCallback(() => {
+    try {
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // A5 note
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 0.05);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+
+      oscillator.start(audioCtx.currentTime);
+      oscillator.stop(audioCtx.currentTime + 0.5);
+    } catch (e) {
+      console.error("Audio playback failed", e);
+    }
+  }, []);
+
+  const sendTestSummary = useCallback(async () => {
+    try {
+      const { sendDailySummary } = await import("@/services/adminService");
+      return await sendDailySummary();
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  }, []);
+
   // Initial fetch and interval
   useEffect(() => {
     refresh();
@@ -71,7 +107,19 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     }
   }, [pathname, latestOrderTime, markAsViewed]);
 
+  // Sound logic
+  useEffect(() => {
+    if (newOrderAlertsEnabled && latestOrderTime && latestOrderTime !== previousLatestOrderTimeRef.current) {
+      // If it's the first load, don't play sound
+      if (previousLatestOrderTimeRef.current !== null) {
+        playAlertSound();
+      }
+      previousLatestOrderTimeRef.current = latestOrderTime;
+    }
+  }, [latestOrderTime, newOrderAlertsEnabled, playAlertSound]);
+
   const hasUnread = Boolean(
+    newOrderAlertsEnabled &&
     pendingCount > 0 && 
     latestOrderTime && 
     (!lastViewedTime || new Date(latestOrderTime) > new Date(lastViewedTime))
@@ -83,7 +131,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       hasUnread, 
       latestOrderTime, 
       markAsViewed,
-      refresh 
+      refresh,
+      sendTestSummary
     }}>
       {children}
     </NotificationContext.Provider>
