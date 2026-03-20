@@ -222,10 +222,13 @@ export default function OrderStatusPage() {
                 )}
                 {waiterNotified ? "Called!" : "Call Waiter"}
               </button>
-              <button className="flex items-center justify-center gap-2 p-5 glass rounded-[2rem] border border-neutral-800/50 text-xs font-black shadow-lg">
+              <Link 
+                href={`/menu?tableId=${orderData?.tableId}&restaurantId=${orderData?.restaurantId}`}
+                className="flex items-center justify-center gap-2 p-5 glass rounded-[2rem] border border-neutral-800/50 text-xs font-black shadow-lg hover:bg-neutral-900 transition-all active:scale-95"
+              >
                 <ArrowUpRight className="w-4 h-4 text-orange-500" />
                 Order More
-              </button>
+              </Link>
             </>
           )}
         </div>

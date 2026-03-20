@@ -69,6 +69,50 @@ export async function getMenu(restaurantId: string) {
 export async function createOrder(data: OrderData) {
   await connectToDatabase();
   
+  // Check for an existing pending order for this table and restaurant
+  const existingOrder = await OrderModel.findOne({
+    restaurantId: mongoose.Types.ObjectId.isValid(data.restaurantId) ? data.restaurantId : undefined,
+    tableId: data.tableId,
+    status: 'pending'
+  });
+
+  if (existingOrder) {
+    // Merge items into the existing order
+    const currentItems = [...existingOrder.items];
+    
+    data.items.forEach(newItem => {
+      const existingItemIndex = currentItems.findIndex(i => 
+        i.menuItemId?.toString() === newItem.menuItemId || i.name === newItem.name
+      );
+
+      if (existingItemIndex !== -1) {
+        // Increment quantity of existing item
+        currentItems[existingItemIndex].quantity += newItem.quantity;
+      } else {
+        // Add new item to the list
+        currentItems.push({
+          menuItemId: mongoose.Types.ObjectId.isValid(newItem.menuItemId) ? newItem.menuItemId : undefined,
+          name: newItem.name,
+          quantity: newItem.quantity,
+          price: newItem.price
+        });
+      }
+    });
+
+    existingOrder.items = currentItems;
+    existingOrder.totalAmount += data.totalAmount;
+    existingOrder.updatedAt = new Date();
+    
+    await existingOrder.save();
+
+    return {
+      success: true,
+      orderId: existingOrder._id.toString(),
+      merged: true
+    };
+  }
+
+  // If no pending order, create a new one
   const newOrder = await OrderModel.create({
     restaurantId: mongoose.Types.ObjectId.isValid(data.restaurantId) ? data.restaurantId : undefined,
     tableId: data.tableId,

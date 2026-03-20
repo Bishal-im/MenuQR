@@ -94,8 +94,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const clearCart = () => {
-    setCart([]);
     localStorage.removeItem("menuqr_cart");
+    setCart([]);
   };
 
   const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
