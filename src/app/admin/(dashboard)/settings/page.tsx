@@ -453,23 +453,36 @@ export default function SettingsPage() {
           {activeTab === "account" && (
             <section className="rounded-2xl border border-border bg-card p-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                <h3 className="text-lg font-bold mb-2">Account Details</h3>
-               <p className="text-sm text-muted mb-8">Personal information and subscription status</p>
+               <p className="text-sm text-muted mb-8">Personal information and account settings</p>
                
                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-1.5">
                      <label className="text-xs font-bold uppercase tracking-wider text-muted ml-1">Account Owner</label>
-                     <p className="w-full rounded-xl border border-border bg-background p-3 text-sm font-bold text-white">{formData.ownerName}</p>
+                     <input 
+                        type="text"
+                        value={formData.ownerName}
+                        onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })}
+                        className="w-full rounded-xl border border-border bg-background p-3 text-sm font-bold text-white focus:outline-none focus:ring-1 focus:ring-primary transition-all"
+                        placeholder="Owner Name"
+                     />
                   </div>
                   <div className="space-y-1.5">
                      <label className="text-xs font-bold uppercase tracking-wider text-muted ml-1">Email Address</label>
-                     <p className="w-full rounded-xl border border-border bg-background p-3 text-sm font-bold text-neutral-400 flex items-center gap-2">
-                        <Lock className="h-3 w-3" /> {formData.name ? "Linked" : "Not Linked"}
-                     </p>
+                     <div className="w-full rounded-xl border border-border bg-background/50 p-3 text-sm font-bold text-neutral-500 flex items-center gap-2 cursor-not-allowed">
+                        <Lock className="h-3 w-3" /> {formData.email || "Linked"}
+                     </div>
                   </div>
-                  <div className="col-span-1 md:col-span-2 p-6 rounded-2xl bg-neutral-900 border border-neutral-800 border-dashed text-center">
-                     <p className="text-sm font-bold text-neutral-500 uppercase tracking-widest mb-2">Plan: Professional</p>
-                     <p className="text-xs text-neutral-600">Enjoy full access to all features on the MenuQR platform.</p>
-                  </div>
+               </div>
+
+               <div className="pt-8 flex justify-end border-t border-border mt-8">
+                  <button 
+                    onClick={() => handleSubmit()}
+                    disabled={saving}
+                    className="flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-bold text-black transition hover:bg-amber-500 shadow-lg shadow-primary/20 disabled:opacity-50 active:scale-95"
+                  >
+                     {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                     Save Account Settings
+                  </button>
                </div>
             </section>
           )}
