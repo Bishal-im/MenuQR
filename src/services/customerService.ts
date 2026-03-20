@@ -1,7 +1,7 @@
 "use server";
 
 import { connectToDatabase } from "@/lib/db";
-import { CategoryModel, MenuItemModel, OrderModel, RestaurantModel } from "@/models/Schemas";
+import { CategoryModel, MenuItemModel, OrderModel, RestaurantModel, TableModel } from "@/models/Schemas";
 
 export interface MenuItem {
   id: string;
@@ -69,11 +69,13 @@ export async function getMenu(restaurantId: string) {
 export async function createOrder(data: OrderData) {
   await connectToDatabase();
   
-  // Check for an existing pending order for this table and restaurant
+  // Check for an existing active order for this table and restaurant
+  // Sessions include: pending, accepted, preparing, ready
+  const activeStatuses = ['pending', 'accepted', 'preparing', 'ready'];
   const existingOrder = await OrderModel.findOne({
     restaurantId: mongoose.Types.ObjectId.isValid(data.restaurantId) ? data.restaurantId : undefined,
     tableId: data.tableId,
-    status: 'pending'
+    status: { $in: activeStatuses }
   });
 
   if (existingOrder) {
@@ -105,6 +107,12 @@ export async function createOrder(data: OrderData) {
     
     await existingOrder.save();
 
+    // Ensure table is marked as Occupied
+    await (mongoose.model('Table') as any).findOneAndUpdate(
+      { number: data.tableId, restaurantId: data.restaurantId },
+      { status: 'Occupied', lastOrderAt: new Date() }
+    );
+
     return {
       success: true,
       orderId: existingOrder._id.toString(),
@@ -125,6 +133,12 @@ export async function createOrder(data: OrderData) {
     totalAmount: data.totalAmount,
     status: 'pending'
   });
+
+  // Set table status to Occupied
+  await (mongoose.model('Table') as any).findOneAndUpdate(
+    { number: data.tableId, restaurantId: data.restaurantId },
+    { status: 'Occupied', lastOrderAt: new Date() }
+  );
 
   return {
     success: true,

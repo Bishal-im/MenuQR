@@ -289,6 +289,29 @@ export async function updateOrderStatus(orderId: string, status: string) {
   try {
     await connectToDatabase();
     await OrderModel.findByIdAndUpdate(orderId, { status: status.toLowerCase(), updatedAt: new Date() });
+    
+    // If marking as completed or cancelled, check if table should be cleared
+    if (['completed', 'cancelled'].includes(status.toLowerCase())) {
+      const order = await OrderModel.findById(orderId).lean();
+      if (order && order.tableId) {
+        // Find any OTHER active orders for this table
+        const activeOrdersCount = await OrderModel.countDocuments({
+          restaurantId: order.restaurantId,
+          tableId: order.tableId,
+          status: { $in: ['pending', 'accepted', 'preparing', 'ready'] },
+          _id: { $ne: new mongoose.Types.ObjectId(orderId) }
+        });
+
+        if (activeOrdersCount === 0) {
+          // No more active orders, set table to Empty
+          await TableModel.findOneAndUpdate(
+            { number: order.tableId, restaurantId: order.restaurantId },
+            { status: 'Empty' }
+          );
+        }
+      }
+    }
+
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };

@@ -196,7 +196,11 @@ export default function TablesPage() {
               </div>
               <div className={cn(
                 "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border",
-                table.status === "Active" ? "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" : "text-zinc-500 bg-background border-border"
+                table.status === "Occupied" 
+                  ? "text-rose-500 bg-rose-500/10 border-rose-500/20 shadow-[0_0_10px_rgba(244,63,94,0.1)]" 
+                  : table.status === "Empty" || table.status === "Active"
+                    ? "text-emerald-500 bg-emerald-500/10 border-emerald-500/20"
+                    : "text-zinc-500 bg-background border-border"
               )}>
                 {table.status}
               </div>
