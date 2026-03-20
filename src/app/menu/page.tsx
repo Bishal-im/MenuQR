@@ -52,6 +52,24 @@ function MenuContent() {
         setCategories(data.categories);
         setMenuItems(data.menu);
         setFilteredItems(data.menu);
+
+        // Immediate check for saved call status
+        if (savedCall) {
+          try {
+            const order = await getOrder(savedCall);
+            if (!order.callWaiter && !order.waiterAccepted) {
+              setWaiterNotified(false);
+              setWaiterAccepted(false);
+              setActiveServiceOrderId(null);
+              localStorage.removeItem("menuqr_active_service_call");
+            } else {
+              setWaiterAccepted(!!order.waiterAccepted);
+              setWaiterNotified(!!order.callWaiter);
+            }
+          } catch (err) {
+            console.error("Check saved call failed", err);
+          }
+        }
       } catch (e) {
         console.error("Failed to load menu", e);
       } finally {
@@ -92,6 +110,8 @@ function MenuContent() {
         // If the call is no longer active (notified is false) AND not accepted (so no modal will show)
         // then we can safely clear the activeServiceOrderId and localStorage
         if (!data.callWaiter && !data.waiterAccepted) {
+          setWaiterNotified(false);
+          setWaiterAccepted(false);
           setActiveServiceOrderId(null);
           localStorage.removeItem("menuqr_active_service_call");
         }
