@@ -115,23 +115,33 @@ export async function getAnalytics() {
   const totalOrders = await OrderModel.countDocuments();
   const totalUsers = await UserModel.countDocuments();
   
-  // Real billing/revenue would come from a Subscriptions model, 
-  // but for now we'll calculate based on some mock logic or just counts.
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const revenueByMonth = [];
+
+  const today = new Date();
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+    const endOfMonth = new Date(today.getFullYear(), today.getMonth() - i + 1, 0, 23, 59, 59, 999);
+    
+    const orders = await OrderModel.find({
+      status: 'completed',
+      createdAt: { $gte: d, $lte: endOfMonth }
+    }).lean();
+    
+    const revenue = orders.reduce((sum, o: any) => sum + (o.totalAmount || 0), 0);
+    
+    revenueByMonth.push({
+      month: monthNames[d.getMonth()],
+      revenue
+    });
+  }
   
   return {
     totalRestaurants,
     totalOrders,
     totalUsers,
-    revenueByMonth: [
-      { month: 'Jan', revenue: 45000 },
-      { month: 'Feb', revenue: 52000 },
-      { month: 'Mar', revenue: 48000 },
-    ],
-    ordersByMonth: [
-      { month: 'Jan', orders: 120 },
-      { month: 'Feb', orders: 150 },
-      { month: 'Mar', orders: 140 },
-    ]
+    revenueByMonth,
+    ordersByMonth: [] // Left blank as it's not used in the UI currently
   };
 }
 

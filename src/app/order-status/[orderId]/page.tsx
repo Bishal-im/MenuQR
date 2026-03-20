@@ -1,6 +1,6 @@
 "use client";
 
-import { getOrder, cancelOrder } from "@/services/customerService";
+import { getOrder, cancelOrder, callWaiterAlert, clearWaiterAccepted } from "@/services/customerService";
 import { ChevronLeft, Clock, ChefHat, Check, Utensils, HelpCircle, Phone, ArrowUpRight, XCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -17,16 +17,23 @@ export default function OrderStatusPage() {
   const [cancelling, setCancelling] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [orderData, setOrderData] = useState<any>(null);
+  const [isCallingWaiter, setIsCallingWaiter] = useState(false);
+  const [waiterNotified, setWaiterNotified] = useState(false);
+  const [waiterAccepted, setWaiterAccepted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchOrder = async () => {
       if (typeof orderId !== 'string') return;
       try {
-        const data = await getOrder(orderId);
+        const data = await getOrder(orderId as string);
         setOrderData(data);
         setStatus(data.status as OrderStatus);
+        if (data.callWaiter) setWaiterNotified(true);
+        if (data.waiterAccepted) setWaiterAccepted(true);
       } catch (e) {
         console.error("Failed to fetch order", e);
+        setError("Failed to fetch order details.");
       } finally {
         setLoading(false);
       }
@@ -34,8 +41,8 @@ export default function OrderStatusPage() {
 
     fetchOrder();
 
-    // Poll for status updates every 10 seconds
-    const interval = setInterval(fetchOrder, 10000);
+    // Poll for status updates every 5 seconds
+    const interval = setInterval(fetchOrder, 5000);
 
     return () => clearInterval(interval);
   }, [orderId]);
@@ -52,6 +59,20 @@ export default function OrderStatusPage() {
       alert(res.error || "Failed to cancel order");
     }
     setCancelling(false);
+  };
+
+  const handleCallWaiter = async () => {
+    if (!orderId || typeof orderId !== 'string') return;
+    
+    setIsCallingWaiter(true);
+    const res = await callWaiterAlert(orderId);
+    if (res.success) {
+      setWaiterNotified(true);
+      setTimeout(() => setWaiterNotified(false), 5000);
+    } else {
+      alert("Failed to call waiter. Please try again.");
+    }
+    setIsCallingWaiter(false);
   };
 
   if (loading) return (
@@ -132,6 +153,42 @@ export default function OrderStatusPage() {
           </div>
         )}
 
+      {/* Waiter Acceptance Alert */}
+      {waiterAccepted && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-orange-500/10 blur-[80px] pointer-events-none" />
+            
+            <div className="flex flex-col items-center text-center">
+              <div className="w-20 h-20 bg-orange-500/10 rounded-full flex items-center justify-center mb-6 border border-orange-500/20">
+                <div className="w-10 h-10 text-orange-500 flex items-center justify-center">
+                  <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              </div>
+
+              <h2 className="text-2xl font-black text-white mb-2 leading-tight">Waiter is Coming!</h2>
+              <p className="text-neutral-400 text-sm font-medium mb-8">
+                Your request has been accepted. A waiter will be at your table shortly.
+              </p>
+
+              <button
+                onClick={async () => {
+                  if (typeof orderId === 'string') {
+                    await clearWaiterAccepted(orderId);
+                  }
+                  setWaiterAccepted(false);
+                }}
+                className="w-full bg-orange-500 hover:bg-orange-600 text-black font-black py-4 rounded-2xl shadow-xl shadow-orange-500/20 active:scale-95 transition-all uppercase tracking-widest text-xs"
+              >
+                Okay, Thanks!
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
         <div className="grid grid-cols-2 gap-4 pt-12">
           {status === 'pending' ? (
             <button 
@@ -151,9 +208,19 @@ export default function OrderStatusPage() {
             </Link>
           ) : (
             <>
-              <button className="flex items-center justify-center gap-2 p-5 glass rounded-[2rem] border border-neutral-800/50 text-xs font-black shadow-lg">
-                <Phone className="w-4 h-4 text-orange-500" />
-                Call Waiter
+              <button 
+                onClick={handleCallWaiter}
+                disabled={isCallingWaiter || waiterNotified}
+                className={`flex items-center justify-center gap-2 p-5 glass rounded-[2rem] border border-neutral-800/50 text-xs font-black shadow-lg transition-all ${waiterNotified ? "text-green-500 border-green-500/30" : ""}`}
+              >
+                {isCallingWaiter ? (
+                  <Loader2 className="w-4 h-4 animate-spin text-orange-500" />
+                ) : waiterNotified ? (
+                  <Check className="w-4 h-4 text-green-500" />
+                ) : (
+                  <Phone className="w-4 h-4 text-orange-500" />
+                )}
+                {waiterNotified ? "Called!" : "Call Waiter"}
               </button>
               <button className="flex items-center justify-center gap-2 p-5 glass rounded-[2rem] border border-neutral-800/50 text-xs font-black shadow-lg">
                 <ArrowUpRight className="w-4 h-4 text-orange-500" />

@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useSearchParams } from "next/navigation";
 import { 
   Bell, 
   ChefHat, 
@@ -11,7 +12,8 @@ import {
   User, 
   LogOut,
   UtensilsCrossed,
-  Loader2
+  Loader2,
+  Zap
 } from "lucide-react";
 
 export default function WaiterLayout({
@@ -22,6 +24,8 @@ export default function WaiterLayout({
   const { user, loading, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'pending';
 
   const isLoginPage = pathname === '/waiter/login';
 
@@ -43,6 +47,8 @@ export default function WaiterLayout({
 
   return (
     <div className="min-h-screen bg-neutral-950 text-white flex flex-col">
+
+
       {/* Top Header */}
       <header className="h-16 bg-neutral-900 border-b border-neutral-800 flex items-center justify-between px-6 sticky top-0 z-50">
         <div className="flex items-center gap-3">
@@ -86,22 +92,16 @@ export default function WaiterLayout({
       {/* Mobile-style bottom nav for quick status filtering on tablets/phones */}
       <div className="h-20 bg-neutral-900 border-t border-neutral-800 grid grid-cols-4 px-4 sticky bottom-0 z-50">
         {[
-          { icon: Bell, label: "New", count: 0, color: "orange" },
-          { icon: ChefHat, label: "Active", count: 0, color: "blue" },
-          { icon: CheckCircle2, label: "Ready", count: 0, color: "green" },
-          { icon: ClipboardList, label: "History", color: "neutral" },
+          { icon: Zap, label: "Home", value: "pending", color: "orange" },
+          { icon: ClipboardList, label: "History", value: "history", color: "neutral" },
         ].map((tab, i) => (
           <button 
             key={i} 
-            className={`flex flex-col items-center justify-center gap-1 group relative ${i === 0 ? "text-primary" : "text-neutral-500"}`}
+            onClick={() => router.push(`/waiter/dashboard?tab=${tab.value}`)}
+            className={`flex flex-col items-center justify-center gap-1 group relative ${activeTab === tab.value ? "text-primary scale-110" : "text-neutral-500 hover:text-neutral-400"}`}
           >
             <tab.icon className="w-6 h-6 transition-transform group-active:scale-95" />
             <span className="text-[10px] font-black uppercase tracking-widest">{tab.label}</span>
-            {tab.count !== undefined && tab.count > 0 && (
-              <span className={`absolute top-3 right-5 text-[10px] font-black px-1.5 py-0.5 rounded-full text-white ${tab.color === 'orange' ? 'bg-primary shadow-lg shadow-primary/30' : 'bg-blue-500'}`}>
-                {tab.count}
-              </span>
-            )}
           </button>
         ))}
       </div>

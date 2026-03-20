@@ -103,6 +103,8 @@ export async function getOrder(orderId: string) {
   return {
     id: order._id.toString(),
     status: order.status,
+    callWaiter: order.callWaiter,
+    waiterAccepted: order.waiterAccepted,
     items: order.items.map((item: any) => ({
       id: item.menuItemId?._id?.toString() || item._id.toString(),
       name: item.menuItemId?.name || item.name,
@@ -136,6 +138,36 @@ export async function cancelOrder(orderId: string) {
   });
 
   return { success: true };
+}
+
+export async function callWaiterAlert(orderId: string) {
+  await connectToDatabase();
+  
+  if (!mongoose.Types.ObjectId.isValid(orderId)) {
+    return { success: false, error: "Invalid Order ID" };
+  }
+
+  const result = await OrderModel.findByIdAndUpdate(orderId, { 
+    callWaiter: true,
+    updatedAt: new Date()
+  });
+
+  return { success: !!result };
+}
+
+export async function clearWaiterAccepted(orderId: string) {
+  await connectToDatabase();
+  
+  if (!mongoose.Types.ObjectId.isValid(orderId)) {
+    return { success: false, error: "Invalid Order ID" };
+  }
+
+  const result = await OrderModel.findByIdAndUpdate(orderId, { 
+    waiterAccepted: false,
+    updatedAt: new Date()
+  });
+
+  return { success: !!result };
 }
 
 // Server actions must only export async functions.

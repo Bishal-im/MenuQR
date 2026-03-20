@@ -74,6 +74,8 @@ const OrderSchema = new Schema({
     enum: ['pending', 'accepted', 'preparing', 'ready', 'completed', 'cancelled'],
     default: 'pending' 
   },
+  callWaiter: { type: Boolean, default: false },
+  waiterAccepted: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

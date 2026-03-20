@@ -17,6 +17,7 @@ export interface WaiterOrder {
   items: WaiterOrderItem[];
   totalAmount: number;
   status: OrderStatus;
+  callWaiter?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -38,6 +39,7 @@ export async function getOrders(): Promise<WaiterOrder[]> {
     })),
     totalAmount: order.totalAmount,
     status: order.status as OrderStatus,
+    callWaiter: order.callWaiter || false,
     createdAt: order.createdAt.toISOString(),
     updatedAt: order.updatedAt.toISOString(),
   }));
@@ -67,6 +69,28 @@ export async function updateStatus(orderId: string, status: OrderStatus): Promis
     updatedAt: new Date()
   });
   return !!result;
+}
+
+export async function resolveWaiterCall(orderId: string): Promise<boolean> {
+  await connectToDatabase();
+  if (!mongoose.Types.ObjectId.isValid(orderId)) {
+    return false;
+  }
+  const result = await OrderModel.findByIdAndUpdate(orderId, { 
+    callWaiter: false,
+    waiterAccepted: true,
+    updatedAt: new Date()
+  });
+  return !!result;
+}
+
+export async function resolveAllServiceCalls(): Promise<boolean> {
+  await connectToDatabase();
+  const result = await OrderModel.updateMany(
+    { callWaiter: true },
+    { callWaiter: false, waiterAccepted: true, updatedAt: new Date() }
+  );
+  return result.modifiedCount > 0;
 }
 
 // Server actions must only export async functions.
