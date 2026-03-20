@@ -375,7 +375,8 @@ export async function getAdminDashboardStats() {
         error: "No restaurant associated with your account.",
         userName: session.name || "User",
         restaurantName: "N/A",
-        restaurantStatus: "Closed"
+        restaurantStatus: "Closed",
+        pendingCount: 0
       };
     }
 

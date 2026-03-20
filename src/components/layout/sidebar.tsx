@@ -40,7 +40,7 @@ export function Sidebar() {
     async function fetchBadge() {
        const { getAdminDashboardStats } = await import("@/services/adminService");
        const stats = await getAdminDashboardStats();
-       if (stats) setPendingCount(stats.pendingCount);
+       if (stats) setPendingCount(stats.pendingCount ?? 0);
     }
     fetchBadge();
     const interval = setInterval(fetchBadge, 30000);
