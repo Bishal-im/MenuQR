@@ -106,14 +106,58 @@ export async function updateStatus(orderId: string, status: OrderStatus): Promis
     if (!mongoose.Types.ObjectId.isValid(orderId)) {
       return false;
     }
-    const result = await OrderModel.findOneAndUpdate(
-      { _id: new mongoose.Types.ObjectId(orderId), restaurantId: new mongoose.Types.ObjectId(session.restaurantId) },
-      { 
-        status,
-        updatedAt: new Date()
-      }
-    );
-    return !!result;
+    const currentOrder = await OrderModel.findOne({
+      _id: new mongoose.Types.ObjectId(orderId), 
+      restaurantId: new mongoose.Types.ObjectId(session.restaurantId) 
+    });
+
+    if (!currentOrder) return false;
+
+    // Check if there's already an order in the target status for this table
+    const targetOrder = await OrderModel.findOne({
+      restaurantId: currentOrder.restaurantId,
+      tableId: currentOrder.tableId,
+      status: status,
+      _id: { $ne: currentOrder._id }
+    });
+
+    if (targetOrder) {
+      // Merge items from currentOrder into targetOrder
+      const mergedItems = [...targetOrder.items];
+      
+      currentOrder.items.forEach((item: any) => {
+        const existingItemIndex = mergedItems.findIndex(i => 
+          i.menuItemId?.toString() === item.menuItemId?.toString() || i.name === item.name
+        );
+
+        if (existingItemIndex !== -1) {
+          mergedItems[existingItemIndex].quantity += item.quantity;
+        } else {
+          mergedItems.push({
+            menuItemId: item.menuItemId,
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price
+          });
+        }
+      });
+
+      targetOrder.items = mergedItems;
+      targetOrder.totalAmount += currentOrder.totalAmount;
+      targetOrder.updatedAt = new Date();
+      
+      await targetOrder.save();
+
+      // Delete the current order as it has been merged
+      await OrderModel.findByIdAndDelete(currentOrder._id);
+      return true;
+    }
+
+    // No target order, just update status
+    currentOrder.status = status;
+    currentOrder.updatedAt = new Date();
+    await currentOrder.save();
+    return true;
   } catch (error) {
     console.error("[WAITER SERVICE] Update Status Error:", error);
     return false;
