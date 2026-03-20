@@ -541,6 +541,10 @@ export async function getAdminDashboardStats(restaurantIdOverride?: string) {
       notificationPreferences: (restaurant as any)?.notificationPreferences || {
         newOrderAlerts: true,
         emailSummaries: true
+      },
+      securityPreferences: (restaurant as any)?.securityPreferences || {
+        loginNotifications: true,
+        doubleVerification: false
       }
     };
   } catch (error: any) {
@@ -593,6 +597,10 @@ export async function getRestaurantSettings() {
           notificationPreferences: {
             newOrderAlerts: true,
             emailSummaries: true
+          },
+          securityPreferences: {
+            loginNotifications: true,
+            doubleVerification: false
           }
         }
       };
@@ -614,6 +622,10 @@ export async function getRestaurantSettings() {
         notificationPreferences: (restaurant as any).notificationPreferences || {
           newOrderAlerts: true,
           emailSummaries: true
+        },
+        securityPreferences: (restaurant as any).securityPreferences || {
+          loginNotifications: true,
+          doubleVerification: false
         }
       }
     };
@@ -648,6 +660,7 @@ export async function updateRestaurantSettings(data: any) {
       (restaurant as any).isOpen = data.isOpen;
       (restaurant as any).operatingHours = data.operatingHours;
       (restaurant as any).notificationPreferences = data.notificationPreferences;
+      (restaurant as any).securityPreferences = data.securityPreferences;
       restaurant.updatedAt = new Date();
       await restaurant.save();
     } else {
@@ -665,6 +678,10 @@ export async function updateRestaurantSettings(data: any) {
         notificationPreferences: data.notificationPreferences || {
           newOrderAlerts: true,
           emailSummaries: true
+        },
+        securityPreferences: data.securityPreferences || {
+          loginNotifications: true,
+          doubleVerification: false
         }
       });
 

@@ -59,6 +59,10 @@ const RestaurantSchema = new Schema({
     newOrderAlerts: { type: Boolean, default: true },
     emailSummaries: { type: Boolean, default: true },
   },
+  securityPreferences: {
+    loginNotifications: { type: Boolean, default: true },
+    doubleVerification: { type: Boolean, default: false },
+  },
   createdAt: { type: Date, default: Date.now },
 });
 

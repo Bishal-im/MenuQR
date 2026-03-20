@@ -7,24 +7,49 @@ import { getRestaurantSettings, updateRestaurantSettings } from "@/services/admi
 import { cn } from "@/lib/utils";
 import { useNotifications } from "@/context/NotificationContext";
 
+interface SettingsFormData {
+  name: string;
+  cuisine: string;
+  address: string;
+  phone: string;
+  website: string;
+  ownerName: string;
+  email: string;
+  isOpen: boolean;
+  operatingHours: any;
+  notificationPreferences: {
+    newOrderAlerts: boolean;
+    emailSummaries: boolean;
+  };
+  securityPreferences: {
+    loginNotifications: boolean;
+    doubleVerification: boolean;
+  };
+}
+
 export default function SettingsPage() {
   const { sendTestSummary } = useNotifications();
   const [activeTab, setActiveTab] = useState("profile");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<SettingsFormData>({
     name: "",
     cuisine: "",
     address: "",
     phone: "",
     website: "",
     ownerName: "",
+    email: "",
     isOpen: true,
     operatingHours: {} as any,
     notificationPreferences: {
       newOrderAlerts: true,
       emailSummaries: true
+    },
+    securityPreferences: {
+      loginNotifications: true,
+      doubleVerification: false
     }
   });
 
@@ -39,11 +64,16 @@ export default function SettingsPage() {
           phone: res.data.phone || "",
           website: res.data.website || "",
           ownerName: res.data.ownerName || "",
+          email: res.data.email || "",
           isOpen: res.data.isOpen ?? true,
           operatingHours: res.data.operatingHours || {},
           notificationPreferences: res.data.notificationPreferences || {
             newOrderAlerts: true,
             emailSummaries: true
+          },
+          securityPreferences: res.data.securityPreferences || {
+            loginNotifications: true,
+            doubleVerification: false
           }
         });
       } else {
@@ -98,6 +128,16 @@ export default function SettingsPage() {
           ...prev.operatingHours[day],
           [field]: value
         }
+      }
+    }));
+  };
+
+  const handleSecurityToggle = (field: string) => {
+    setFormData(prev => ({
+      ...prev,
+      securityPreferences: {
+        ...prev.securityPreferences,
+        [field]: !prev.securityPreferences[field as keyof typeof prev.securityPreferences]
       }
     }));
   };
@@ -423,11 +463,55 @@ export default function SettingsPage() {
                <p className="text-sm text-muted mb-8">Protect your account and restaurant data</p>
                
                <div className="space-y-6">
+                  {/* Security Preferences */}
+                  <div className="grid grid-cols-1 gap-4">
+                    {[
+                      { 
+                        id: 'loginNotifications', 
+                        title: 'Login Notifications', 
+                        desc: 'Receive an email every time your account is accessed',
+                        icon: Bell
+                      },
+                      { 
+                        id: 'doubleVerification', 
+                        title: 'Double Verification', 
+                        desc: 'Request an extra confirmation code for sensitive changes',
+                        icon: Shield
+                      }
+                    ].map((pref) => (
+                      <div key={pref.id} className="flex items-center justify-between p-4 rounded-xl bg-background border border-border group hover:border-primary/30 transition-all">
+                        <div className="flex gap-4">
+                          <div className="h-10 w-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                            <pref.icon className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold">{pref.title}</p>
+                            <p className="text-[10px] text-muted uppercase tracking-tight">{pref.desc}</p>
+                          </div>
+                        </div>
+                        <button 
+                          onClick={() => handleSecurityToggle(pref.id)}
+                          className={cn(
+                            "relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none",
+                            formData.securityPreferences[pref.id as keyof typeof formData.securityPreferences] ? "bg-primary" : "bg-neutral-800"
+                          )}
+                        >
+                          <span 
+                            className={cn(
+                              "inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-sm",
+                              formData.securityPreferences[pref.id as keyof typeof formData.securityPreferences] ? "translate-x-6" : "translate-x-1"
+                            )} 
+                          />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
                   <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/10 flex gap-4">
                      <Lock className="h-6 w-6 text-amber-500 shrink-0" />
                      <div>
-                        <p className="text-sm font-bold text-amber-500">Password Management</p>
-                        <p className="text-xs text-neutral-400 mt-1">We use passwordless email login for maximum security. You don't need to manage a password!</p>
+                        <p className="text-sm font-bold text-amber-500 uppercase tracking-tighter">Passwordless Access</p>
+                        <p className="text-[10px] text-neutral-400 mt-1 uppercase font-bold">Your account uses secure OTP-based login. No passwords required.</p>
                      </div>
                   </div>
 
@@ -443,33 +527,14 @@ export default function SettingsPage() {
                               <p className="text-[10px] text-muted uppercase">Last active: Just now</p>
                            </div>
                         </div>
-                        <button className="text-[10px] font-black uppercase tracking-widest text-red-500 hover:underline">Revoke</button>
-                     </div>
-                  </div>
-               </div>
-            </section>
-          )}
-
-          {activeTab === "account" && (
-            <section className="rounded-2xl border border-border bg-card p-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-               <h3 className="text-lg font-bold mb-2">Account Details</h3>
-               <p className="text-sm text-muted mb-8">Personal information and account settings</p>
-               
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-1.5">
-                     <label className="text-xs font-bold uppercase tracking-wider text-muted ml-1">Account Owner</label>
-                     <input 
-                        type="text"
-                        value={formData.ownerName}
-                        onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })}
-                        className="w-full rounded-xl border border-border bg-background p-3 text-sm font-bold text-white focus:outline-none focus:ring-1 focus:ring-primary transition-all"
-                        placeholder="Owner Name"
-                     />
-                  </div>
-                  <div className="space-y-1.5">
-                     <label className="text-xs font-bold uppercase tracking-wider text-muted ml-1">Email Address</label>
-                     <div className="w-full rounded-xl border border-border bg-background/50 p-3 text-sm font-bold text-neutral-500 flex items-center gap-2 cursor-not-allowed">
-                        <Lock className="h-3 w-3" /> {formData.email || "Linked"}
+                        <button 
+                          onClick={() => {
+                            window.location.href = '/admin/login'; // Simple mock functional revoke (force log out)
+                          }}
+                          className="text-[10px] font-black uppercase tracking-widest text-red-500 hover:scale-105 active:scale-95 transition-all"
+                        >
+                          Revoke
+                        </button>
                      </div>
                   </div>
                </div>
@@ -481,8 +546,101 @@ export default function SettingsPage() {
                     className="flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-bold text-black transition hover:bg-amber-500 shadow-lg shadow-primary/20 disabled:opacity-50 active:scale-95"
                   >
                      {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                     Save Account Settings
+                     Update Security Settings
                   </button>
+               </div>
+            </section>
+          )}
+
+          {activeTab === "account" && (
+            <section className="rounded-2xl border border-border bg-card p-0 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
+               {/* Profile Header */}
+               <div className="bg-primary/5 p-8 border-b border-border">
+                  <div className="flex flex-col md:flex-row items-center gap-6">
+                     <div className="h-20 w-20 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-3xl font-black shadow-inner shadow-primary/10">
+                        {formData.ownerName ? formData.ownerName[0].toUpperCase() : <User className="h-10 w-10" />}
+                     </div>
+                     <div className="text-center md:text-left space-y-1">
+                        <div className="flex items-center justify-center md:justify-start gap-2">
+                           <h3 className="text-xl font-black tracking-tight">{formData.ownerName || "Restaurant Owner"}</h3>
+                           <div className="flex items-center gap-1 bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-500/20">
+                              <CheckCircle2 className="h-3 w-3" />
+                              Verified
+                           </div>
+                        </div>
+                        <p className="text-sm text-muted font-medium">Administrator • {formData.email}</p>
+                     </div>
+                  </div>
+               </div>
+
+               <div className="p-8 space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                     <div className="space-y-4">
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted ml-0.5">Primary Information</h4>
+                        <div className="space-y-4">
+                           <div className="space-y-1.5">
+                              <label className="text-xs font-bold uppercase tracking-wider text-muted ml-1">Account Owner</label>
+                              <div className="relative group">
+                                 <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted group-focus-within:text-primary transition-colors" />
+                                 <input 
+                                    type="text"
+                                    value={formData.ownerName}
+                                    onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })}
+                                    className="w-full rounded-xl border border-border bg-background pl-10 pr-4 py-3 text-sm font-bold text-white focus:outline-none focus:ring-1 focus:ring-primary transition-all hover:border-primary/30"
+                                    placeholder="Owner Name"
+                                 />
+                              </div>
+                           </div>
+                           <div className="space-y-1.5">
+                              <label className="text-xs font-bold uppercase tracking-wider text-muted ml-1">Email Address</label>
+                              <div className="w-full rounded-xl border border-border bg-background/50 p-3 text-sm font-bold text-neutral-500 flex items-center gap-2 cursor-not-allowed">
+                                 <Lock className="h-4 w-4" /> {formData.email || "Linked"}
+                              </div>
+                           </div>
+                        </div>
+                     </div>
+
+                     <div className="space-y-4">
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted ml-0.5">Account Status</h4>
+                        <div className="grid grid-cols-1 gap-4">
+                           <div className="p-4 rounded-xl border border-border bg-background flex items-center justify-between">
+                              <div>
+                                 <p className="text-[10px] font-black uppercase tracking-widest text-muted mb-1">Status</p>
+                                 <p className="text-sm font-bold text-emerald-500">Active</p>
+                              </div>
+                              <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shadow-lg shadow-emerald-500/50" />
+                           </div>
+                           <div className="p-4 rounded-xl border border-border bg-background">
+                              <p className="text-[10px] font-black uppercase tracking-widest text-muted mb-1">Account Type</p>
+                              <p className="text-sm font-bold">Standard Owner</p>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+
+                  {/* Danger Zone */}
+                  <div className="pt-8 border-t border-border">
+                     <div className="p-6 rounded-2xl bg-red-500/5 border border-red-500/10 flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div className="text-center md:text-left">
+                           <p className="text-sm font-black text-red-500 uppercase tracking-tight">Deactivate Restaurant</p>
+                           <p className="text-xs text-muted mt-1 font-medium">Temporarily disable your restaurant from the public listing.</p>
+                        </div>
+                        <button className="px-6 py-2 rounded-xl border border-red-500/20 text-red-500 text-xs font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all shadow-lg shadow-red-500/10">
+                           Deactivate
+                        </button>
+                     </div>
+                  </div>
+
+                  <div className="pt-4 flex justify-end">
+                     <button 
+                       onClick={() => handleSubmit()}
+                       disabled={saving}
+                       className="flex items-center gap-2 rounded-xl bg-primary px-8 py-3 text-sm font-black text-black transition hover:bg-amber-500 shadow-xl shadow-primary/20 disabled:opacity-50 active:scale-95 group"
+                     >
+                        {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5 group-hover:scale-110 transition-transform" />}
+                        Save Account Settings
+                     </button>
+                  </div>
                </div>
             </section>
           )}
