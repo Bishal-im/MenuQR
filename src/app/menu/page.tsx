@@ -93,7 +93,7 @@ function MenuContent() {
               <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
               <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
               <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
-              4.9 • Table 12
+              4.9 • Table {searchParams.get("tableId") || "N/A"}
             </p>
           </div>
           <div className="w-12 h-12 rounded-full bg-neutral-900 border border-neutral-800 flex items-center justify-center shadow-2xl">

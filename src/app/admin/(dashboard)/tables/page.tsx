@@ -6,8 +6,11 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import DeleteConfirmationModal from "@/components/common/DeleteConfirmationModal";
 import { getTables, addTable, deleteTable } from "@/services/adminService";
+import { QRCodeSVG } from "qrcode.react";
+import { useAuth } from "@/context/AuthContext";
 
 export default function TablesPage() {
+  const { user } = useAuth();
   const [tables, setTables] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -68,6 +71,12 @@ export default function TablesPage() {
       </div>
     );
   }
+
+  // Generate QR URL
+  const getQRUrl = (tableNumber: string) => {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://menu-qr-topaz.vercel.app";
+    return `${baseUrl}/menu?restaurantId=${user?.restaurantId}&tableId=${tableNumber}`;
+  };
 
   return (
     <div className="space-y-6">
@@ -204,22 +213,61 @@ export default function TablesPage() {
              className="relative w-full max-w-sm rounded-3xl bg-card p-8 border border-border shadow-2xl text-center"
            >
               <div className="flex flex-col items-center">
-                 <div className="mb-6 rounded-2xl bg-white p-4 shadow-xl">
-                    <div className="flex h-48 w-48 items-center justify-center rounded-lg border-2 border-dashed border-zinc-200 bg-zinc-50 relative">
-                       <QrCode className="h-32 w-32 text-zinc-300" />
-                       <p className="absolute bottom-2 text-[10px] font-bold text-zinc-400 uppercase tracking-tighter">Table {showQRModal} • MenuQR</p>
+                 <div className="mb-6 rounded-2xl bg-white p-6 shadow-xl relative overflow-hidden group">
+                    <QRCodeSVG 
+                      value={getQRUrl(showQRModal)}
+                      size={200}
+                      level="H"
+                      includeMargin={false}
+                      imageSettings={{
+                        src: "/favicon.ico",
+                        x: undefined,
+                        y: undefined,
+                        height: 40,
+                        width: 40,
+                        excavate: true,
+                      }}
+                    />
+                    <div className="mt-4 text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-t border-zinc-100 pt-3">
+                       Table {showQRModal} • MenuQR
                     </div>
                  </div>
                  <h3 className="text-xl font-bold">Table {showQRModal} QR Code</h3>
-                 <p className="mt-2 text-sm text-muted mb-8 italic">SCAN TO VIEW MENU & ORDER</p>
+                 <p className="mt-2 text-sm text-muted mb-8 italic italic">SCAN TO VIEW MENU & ORDER</p>
                  
                  <div className="flex w-full gap-3">
-                    <button className="flex-1 rounded-xl bg-primary py-3 text-sm font-bold text-black transition hover:bg-amber-500">
+                    <button 
+                      onClick={() => {
+                        const canvas = document.querySelector('svg');
+                        if (canvas) {
+                          const svgData = new XMLSerializer().serializeToString(canvas);
+                          const canvasEl = document.createElement("canvas");
+                          const ctx = canvasEl.getContext("2d");
+                          const img = new Image();
+                          img.onload = () => {
+                            canvasEl.width = img.width;
+                            canvasEl.height = img.height;
+                            ctx?.drawImage(img, 0, 0);
+                            const pngFile = canvasEl.toDataURL("image/png");
+                            const downloadLink = document.createElement("a");
+                            downloadLink.download = `Table-${showQRModal}-QR.png`;
+                            downloadLink.href = `${pngFile}`;
+                            downloadLink.click();
+                          };
+                          img.src = `data:image/svg+xml;base64,${btoa(svgData)}`;
+                        }
+                      }}
+                      className="flex-1 rounded-xl bg-primary py-3 text-sm font-bold text-black transition hover:bg-amber-500"
+                    >
                        Download PNG
                     </button>
-                    <button className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary border border-border transition hover:bg-white/5">
+                    <a 
+                      href={getQRUrl(showQRModal)} 
+                      target="_blank" 
+                      className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary border border-border transition hover:bg-white/5"
+                    >
                        <ExternalLink className="h-5 w-5" />
-                    </button>
+                    </a>
                  </div>
               </div>
            </motion.div>
