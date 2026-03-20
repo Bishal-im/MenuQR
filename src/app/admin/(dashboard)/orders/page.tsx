@@ -293,26 +293,44 @@ export default function OrdersPage() {
                   <div className="grid grid-cols-2 gap-3">
                      <button 
                       onClick={() => handleUpdateStatus(selectedOrder.fullId, "Preparing")}
-                      disabled={isUpdating}
-                      className="flex flex-col items-center justify-center h-20 rounded-2xl border border-border bg-background p-4 hover:border-primary hover:text-primary transition group disabled:opacity-50"
+                      disabled={isUpdating || ["Preparing", "Ready", "Completed", "Cancelled"].includes(selectedOrder.status)}
+                      className={cn(
+                        "flex flex-col items-center justify-center h-20 rounded-2xl border border-border bg-background p-4 transition group",
+                        !["Preparing", "Ready", "Completed", "Cancelled"].includes(selectedOrder.status) 
+                          ? "hover:border-primary hover:text-primary" 
+                          : "opacity-40 cursor-not-allowed",
+                        selectedOrder.status === "Preparing" && "border-primary text-primary opacity-100"
+                      )}
                      >
                         <Clock className="h-5 w-5 mb-2 group-hover:animate-pulse" />
                         <span className="text-xs font-bold">Prepare</span>
                      </button>
                      <button 
                       onClick={() => handleUpdateStatus(selectedOrder.fullId, "Ready")}
-                      disabled={isUpdating}
-                      className="flex flex-col items-center justify-center h-20 rounded-2xl border border-border bg-background p-4 hover:border-emerald-500 hover:text-emerald-500 transition group disabled:opacity-50"
+                      disabled={isUpdating || ["Ready", "Completed", "Cancelled"].includes(selectedOrder.status)}
+                      className={cn(
+                        "flex flex-col items-center justify-center h-20 rounded-2xl border border-border bg-background p-4 transition group",
+                        !["Ready", "Completed", "Cancelled"].includes(selectedOrder.status)
+                          ? "hover:border-emerald-500 hover:text-emerald-500"
+                          : "opacity-40 cursor-not-allowed",
+                        selectedOrder.status === "Ready" && "border-emerald-500 text-emerald-500 opacity-100"
+                      )}
                      >
                         <CheckCircle2 className="h-5 w-5 mb-2 group-hover:scale-110 transition" />
                         <span className="text-xs font-bold">Ready</span>
                      </button>
                      <button 
                       onClick={() => handleUpdateStatus(selectedOrder.fullId, "Completed")}
-                      disabled={isUpdating}
-                      className="col-span-2 flex items-center justify-center gap-2 h-12 rounded-2xl bg-zinc-800 text-white font-bold hover:bg-zinc-700 transition disabled:opacity-50"
+                      disabled={isUpdating || ["Completed", "Cancelled"].includes(selectedOrder.status)}
+                      className={cn(
+                        "col-span-2 flex items-center justify-center gap-2 h-12 rounded-2xl font-bold transition",
+                        !["Completed", "Cancelled"].includes(selectedOrder.status)
+                          ? "bg-zinc-800 text-white hover:bg-zinc-700"
+                          : "bg-zinc-900 text-zinc-600 cursor-not-allowed"
+                      )}
                      >
-                        <CheckCircle2 className="h-4 w-4" /> Mark as Completed
+                        <CheckCircle2 className="h-4 w-4" /> 
+                        {selectedOrder.status === "Completed" ? "Completed" : "Mark as Completed"}
                      </button>
                   </div>
                   <button className="w-full flex items-center justify-center gap-2 h-12 rounded-2xl bg-primary font-bold text-black mt-4 hover:bg-amber-500 transition">
