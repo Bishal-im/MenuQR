@@ -29,8 +29,8 @@ export default function OrderStatusPage() {
         const data = await getOrder(orderId as string);
         setOrderData(data);
         setStatus(data.status as OrderStatus);
-        if (data.callWaiter) setWaiterNotified(true);
-        if (data.waiterAccepted) setWaiterAccepted(true);
+        setWaiterNotified(!!data.callWaiter);
+        setWaiterAccepted(!!data.waiterAccepted);
       } catch (e) {
         console.error("Failed to fetch order", e);
         setError("Failed to fetch order details.");

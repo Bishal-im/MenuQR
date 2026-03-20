@@ -86,9 +86,12 @@ function MenuContent() {
     const pollStatus = async () => {
       try {
         const data = await getOrder(activeServiceOrderId);
+        setWaiterNotified(!!data.callWaiter);
+        setWaiterAccepted(!!data.waiterAccepted);
+        
         if (data.waiterAccepted) {
-          setWaiterAccepted(true);
-          setWaiterNotified(false);
+          // If accepted, we can stop the local "notified" spinner/state
+          // but we keep the activeServiceOrderId until they dismiss the modal
         }
       } catch (e) {
         console.error("Polling failed", e);
