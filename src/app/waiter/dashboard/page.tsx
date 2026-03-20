@@ -148,10 +148,12 @@ function WaiterDashboardContent() {
     }
     
     const matchesSearch = o.tableId.includes(searchQuery) || o.id.includes(searchQuery);
-    return matchesTab && matchesSearch;
+    const hasItems = o.items && o.items.length > 0;
+    
+    return matchesTab && matchesSearch && hasItems;
   });
 
-  const getTabCount = (status: OrderStatus) => orders.filter(o => o.status === status).length;
+  const getTabCount = (status: OrderStatus) => orders.filter(o => o.status === status && o.items && o.items.length > 0).length;
 
   return (
     <div className="flex-grow flex flex-col h-full overflow-hidden bg-neutral-950">

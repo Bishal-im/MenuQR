@@ -162,38 +162,40 @@ function MenuContent() {
         </div>
 
         {/* Search Bar & Call Waiter */}
-        <div className="flex gap-3 mb-2">
-          <div className={`relative transition-all duration-300 ${isSearchFocused ? "flex-grow" : "flex-grow"}`}>
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 w-5 h-5" />
+        <div className="flex gap-2 mb-2 items-center">
+          <div className={`relative transition-all duration-500 ease-in-out ${isSearchFocused ? "flex-grow" : "w-[60px]"}`}>
+            <Search className="absolute left-[18px] top-1/2 -translate-y-1/2 text-neutral-500 w-6 h-6 z-10 pointer-events-none" />
             <input
               type="text"
-              placeholder="Search for dishes..."
+              placeholder={isSearchFocused ? "Search for dishes..." : ""}
               value={searchQuery}
               onFocus={() => setIsSearchFocused(true)}
               onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-neutral-900/50 backdrop-blur-md border border-neutral-800 focus:border-primary focus:ring-1 focus:ring-primary outline-none rounded-2xl py-4 pl-12 pr-4 text-white transition-all placeholder:text-neutral-600"
+              className={`w-full bg-neutral-900/50 backdrop-blur-md border border-neutral-800 focus:border-primary focus:ring-1 focus:ring-primary outline-none rounded-2xl py-[18px] transition-all duration-500 placeholder:text-neutral-600 ${
+                isSearchFocused ? "pl-14 pr-4 opacity-100" : "pl-14 pr-0 cursor-pointer opacity-80 hover:opacity-100"
+              }`}
             />
           </div>
           <button 
             onClick={handleCallWaiter}
             disabled={isCallingWaiter || waiterNotified || waiterAccepted}
-            className={`flex items-center justify-center gap-2 group transition-all duration-300 h-[60px] bg-neutral-900/50 backdrop-blur-md border border-neutral-800 rounded-2xl active:scale-95 ${
-              waiterNotified ? "border-green-500/50 text-green-500 px-5" : "hover:border-primary/50 text-neutral-400 hover:text-primary px-4 md:px-5"
-            } ${isSearchFocused ? "w-[60px] px-0" : "flex-shrink-0"}`}
+            className={`flex items-center justify-center gap-2 group transition-all duration-500 ease-in-out h-[60px] bg-neutral-900/50 backdrop-blur-md border border-neutral-800 rounded-2xl active:scale-95 whitespace-nowrap overflow-hidden ${
+              waiterNotified ? "border-green-500/50 text-green-500 px-6" : "hover:border-primary/50 text-neutral-400 hover:text-primary"
+            } ${isSearchFocused ? "w-[60px] px-0 flex-shrink-0" : "flex-grow px-6"}`}
           >
             {isCallingWaiter ? (
               <Loader2 className="w-5 h-5 animate-spin text-primary" />
             ) : waiterNotified ? (
               <>
-                <Check className="w-5 h-5" />
+                <Check className="w-5 h-5 flex-shrink-0" />
                 {!isSearchFocused && <span className="text-xs font-black uppercase tracking-widest text-green-500">Notified</span>}
               </>
             ) : (
               <>
-                <Bell className={`w-5 h-5 ${isSearchFocused ? "mx-auto" : ""}`} />
+                <Bell className={`w-5 h-5 flex-shrink-0 ${isSearchFocused ? "" : ""}`} />
                 {!isSearchFocused && (
-                  <span className="text-xs font-black uppercase tracking-widest whitespace-nowrap">Call Waiter</span>
+                  <span className="text-xs font-black uppercase tracking-widest">Call Waiter</span>
                 )}
               </>
             )}
