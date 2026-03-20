@@ -7,6 +7,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { Navbar } from "@/components/layout/navbar";
 import { Loader2 } from "lucide-react";
 import { SidebarProvider } from "@/context/SidebarContext";
+import { NotificationProvider } from "@/context/NotificationContext";
 
 export default function AdminLayout({
   children,
@@ -31,16 +32,18 @@ export default function AdminLayout({
   }
 
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen bg-background text-foreground selection:bg-primary/30 selection:text-primary overflow-hidden">
-        <Sidebar />
-        <div className="flex flex-1 flex-col min-w-0 overflow-hidden">
-          <Navbar />
-          <main className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
-            {children}
-          </main>
+    <NotificationProvider>
+      <SidebarProvider>
+        <div className="flex min-h-screen bg-background text-foreground selection:bg-primary/30 selection:text-primary overflow-hidden">
+          <Sidebar />
+          <div className="flex flex-1 flex-col min-w-0 overflow-hidden">
+            <Navbar />
+            <main className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
+              {children}
+            </main>
+          </div>
         </div>
-      </div>
-    </SidebarProvider>
+      </SidebarProvider>
+    </NotificationProvider>
   );
 }

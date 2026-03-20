@@ -20,34 +20,24 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useSidebar } from "@/context/SidebarContext";
+import { useNotifications } from "@/context/NotificationContext";
 
 export function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const router = useRouter();
   const { logout } = useAuth();
-  const [pendingCount, setPendingCount] = useState(0);
   const { isOpen, close } = useSidebar();
-
-  useEffect(() => {
-    async function fetchBadge() {
-       const { getAdminDashboardStats } = await import("@/services/adminService");
-       const stats = await getAdminDashboardStats();
-       if (stats) setPendingCount(stats.pendingCount ?? 0);
-    }
-    fetchBadge();
-    const interval = setInterval(fetchBadge, 30000);
-    return () => clearInterval(interval);
-  }, []);
+  const { pendingCount, hasUnread } = useNotifications();
 
   useEffect(() => {
     // Close sidebar on mobile when navigating
     close();
-  }, [pathname]);
+  }, [pathname, close]);
 
   const menuWithBadges = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/admin/dashboard" },
-    { icon: ShoppingBag, label: "Orders", href: "/admin/orders", badge: pendingCount > 0 ? pendingCount : undefined },
+    { icon: ShoppingBag, label: "Orders", href: "/admin/orders", badge: hasUnread ? pendingCount : undefined },
     { icon: MenuIcon, label: "Menu Management", href: "/admin/menu" },
     { icon: Hash, label: "Tables & QR", href: "/admin/tables" },
     { icon: BarChart3, label: "Analytics", href: "/admin/analytics" },

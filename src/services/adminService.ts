@@ -12,6 +12,11 @@ import {
 import { getSession } from "@/services/authService";
 import mongoose from "mongoose";
 
+const isSuperAdmin = (email: string) => {
+  const superadminEmail = process.env.SUPERADMIN_EMAIL;
+  return superadminEmail?.split(',').map(e => e.trim().toLowerCase()).includes(email.toLowerCase());
+};
+
 // --- Staff Management ---
 
 export interface StaffMember {
@@ -27,14 +32,11 @@ export async function getStaff(): Promise<StaffMember[]> {
   try {
     await connectToDatabase();
     const session = await getSession();
-    if (!session || (session.role !== 'admin' && session.role !== 'superadmin')) {
-      throw new Error("Unauthorized");
-    }
+    if (!session) return [];
+    if (session.role !== 'admin' && session.role !== 'superadmin') return [];
 
     const restaurantId = session.restaurantId;
-    if (!restaurantId) {
-      return [];
-    }
+    if (!restaurantId) return [];
 
     const staff = await UserModel.find({ 
       restaurantId: new mongoose.Types.ObjectId(restaurantId),
@@ -127,9 +129,16 @@ export async function getMenuData() {
   try {
     await connectToDatabase();
     const session = await getSession();
-    if (!session || !session.restaurantId) throw new Error("Unauthorized");
-    
-    const restaurantId = new mongoose.Types.ObjectId(session.restaurantId);
+    if (!session) return { categories: [], menuItems: [] };
+
+    let restaurantIdRaw = session.restaurantId;
+    if (!restaurantIdRaw && isSuperAdmin(session.email)) {
+      const firstReg = await RestaurantModel.findOne().lean();
+      if (firstReg) restaurantIdRaw = firstReg._id.toString();
+    }
+
+    if (!restaurantIdRaw) return { categories: [], menuItems: [] };
+    const restaurantId = new mongoose.Types.ObjectId(restaurantIdRaw);
     
     const categories = await CategoryModel.find({ restaurantId }).lean();
     const menuItems = await MenuItemModel.find({ restaurantId }).populate('category').lean();
@@ -245,7 +254,21 @@ export async function deleteMenuItem(id: string) {
 export async function getAllOrders() {
   try {
     await connectToDatabase();
-    const orders = await OrderModel.find().sort({ createdAt: -1 }).lean();
+    const session = await getSession();
+    if (!session) return [];
+    
+    let restaurantIdRow = session.restaurantId;
+    if (!restaurantIdRow && isSuperAdmin(session.email)) {
+      const firstReg = await RestaurantModel.findOne().lean();
+      if (firstReg) restaurantIdRow = firstReg._id.toString();
+    }
+    
+    if (!restaurantIdRow) return [];
+    
+    const orders = await OrderModel.find({ 
+      restaurantId: new mongoose.Types.ObjectId(restaurantIdRow) 
+    }).sort({ createdAt: -1 }).lean();
+
     return orders.map((o: any) => ({
       id: `#ORD-${o._id.toString().slice(-4).toUpperCase()}`,
       fullId: o._id.toString(),
@@ -276,10 +299,13 @@ export async function updateOrderStatus(orderId: string, status: string) {
 
 export async function getDashboardAnalytics() {
   try {
-    await connectToDatabase();
     const session = await getSession();
-    if (!session || !session.restaurantId) throw new Error("Unauthorized");
-    const restaurantId = new mongoose.Types.ObjectId(session.restaurantId);
+    if (!session) return { totalSales: 0, orderCount: 0, peakHour: "N/A", paymentSplit: [], revenueTrend: [], hourlyOrders: [] };
+    
+    const restaurantIdRow = session.restaurantId;
+    if (!restaurantIdRow) return { totalSales: 0, orderCount: 0, peakHour: "N/A", paymentSplit: [], revenueTrend: [], hourlyOrders: [] };
+    
+    const restaurantId = new mongoose.Types.ObjectId(restaurantIdRow);
 
     const orders = await OrderModel.find({ 
       restaurantId,
@@ -367,10 +393,21 @@ export async function getAdminDashboardStats() {
     const session = await getSession();
     if (!session) throw new Error("Unauthorized: No session found");
     
-    // For superadmin, if restaurantId is missing, we might want to return a special state
-    // But for now, let's just be explicit about what's missing
-    if (!session.restaurantId) {
-      console.warn(`[ADMIN SERVICE] Dashboard access attempted by ${session.role} (${session.email}) but no restaurantId found.`);
+    let restaurantIdRaw = session.restaurantId;
+
+    // If superadmin has no restaurantId, try to find the first available one to show something useful
+    if (!restaurantIdRaw && isSuperAdmin(session.email)) {
+      const firstRestaurant = await RestaurantModel.findOne().lean();
+      if (firstRestaurant) {
+        restaurantIdRaw = firstRestaurant._id.toString();
+        console.log(`[ADMIN SERVICE] Superadmin ${session.email} using default restaurant ${firstRestaurant.name} (${restaurantIdRaw})`);
+      }
+    }
+
+    if (!restaurantIdRaw) {
+      if (!isSuperAdmin(session.email)) {
+        console.warn(`[ADMIN SERVICE] Dashboard access attempted by ${session.role} (${session.email}) but no restaurantId found.`);
+      }
       return { 
         error: "No restaurant associated with your account.",
         userName: session.name || "User",
@@ -380,7 +417,7 @@ export async function getAdminDashboardStats() {
       };
     }
 
-    const restaurantId = new mongoose.Types.ObjectId(session.restaurantId);
+    const restaurantId = new mongoose.Types.ObjectId(restaurantIdRaw);
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -473,11 +510,15 @@ export async function getAdminDashboardStats() {
       ? `${Math.round(((totalOrdersToday - ordersYesterday) / ordersYesterday) * 100)}%`
       : "+0%";
 
-    // 5. Sidebar Badge (Pending Orders)
     const pendingCount = await OrderModel.countDocuments({
       restaurantId,
       status: 'pending'
     });
+
+    const latestOrder = await OrderModel.findOne({
+      restaurantId,
+      status: 'pending'
+    }).sort({ createdAt: -1 }).select('createdAt').lean();
 
     const restaurant = await RestaurantModel.findById(restaurantId).lean();
 
@@ -493,6 +534,7 @@ export async function getAdminDashboardStats() {
       liveOrders,
       popularItems,
       pendingCount,
+      latestOrderTime: latestOrder?.createdAt || null,
       restaurantName: restaurant?.name || "Restaurant",
       restaurantStatus: restaurant?.isOpen ? "Open" : "Closed",
       userName: session.name || "Admin"
@@ -629,9 +671,17 @@ export async function getTables() {
   try {
     await connectToDatabase();
     const session = await getSession();
-    if (!session || !session.restaurantId) throw new Error("Unauthorized");
+    if (!session) return [];
     
-    const restaurantId = new mongoose.Types.ObjectId(session.restaurantId);
+    let restaurantIdRow = session.restaurantId;
+    if (!restaurantIdRow && isSuperAdmin(session.email)) {
+      const firstReg = await RestaurantModel.findOne().lean();
+      if (firstReg) restaurantIdRow = firstReg._id.toString();
+    }
+    
+    if (!restaurantIdRow) return [];
+
+    const restaurantId = new mongoose.Types.ObjectId(restaurantIdRow);
     const tables = await TableModel.find({ restaurantId }).populate('assignedWaiter').lean();
     
     return tables.map((t: any) => ({

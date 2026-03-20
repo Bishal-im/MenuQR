@@ -6,12 +6,13 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "@/context/SidebarContext";
+import { useNotifications } from "@/context/NotificationContext";
 import Link from "next/link";
 
 export function Navbar() {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [pendingCount, setPendingCount] = useState(0);
   const { user, logout } = useAuth();
+  const { pendingCount, hasUnread, markAsViewed } = useNotifications();
   const router = useRouter();
   const pathname = usePathname();
   const { toggle } = useSidebar();
@@ -41,17 +42,6 @@ export function Navbar() {
   };
 
   const breadcrumb = getBreadcrumb();
-
-  useEffect(() => {
-    async function fetchBadge() {
-       const { getAdminDashboardStats } = await import("@/services/adminService");
-       const stats = await getAdminDashboardStats();
-       if (stats) setPendingCount(stats.pendingCount ?? 0);
-    }
-    fetchBadge();
-    const interval = setInterval(fetchBadge, 30000);
-    return () => clearInterval(interval);
-  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -97,14 +87,17 @@ export function Navbar() {
 
         <div className="relative" ref={dropdownRef}>
           <button 
-            onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+            onClick={() => {
+              setIsNotificationsOpen(!isNotificationsOpen);
+              if (!isNotificationsOpen) markAsViewed();
+            }}
             className={cn(
               "relative rounded-lg p-2 transition-all duration-200",
               isNotificationsOpen ? "bg-primary/10 text-primary" : "text-muted hover:bg-white/5 hover:text-foreground"
             )}
           >
             <Bell className="h-5 w-5" />
-            {pendingCount > 0 && (
+            {hasUnread && (
               <span className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-black border-2 border-background animate-pulse">
                 {pendingCount}
               </span>
