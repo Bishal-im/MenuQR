@@ -301,7 +301,7 @@ function WaiterDashboardContent() {
       )}
 
       {/* Orders View */}
-      <div className="flex-grow p-6 overflow-y-auto custom-scrollbar bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent">
+      <div className="flex-grow p-6 pb-32 overflow-y-auto custom-scrollbar bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent">
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map(i => <div key={i} className="h-80 glass rounded-[2rem] border border-neutral-800/50 animate-pulse" />)}
