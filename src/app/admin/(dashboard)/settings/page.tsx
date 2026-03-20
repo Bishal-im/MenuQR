@@ -142,6 +142,25 @@ export default function SettingsPage() {
     }));
   };
 
+  const convertTo24Hour = (time12h: string) => {
+    if (!time12h || time12h.includes('hello')) return "09:00"; // Fallback for invalid data
+    const [time, modifier] = time12h.split(' ');
+    let [hours, minutes] = time.split(':');
+    if (hours === '12') hours = '00';
+    if (modifier === 'PM') hours = (parseInt(hours, 10) + 12).toString().padStart(2, '0');
+    return `${hours.padStart(2, '0')}:${minutes}`;
+  };
+
+  const convertTo12Hour = (time24h: string) => {
+    if (!time24h) return "09:00 AM";
+    let [hours, minutes] = time24h.split(':');
+    let h = parseInt(hours, 10);
+    const modifier = h >= 12 ? 'PM' : 'AM';
+    if (h > 12) h -= 12;
+    if (h === 0) h = 12;
+    return `${h.toString().padStart(2, '0')}:${minutes} ${modifier}`;
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
@@ -346,28 +365,28 @@ export default function SettingsPage() {
                                    "absolute top-1 w-3 h-3 rounded-full transition-all",
                                    hours.isClosed ? "left-6 bg-red-500" : "left-1 bg-emerald-500"
                                  )} />
-                              </div>
-                           </div>
+                               </div>
+                            </div>
 
-                           {!hours.isClosed ? (
-                             <div className="flex items-center gap-2">
-                                <input 
-                                  type="text" 
-                                  value={hours.open}
-                                  onChange={(e) => handleHourChange(day, 'open', e.target.value)}
-                                  className="w-24 bg-background border border-border rounded-lg px-2 py-1.5 text-xs text-center font-bold text-emerald-500"
-                                />
-                                <span className="text-muted">–</span>
-                                <input 
-                                  type="text" 
-                                  value={hours.close}
-                                  onChange={(e) => handleHourChange(day, 'close', e.target.value)}
-                                  className="w-24 bg-background border border-border rounded-lg px-2 py-1.5 text-xs text-center font-bold text-emerald-500"
-                                />
-                             </div>
-                           ) : (
-                             <span className="text-xs font-bold text-red-500 uppercase tracking-widest italic pr-4">Closed for the day</span>
-                           )}
+                            {!hours.isClosed ? (
+                              <div className="flex items-center gap-2">
+                                 <input 
+                                   type="time" 
+                                   value={convertTo24Hour(hours.open)}
+                                   onChange={(e) => handleHourChange(day, 'open', convertTo12Hour(e.target.value))}
+                                   className="w-32 bg-background border border-border rounded-lg px-2 py-1.5 text-xs text-center font-bold text-emerald-500 [color-scheme:dark]"
+                                 />
+                                 <span className="text-muted">–</span>
+                                 <input 
+                                   type="time" 
+                                   value={convertTo24Hour(hours.close)}
+                                   onChange={(e) => handleHourChange(day, 'close', convertTo12Hour(e.target.value))}
+                                   className="w-32 bg-background border border-border rounded-lg px-2 py-1.5 text-xs text-center font-bold text-emerald-500 [color-scheme:dark]"
+                                 />
+                              </div>
+                            ) : (
+                              <span className="text-xs font-bold text-red-500 uppercase tracking-widest italic pr-4">Closed for the day</span>
+                            )}
                         </div>
                       );
                     })}
