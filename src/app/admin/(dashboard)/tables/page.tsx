@@ -5,7 +5,7 @@ import { Plus, QrCode, Download, Trash2, Users, ExternalLink, MoreVertical, X, A
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import DeleteConfirmationModal from "@/components/common/DeleteConfirmationModal";
-import { getTables, addTable, deleteTable } from "@/services/adminService";
+import { getTables, addTable, deleteTable, getStaff, assignWaiterToTable, StaffMember } from "@/services/adminService";
 import { QRCodeSVG } from "qrcode.react";
 import { useAuth } from "@/context/AuthContext";
 
@@ -16,8 +16,10 @@ export default function TablesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({ number: "", capacity: 4 });
+  const [staff, setStaff] = useState<StaffMember[]>([]);
   const [error, setError] = useState("");
-  const [showQRModal, setShowQRModal] = useState<string | null>(null);
+  const [isAssigning, setIsAssigning] = useState<string | null>(null);
+  const [showQRModal, setShowQRModal] = useState<any | null>(null);
   const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; id: string | null; number: string }>({
     isOpen: false,
     id: null,
@@ -26,8 +28,12 @@ export default function TablesPage() {
 
   const fetchData = async () => {
     setLoading(true);
-    const data = await getTables();
-    setTables(data);
+    const [tableData, staffData] = await Promise.all([
+      getTables(),
+      getStaff()
+    ]);
+    setTables(tableData);
+    setStaff(staffData);
     setLoading(false);
   };
 
@@ -63,6 +69,18 @@ export default function TablesPage() {
     setIsSubmitting(false);
   };
 
+  const handleAssignWaiter = async (tableId: string, waiterId: string) => {
+    setIsSubmitting(true);
+    const res = await assignWaiterToTable(tableId, waiterId === "none" ? null : waiterId);
+    if (res.success) {
+      setIsAssigning(null);
+      await fetchData();
+    } else {
+      alert("Failed to assign waiter: " + res.error);
+    }
+    setIsSubmitting(false);
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
@@ -74,7 +92,7 @@ export default function TablesPage() {
 
   // Generate QR URL
   const getQRUrl = (tableNumber: string) => {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://menu-qr-topaz.vercel.app";
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_BASE_URL || "https://menu-qr-topaz.vercel.app");
     return `${baseUrl}/menu?restaurantId=${user?.restaurantId}&tableId=${tableNumber}`;
   };
 
@@ -192,9 +210,45 @@ export default function TablesPage() {
                <p className="text-xs text-muted/60">Order Status: {table.lastOrder}</p>
             </div>
 
+            <div className="mt-4 pt-4 border-t border-border/50">
+               <label className="text-[10px] font-black uppercase tracking-wider text-muted mb-2 block">Assigned Waiter</label>
+               <div className="flex items-center gap-2">
+                 <div className="flex-grow">
+                   {isAssigning === table.id ? (
+                     <select 
+                       className="w-full bg-secondary border border-border rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-primary"
+                       onChange={(e) => handleAssignWaiter(table.id, e.target.value)}
+                       defaultValue={table.assignedWaiter?.id || "none"}
+                       disabled={isSubmitting}
+                     >
+                        <option value="none">Unassigned</option>
+                        {staff.map(member => (
+                          <option key={member.id} value={member.id}>{member.name}</option>
+                        ))}
+                     </select>
+                   ) : (
+                     <div className="flex items-center gap-2 group/waiter">
+                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+                           <Users className="w-3 h-3 text-primary" />
+                        </div>
+                        <span className="text-xs font-bold text-foreground">
+                          {table.assignedWaiter?.name || "Not Assigned"}
+                        </span>
+                     </div>
+                   )}
+                 </div>
+                 <button 
+                   onClick={() => setIsAssigning(isAssigning === table.id ? null : table.id)}
+                   className="p-1.5 rounded-lg hover:bg-secondary text-muted transition"
+                 >
+                   <MoreVertical className="w-4 h-4" />
+                 </button>
+               </div>
+             </div>
+
             <div className="mt-6 grid grid-cols-2 gap-3">
                <button 
-                 onClick={() => setShowQRModal(table.number)}
+                 onClick={() => setShowQRModal(table)}
                  className="flex items-center justify-center gap-2 rounded-xl border border-border bg-background py-2 text-xs font-bold transition hover:border-primary hover:text-primary group/btn"
                >
                   <QrCode className="h-3.5 w-3.5 group-hover/btn:scale-110 transition" /> View QR
@@ -283,13 +337,16 @@ export default function TablesPage() {
            <motion.div 
              initial={{ scale: 0.9, opacity: 0 }}
              animate={{ scale: 1, opacity: 1 }}
-             className="relative w-full max-w-sm rounded-3xl bg-card p-8 border border-border shadow-2xl text-center"
+             className="relative w-full max-w-sm rounded-[2.5rem] bg-card p-8 border border-border shadow-2xl text-center overflow-hidden"
            >
-              <div className="flex flex-col items-center">
-                 <div className="mb-6 rounded-2xl bg-white p-6 shadow-xl relative overflow-hidden group">
+              {/* Background Glow */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-primary/10 blur-[60px] pointer-events-none" />
+              
+              <div className="flex flex-col items-center relative z-10">
+                 <div className="mb-6 rounded-3xl bg-white p-6 shadow-2xl shadow-black/20 relative overflow-hidden group">
                     <QRCodeSVG 
-                      id={`qr-modal-${showQRModal}`}
-                      value={getQRUrl(showQRModal)}
+                      id={`qr-modal-${showQRModal.number}`}
+                      value={getQRUrl(showQRModal.number)}
                       size={200}
                       level="H"
                       includeMargin={false}
@@ -303,26 +360,28 @@ export default function TablesPage() {
                       }}
                     />
                     <div className="mt-4 text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-t border-zinc-100 pt-3">
-                       Table {showQRModal} • MenuQR
+                       Table {showQRModal.number} • MenuQR
                     </div>
                  </div>
-                 <h3 className="text-xl font-bold">Table {showQRModal} QR Code</h3>
-                 <p className="mt-2 text-sm text-muted mb-8 italic italic italic">SCAN TO VIEW MENU & ORDER</p>
+                 <h3 className="text-2xl font-black text-white italic tracking-tighter">Table {showQRModal.number}</h3>
+                 <p className="mt-2 text-[10px] text-muted font-black uppercase tracking-widest mb-8">SCAN TO VIEW MENU & ORDER</p>
                  
                  <div className="flex w-full gap-3">
                     <button 
-                      onClick={() => handleDownloadQR(showQRModal)}
-                      className="flex-1 rounded-xl bg-primary py-3 text-sm font-bold text-black transition hover:bg-amber-500"
+                      onClick={() => handleDownloadQR(showQRModal.number)}
+                      className="flex-1 rounded-2xl bg-primary py-4 text-xs font-black text-black uppercase tracking-widest transition hover:bg-amber-500 shadow-xl shadow-primary/20"
                     >
                        Download PNG
                     </button>
-                    <a 
-                      href={getQRUrl(showQRModal)} 
-                      target="_blank" 
-                      className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary border border-border transition hover:bg-white/5"
+                    <button 
+                      onClick={() => {
+                        const url = getQRUrl(showQRModal.number);
+                        window.open(url, '_blank');
+                      }}
+                      className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary border border-border transition hover:bg-white/5"
                     >
                        <ExternalLink className="h-5 w-5" />
-                    </a>
+                    </button>
                  </div>
               </div>
            </motion.div>

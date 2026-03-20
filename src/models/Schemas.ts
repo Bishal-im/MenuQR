@@ -93,10 +93,11 @@ const OrderSchema = new Schema({
 
 // Table Schema
 const TableSchema = new Schema({
-  restaurantId: { type: Schema.Types.ObjectId, ref: 'Restaurant' },
+  restaurantId: { type: Schema.Types.ObjectId, ref: 'Restaurant', required: true },
   number: { type: String, required: true },
   capacity: { type: Number, default: 4 },
-  status: { type: String, enum: ['Active', 'Empty'], default: 'Empty' },
+  status: { type: String, enum: ['Active', 'Empty', 'Occupied'], default: 'Empty' },
+  assignedWaiter: { type: Schema.Types.ObjectId, ref: 'User' },
   lastOrderAt: { type: Date },
 });
 

@@ -628,13 +628,22 @@ export async function updateRestaurantSettings(data: any) {
 export async function getTables() {
   try {
     await connectToDatabase();
-    const tables = await TableModel.find().lean();
+    const session = await getSession();
+    if (!session || !session.restaurantId) throw new Error("Unauthorized");
+    
+    const restaurantId = new mongoose.Types.ObjectId(session.restaurantId);
+    const tables = await TableModel.find({ restaurantId }).populate('assignedWaiter').lean();
+    
     return tables.map((t: any) => ({
       id: t._id.toString(),
       number: t.number,
       capacity: t.capacity,
       status: t.status,
-      lastOrder: t.lastOrderAt ? "Recent" : "No orders"
+      lastOrder: t.lastOrderAt ? "Recent" : "No orders",
+      assignedWaiter: t.assignedWaiter ? {
+        id: t.assignedWaiter._id.toString(),
+        name: t.assignedWaiter.name
+      } : null
     }));
   } catch (error) {
     console.error("[ADMIN SERVICE] Get Tables Error:", error);
@@ -645,7 +654,34 @@ export async function getTables() {
 export async function addTable(number: string, capacity: number) {
   try {
     await connectToDatabase();
-    await TableModel.create({ number, capacity, status: 'Empty' });
+    const session = await getSession();
+    if (!session || !session.restaurantId) throw new Error("Unauthorized");
+    
+    const restaurantId = new mongoose.Types.ObjectId(session.restaurantId);
+    await TableModel.create({ 
+      number, 
+      capacity, 
+      status: 'Empty',
+      restaurantId 
+    });
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function assignWaiterToTable(tableId: string, waiterId: string | null) {
+  try {
+    await connectToDatabase();
+    const session = await getSession();
+    if (!session || !session.restaurantId) throw new Error("Unauthorized");
+
+    const restaurantId = new mongoose.Types.ObjectId(session.restaurantId);
+    
+    await TableModel.findOneAndUpdate(
+      { _id: new mongoose.Types.ObjectId(tableId), restaurantId },
+      { assignedWaiter: waiterId ? new mongoose.Types.ObjectId(waiterId) : null }
+    );
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
