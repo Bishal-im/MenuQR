@@ -27,7 +27,8 @@ export interface WaiterOrder {
 export async function getOrders(): Promise<WaiterOrder[]> {
   try {
     await connectToDatabase();
-    const session = await getSession();
+    // Force waiter session to ensure correct table filtering even if other sessions exist
+    const session = await getSession('waiter');
     if (!session || !session.restaurantId) {
       return [];
     }
@@ -76,7 +77,7 @@ export async function getOrders(): Promise<WaiterOrder[]> {
 export async function acceptOrder(orderId: string): Promise<boolean> {
   try {
     await connectToDatabase();
-    const session = await getSession();
+    const session = await getSession('waiter') || await getSession();
     if (!session || !session.restaurantId) return false;
     
     if (!mongoose.Types.ObjectId.isValid(orderId)) {
@@ -99,7 +100,7 @@ export async function acceptOrder(orderId: string): Promise<boolean> {
 export async function updateStatus(orderId: string, status: OrderStatus): Promise<boolean> {
   try {
     await connectToDatabase();
-    const session = await getSession();
+    const session = await getSession('waiter') || await getSession();
     if (!session || !session.restaurantId) return false;
 
     if (!mongoose.Types.ObjectId.isValid(orderId)) {
@@ -122,7 +123,7 @@ export async function updateStatus(orderId: string, status: OrderStatus): Promis
 export async function resolveWaiterCall(orderId: string): Promise<boolean> {
   try {
     await connectToDatabase();
-    const session = await getSession();
+    const session = await getSession('waiter') || await getSession();
     if (!session || !session.restaurantId) return false;
 
     if (!mongoose.Types.ObjectId.isValid(orderId)) {
@@ -146,7 +147,7 @@ export async function resolveWaiterCall(orderId: string): Promise<boolean> {
 export async function resolveAllServiceCalls(): Promise<boolean> {
   try {
     await connectToDatabase();
-    const session = await getSession();
+    const session = await getSession('waiter') || await getSession();
     if (!session || !session.restaurantId) return false;
 
     const restaurantId = new mongoose.Types.ObjectId(session.restaurantId);
