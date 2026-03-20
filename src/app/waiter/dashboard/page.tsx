@@ -58,11 +58,13 @@ function WaiterDashboardContent() {
     }
   };
 
-  const setActiveTabHandler = (tab: string) => {
+  const setActiveTabHandler = async (tab: string) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set('tab', tab);
     router.push(`?${params.toString()}`);
     setActiveTab(tab as OrderStatus | 'all' | 'history');
+    // Trigger immediate fetch when switching tabs to ensure freshness
+    await fetchOrders();
   };
 
   const fetchOrders = async () => {
@@ -100,18 +102,16 @@ function WaiterDashboardContent() {
   const handleStatusUpdate = async (id: string, status: OrderStatus) => {
     const success = await updateStatus(id, status);
     if (success) {
-      setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
+      // Immediate refresh after status update
+      await fetchOrders();
     }
   };
 
   const handleResolveCall = async (id: string, notifyCustomer: boolean = true) => {
     const success = await resolveWaiterCall(id, notifyCustomer);
     if (success) {
-      setOrders(prev => prev.map(o => o.id === id ? { ...o, callWaiter: false } : o));
-      setPrevOrders(prev => prev.map(o => o.id === id ? { ...o, callWaiter: false } : o));
-      prevOrdersRef.current = prevOrdersRef.current.map((o: WaiterOrder) => o.id === id ? { ...o, callWaiter: false } : o);
-      // Remove from shown set so it can be re-triggered if called again
-      shownCallsRef.current.delete(id);
+      // Immediate refresh after resolution
+      await fetchOrders();
       if (currentModalCall?.id === id) setCurrentModalCall(null);
     }
   };
@@ -119,10 +119,8 @@ function WaiterDashboardContent() {
   const handleResolveAll = async (notifyCustomer: boolean = false) => {
     const success = await resolveAllServiceCalls(notifyCustomer);
     if (success) {
-      setOrders(prev => prev.map(o => ({ ...o, callWaiter: false })));
-      setPrevOrders(prev => prev.map(o => ({ ...o, callWaiter: false })));
-      prevOrdersRef.current = prevOrdersRef.current.map((o: WaiterOrder) => ({ ...o, callWaiter: false }));
-      shownCallsRef.current.clear();
+      // Immediate refresh after bulk resolution
+      await fetchOrders();
       setCurrentModalCall(null);
       setIsAlertMenuOpen(false);
     }
@@ -154,7 +152,12 @@ function WaiterDashboardContent() {
     return matchesTab && matchesSearch && hasItems;
   });
 
-  const getTabCount = (status: OrderStatus) => orders.filter(o => o.status === status && o.items && o.items.length > 0).length;
+  const getTabCount = (tabValue: string) => {
+    if (tabValue === 'history') {
+      return orders.filter(o => ['completed', 'cancelled'].includes(o.status) && o.items && o.items.length > 0).length;
+    }
+    return orders.filter(o => o.status === tabValue && o.items && o.items.length > 0).length;
+  };
 
   return (
     <div className="flex-grow flex flex-col h-full overflow-hidden bg-neutral-950">
@@ -178,13 +181,14 @@ function WaiterDashboardContent() {
 
         <div className="flex gap-2 w-full md:w-auto p-1 bg-black/50 rounded-2xl border border-neutral-800 overflow-x-auto no-scrollbar">
           {[
-            { label: "New", value: 'pending', color: 'orange' },
-            { label: "Prep", value: 'preparing', color: 'blue' },
-            { label: "Ready", value: 'ready', color: 'green' },
+            { label: "New", value: 'pending' },
+            { label: "Prep", value: 'preparing' },
+            { label: "Ready", value: 'ready' },
+            { label: "History", value: 'history' },
           ].map((tab) => (
             <button
               key={tab.value}
-              onClick={() => setActiveTabHandler(tab.value as any)}
+              onClick={() => setActiveTabHandler(tab.value)}
               className={`flex-grow md:flex-initial px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap ${
                 activeTab === tab.value 
                   ? "bg-primary text-white shadow-xl shadow-primary/20 scale-105" 
@@ -192,8 +196,8 @@ function WaiterDashboardContent() {
               }`}
             >
               {tab.label}
-              {tab.value !== 'all' && tab.value !== 'history' && getTabCount(tab.value as OrderStatus) > 0 && (
-                <span className="ml-2 px-1.5 py-0.5 bg-black/30 rounded text-[8px]">{getTabCount(tab.value as OrderStatus)}</span>
+              {getTabCount(tab.value) > 0 && (
+                <span className="ml-2 px-1.5 py-0.5 bg-black/30 rounded text-[8px]">{getTabCount(tab.value)}</span>
               )}
             </button>
           ))}
