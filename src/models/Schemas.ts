@@ -46,6 +46,15 @@ const RestaurantSchema = new Schema({
   website: { type: String },
   isOpen: { type: Boolean, default: true },
   status: { type: String, enum: ['active', 'inactive'], default: 'active' },
+  operatingHours: {
+    monday: { open: { type: String, default: '09:00 AM' }, close: { type: String, default: '10:00 PM' }, isClosed: { type: Boolean, default: false } },
+    tuesday: { open: { type: String, default: '09:00 AM' }, close: { type: String, default: '10:00 PM' }, isClosed: { type: Boolean, default: false } },
+    wednesday: { open: { type: String, default: '09:00 AM' }, close: { type: String, default: '10:00 PM' }, isClosed: { type: Boolean, default: false } },
+    thursday: { open: { type: String, default: '09:00 AM' }, close: { type: String, default: '10:00 PM' }, isClosed: { type: Boolean, default: false } },
+    friday: { open: { type: String, default: '09:00 AM' }, close: { type: String, default: '10:00 PM' }, isClosed: { type: Boolean, default: false } },
+    saturday: { open: { type: String, default: '09:00 AM' }, close: { type: String, default: '10:00 PM' }, isClosed: { type: Boolean, default: false } },
+    sunday: { open: { type: String, default: '09:00 AM' }, close: { type: String, default: '10:00 PM' }, isClosed: { type: Boolean, default: false } },
+  },
   createdAt: { type: Date, default: Date.now },
 });
 

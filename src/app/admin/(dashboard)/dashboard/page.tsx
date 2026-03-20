@@ -54,17 +54,17 @@ export default function DashboardPage() {
 
   if (data?.error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 text-center max-w-md mx-auto">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 text-center max-w-sm mx-auto px-4 py-8">
         <div className="w-20 h-20 bg-amber-500/10 rounded-full flex items-center justify-center">
           <TrendingUp className="h-10 w-10 text-amber-500" />
         </div>
         <div className="space-y-2">
-          <h2 className="text-2xl font-bold tracking-tight">Access Restricted</h2>
+          <h2 className="text-xl md:text-2xl font-bold tracking-tight">Access Restricted</h2>
           <p className="text-neutral-500 text-sm">{data.error}</p>
         </div>
         <Link 
           href="/admin/settings" 
-          className="rounded-xl bg-primary px-6 py-3 text-sm font-bold text-black hover:bg-amber-500 transition shadow-lg shadow-primary/20"
+          className="w-full md:w-auto rounded-xl bg-primary px-8 py-3.5 text-sm font-bold text-black hover:bg-amber-500 transition shadow-lg shadow-primary/20 text-center"
         >
           Check Settings
         </Link>
@@ -73,17 +73,17 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-8">
-      <header className="flex items-center justify-between">
+    <div className="space-y-6 md:space-y-8">
+      <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Good morning, {data?.userName || 'Admin'}! 👋</h2>
-          <p className="text-muted mt-1 text-sm">{currentDate} • Restaurant is <span className={data?.restaurantStatus === 'Open' ? 'text-emerald-500 font-medium' : 'text-red-500 font-medium'}>{data?.restaurantStatus || 'Open'}</span></p>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Good morning, {data?.userName || 'Admin'}! 👋</h2>
+          <p className="text-muted mt-1 text-xs md:text-sm">{currentDate} • Restaurant is <span className={data?.restaurantStatus === 'Open' ? 'text-emerald-500 font-medium' : 'text-red-500 font-medium'}>{data?.restaurantStatus || 'Open'}</span></p>
         </div>
-        <div className="flex gap-3">
-          <button className="rounded-xl border border-neutral-800 bg-neutral-900 px-4 py-2 text-sm font-medium hover:bg-neutral-800 transition">Download Report</button>
+        <div className="flex gap-2 md:gap-3">
+          <button className="flex-1 rounded-xl border border-neutral-800 bg-neutral-900 px-4 py-2.5 md:py-2 text-sm font-medium hover:bg-neutral-800 transition">Download Report</button>
           <Link 
             href="/admin/menu?action=add"
-            className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-black hover:bg-amber-500 transition shadow-lg shadow-primary/20"
+            className="flex-1 rounded-xl bg-primary px-4 py-2.5 md:py-2 text-sm font-bold text-black hover:bg-amber-500 transition shadow-lg shadow-primary/20 text-center"
           >
             + New Item
           </Link>

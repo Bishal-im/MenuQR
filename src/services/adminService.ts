@@ -505,14 +505,48 @@ export async function getAdminDashboardStats() {
 
 // --- Settings Management ---
 
+const DEFAULT_HOURS = {
+  monday: { open: '09:00 AM', close: '10:00 PM', isClosed: false },
+  tuesday: { open: '09:00 AM', close: '10:00 PM', isClosed: false },
+  wednesday: { open: '09:00 AM', close: '10:00 PM', isClosed: false },
+  thursday: { open: '09:00 AM', close: '10:00 PM', isClosed: false },
+  friday: { open: '09:00 AM', close: '10:00 PM', isClosed: false },
+  saturday: { open: '09:00 AM', close: '10:00 PM', isClosed: false },
+  sunday: { open: '09:00 AM', close: '10:00 PM', isClosed: false },
+};
+
 export async function getRestaurantSettings() {
   try {
     await connectToDatabase();
     const session = await getSession();
-    if (!session || !session.restaurantId) throw new Error("Unauthorized");
+    if (!session) throw new Error("Unauthorized");
 
-    const restaurant = await RestaurantModel.findById(session.restaurantId).lean();
-    if (!restaurant) throw new Error("Restaurant not found");
+    // If no restaurantId in session, try finding by email
+    let restaurant = null;
+    if (session.restaurantId) {
+      restaurant = await RestaurantModel.findById(session.restaurantId).lean();
+    } else {
+      restaurant = await RestaurantModel.findOne({ email: session.email }).lean();
+    }
+
+    if (!restaurant) {
+      // Return empty data for a new restaurant setup
+      return {
+        success: true,
+        data: {
+          id: "",
+          name: "",
+          ownerName: session.name || "",
+          email: session.email,
+          phone: "",
+          address: "",
+          cuisine: "",
+          website: "",
+          isOpen: true,
+          operatingHours: DEFAULT_HOURS
+        }
+      };
+    }
 
     return {
       success: true,
@@ -523,9 +557,10 @@ export async function getRestaurantSettings() {
         email: restaurant.email,
         phone: restaurant.phone,
         address: restaurant.address,
-        cuisine: (restaurant as any).cuisine || "", // Field might not exist yet
+        cuisine: (restaurant as any).cuisine || "",
         website: (restaurant as any).website || "",
         isOpen: (restaurant as any).isOpen ?? true,
+        operatingHours: (restaurant as any).operatingHours || DEFAULT_HOURS
       }
     };
   } catch (error: any) {
@@ -538,28 +573,50 @@ export async function updateRestaurantSettings(data: any) {
   try {
     await connectToDatabase();
     const session = await getSession();
-    if (!session || !session.restaurantId) throw new Error("Unauthorized");
+    if (!session) throw new Error("Unauthorized");
 
-    const updatedRestaurant = await RestaurantModel.findByIdAndUpdate(
-      session.restaurantId,
-      {
-        $set: {
-          name: data.name,
-          ownerName: data.ownerName,
-          phone: data.phone,
-          address: data.address,
-          cuisine: data.cuisine,
-          website: data.website,
-          isOpen: data.isOpen,
-          updatedAt: new Date()
-        }
-      },
-      { new: true, runValidators: true }
-    );
+    let restaurant;
+    
+    if (session.restaurantId) {
+      restaurant = await RestaurantModel.findById(session.restaurantId);
+    } else {
+      restaurant = await RestaurantModel.findOne({ email: session.email });
+    }
 
-    if (!updatedRestaurant) throw new Error("Failed to update restaurant");
+    if (restaurant) {
+      // Update existing
+      restaurant.name = data.name;
+      restaurant.ownerName = data.ownerName;
+      restaurant.phone = data.phone;
+      restaurant.address = data.address;
+      (restaurant as any).cuisine = data.cuisine;
+      (restaurant as any).website = data.website;
+      (restaurant as any).isOpen = data.isOpen;
+      (restaurant as any).operatingHours = data.operatingHours;
+      restaurant.updatedAt = new Date();
+      await restaurant.save();
+    } else {
+      // Create new
+      restaurant = await RestaurantModel.create({
+        name: data.name,
+        ownerName: data.ownerName || session.name,
+        email: session.email,
+        phone: data.phone,
+        address: data.address,
+        cuisine: data.cuisine,
+        website: data.website,
+        isOpen: data.isOpen,
+        operatingHours: data.operatingHours || DEFAULT_HOURS
+      });
 
-    return { success: true, data: updatedRestaurant };
+      // Update user to link this restaurant (optional but good for future sessions)
+      await UserModel.findOneAndUpdate(
+        { email: session.email },
+        { $set: { restaurantId: restaurant._id, role: 'admin' } }
+      );
+    }
+
+    return { success: true, data: restaurant };
   } catch (error: any) {
     console.error("[ADMIN SERVICE] Update Settings Error:", error.message);
     return { success: false, error: error.message };

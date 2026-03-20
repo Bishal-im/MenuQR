@@ -114,8 +114,9 @@ export default function OrdersPage() {
       </div>
 
       {/* Orders List */}
-      <div className="grid grid-cols-1 gap-6">
-        <div className="rounded-2xl border border-border bg-card overflow-hidden">
+      <div className="space-y-4">
+        {/* Desktop Table View */}
+        <div className="hidden lg:block rounded-2xl border border-border bg-card overflow-hidden">
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-border bg-background/30 px-6">
@@ -176,6 +177,59 @@ export default function OrdersPage() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Card View */}
+        <div className="grid grid-cols-1 gap-4 lg:hidden">
+          {filteredOrders.length === 0 ? (
+            <div className="rounded-2xl border border-border bg-card p-12 text-center text-muted">
+              No orders found.
+            </div>
+          ) : (
+            filteredOrders.map((order, i) => (
+              <motion.div 
+                key={i}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-2xl border border-border bg-card p-4 space-y-4"
+                onClick={() => setSelectedOrder(order)}
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm font-bold text-primary">{order.id}</p>
+                    <p className="text-[10px] text-muted flex items-center gap-1 mt-0.5">
+                      <Clock className="h-3 w-3" /> {new Date(order.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                  <span className={cn(
+                    "inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase",
+                    getStatusStyle(order.status)
+                  )}>
+                    {order.status}
+                  </span>
+                </div>
+                
+                <div className="flex items-center justify-between py-3 border-y border-border/50">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted">Table</span>
+                    <span className="rounded-lg bg-background border border-border px-2 py-0.5 text-xs font-bold">
+                      {order.table}
+                    </span>
+                  </div>
+                  <p className="text-sm font-bold text-foreground">Rs. {order.total}</p>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-muted truncate max-w-[70%]">
+                    {order.items.map((it: any) => `${it.qty}x ${it.name}`).join(", ")}
+                  </p>
+                  <button className="text-primary text-xs font-bold flex items-center gap-1">
+                    Details <ChevronRight className="h-3 w-3" />
+                  </button>
+                </div>
+              </motion.div>
+            ))
+          )}
         </div>
       </div>
 

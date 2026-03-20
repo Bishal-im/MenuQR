@@ -102,15 +102,15 @@ function MenuContent() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
         <div>
-          <h2 className="text-3xl font-black tracking-tight text-white">Menu Management</h2>
-          <p className="text-sm text-neutral-500 font-medium">Create and manage your restaurant menu items</p>
+          <h2 className="text-2xl md:text-3xl font-black tracking-tight text-white line-clamp-1">Menu Management</h2>
+          <p className="text-xs md:text-sm text-neutral-500 font-medium">Create and manage your restaurant menu items</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-2 md:gap-3">
           <button 
             onClick={() => setIsCategoryModalOpen(true)}
-            className="flex items-center justify-center gap-2 rounded-xl bg-neutral-900 border border-neutral-800 px-4 py-2.5 text-sm font-bold text-white hover:bg-neutral-800 transition shadow-sm"
+            className="flex-1 md:flex-none flex items-center justify-center gap-2 rounded-xl bg-neutral-900 border border-neutral-800 px-4 py-3 md:py-2.5 text-xs md:text-sm font-bold text-white hover:bg-neutral-800 transition shadow-sm whitespace-nowrap"
           >
             <Plus className="h-4 w-4" /> Category
           </button>
@@ -119,7 +119,7 @@ function MenuContent() {
               setEditingItem(null);
               setIsItemModalOpen(true);
             }}
-            className="flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-black hover:bg-orange-600 transition shadow-lg shadow-primary/20"
+            className="flex-1 md:flex-none flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 md:py-2.5 text-xs md:text-sm font-bold text-black hover:bg-orange-600 transition shadow-lg shadow-primary/20 whitespace-nowrap"
           >
             <Plus className="h-4 w-4" /> Add Item
           </button>

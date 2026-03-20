@@ -150,14 +150,14 @@ export default function TablesPage() {
         ))}
       </div>
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Tables & QR Codes</h2>
           <p className="text-sm text-muted">Generate and manage QR codes for your restaurant tables</p>
         </div>
         <button 
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-black hover:bg-amber-500 transition shadow-lg shadow-primary/20"
+          className="w-full md:w-auto flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 md:py-2 text-sm font-bold text-black hover:bg-amber-500 transition shadow-lg shadow-primary/20"
         >
           <Plus className="h-4 w-4" /> Add New Table
         </button>
