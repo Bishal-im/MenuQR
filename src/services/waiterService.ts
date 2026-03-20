@@ -48,7 +48,7 @@ export async function getOrders(): Promise<WaiterOrder[]> {
     }
 
     const orders = await OrderModel.find(query)
-      .sort({ createdAt: -1 })
+      .sort({ createdAt: 1 })
       .populate('items.menuItemId')
       .lean();
     

@@ -152,6 +152,11 @@ function WaiterDashboardContent() {
     return matchesTab && matchesSearch && hasItems;
   });
 
+  // For history, show newest first. For active tabs, show oldest first (chronological) per user request.
+  if (activeTab === 'history') {
+    filteredOrders.reverse();
+  }
+
   const getTabCount = (tabValue: string) => {
     if (tabValue === 'history') {
       return orders.filter(o => ['completed', 'cancelled'].includes(o.status) && o.items && o.items.length > 0).length;
