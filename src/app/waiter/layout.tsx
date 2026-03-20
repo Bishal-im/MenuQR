@@ -47,21 +47,7 @@ export default function WaiterLayout({
 
   return (
     <div className="min-h-screen bg-neutral-950 text-white flex flex-col">
-      {/* Active Service Alerts (Call Waiter) */}
-      <div className="bg-red-500/10 border-b border-red-500/20 px-6 py-2 flex items-center justify-between animate-pulse">
-        <div className="flex items-center gap-3">
-          <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
-          <p className="text-[10px] font-black uppercase tracking-widest text-red-500">Active Service Calls</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 bg-red-500 text-white px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tighter shadow-lg shadow-red-500/20">
-            Table 5 <span className="opacity-50 mx-1">•</span> 2m ago
-          </div>
-          <button className="text-[10px] font-black uppercase tracking-widest text-neutral-400 hover:text-white transition-colors underline decoration-red-500/50 underline-offset-4">
-            Clear All
-          </button>
-        </div>
-      </div>
+
 
       {/* Top Header */}
       <header className="h-16 bg-neutral-900 border-b border-neutral-800 flex items-center justify-between px-6 sticky top-0 z-50">

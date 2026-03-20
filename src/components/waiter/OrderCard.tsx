@@ -9,15 +9,17 @@ import {
   ChefHat, 
   Utensils, 
   XCircle,
-  AlertCircle
+  AlertCircle,
+  BellRing
 } from "lucide-react";
 
 interface OrderCardProps {
   order: WaiterOrder;
   onStatusUpdate: (id: string, status: OrderStatus) => void;
+  onResolveCall: (id: string) => void;
 }
 
-export default function OrderCard({ order, onStatusUpdate }: OrderCardProps) {
+export default function OrderCard({ order, onStatusUpdate, onResolveCall }: OrderCardProps) {
   const isNew = order.status === 'pending';
   const isPreparing = order.status === 'preparing';
   const isReady = order.status === 'ready';
@@ -41,12 +43,21 @@ export default function OrderCard({ order, onStatusUpdate }: OrderCardProps) {
 
   return (
     <div className={`p-6 rounded-[2rem] border transition-all duration-500 relative overflow-hidden group ${
-      isNew 
-        ? "bg-primary/5 border-primary/50 shadow-2xl shadow-primary/10 animate-in fade-in" 
-        : isHistory 
-          ? "bg-neutral-900 border-neutral-800/50 opacity-80"
-          : "bg-neutral-900 border-neutral-800 hover:border-neutral-700 shadow-xl"
+      order.callWaiter
+        ? "bg-red-500/10 border-red-500 shadow-2xl shadow-red-500/20 animate-pulse"
+        : isNew 
+          ? "bg-primary/5 border-primary/50 shadow-2xl shadow-primary/10 animate-in fade-in" 
+          : isHistory 
+            ? "bg-neutral-900 border-neutral-800/50 opacity-80"
+            : "bg-neutral-900 border-neutral-800 hover:border-neutral-700 shadow-xl"
     }`}>
+      {/* Waiter Call Overlay */}
+      {order.callWaiter && (
+        <div className="absolute top-0 left-0 right-0 bg-red-500 text-white text-[10px] font-black uppercase tracking-widest py-1 flex items-center justify-center gap-2 z-20">
+          <BellRing className="w-3 h-3 animate-bounce" />
+          Waiter Called!
+        </div>
+      )}
       {/* Table Badge */}
       <div className="flex justify-between items-start mb-6">
         <div className="flex items-center gap-4">
@@ -83,36 +94,47 @@ export default function OrderCard({ order, onStatusUpdate }: OrderCardProps) {
       </div>
 
       {/* Actions */}
-      <div className="flex gap-3 relative z-10">
-        {isNew && (
+      <div className="flex flex-col gap-3 relative z-10">
+        {order.callWaiter && (
           <button 
-            onClick={() => onStatusUpdate(order.id, 'preparing')}
-            className="flex-grow flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 active:scale-95 text-white py-4 rounded-2xl font-black text-sm shadow-xl shadow-primary/20 transition-all"
+            onClick={() => onResolveCall(order.id)}
+            className="flex items-center justify-center gap-2 bg-white text-red-600 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl ring-2 ring-red-500/50 hover:bg-neutral-100 transition-all mb-1"
           >
-            <Check className="w-5 h-5" /> Accept Order
+            <Check className="w-4 h-4" /> Acknowledge Call
           </button>
         )}
-        {isPreparing && (
-          <button 
-            onClick={() => onStatusUpdate(order.id, 'ready')}
-            className="flex-grow flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 active:scale-95 text-white py-4 rounded-2xl font-black text-sm shadow-xl shadow-blue-500/20 transition-all"
-          >
-            <Check className="w-5 h-5" /> Mark Done
-          </button>
-        )}
-        {isReady && (
-          <button 
-            onClick={() => onStatusUpdate(order.id, 'completed')}
-            className="flex-grow flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 active:scale-95 text-white py-4 rounded-2xl font-black text-sm shadow-xl shadow-green-500/20 transition-all"
-          >
-            <Check className="w-5 h-5" /> Mark Served
-          </button>
-        )}
-        {order.status === 'cancelled' && (
-          <div className="flex-grow flex items-center justify-center gap-2 bg-red-500/10 border border-red-500/50 text-red-500 py-4 rounded-2xl font-black text-sm uppercase tracking-widest animate-pulse">
-            <XCircle className="w-5 h-5" /> Cancelled
-          </div>
-        )}
+        
+        <div className="flex gap-3">
+          {isNew && (
+            <button 
+              onClick={() => onStatusUpdate(order.id, 'preparing')}
+              className="flex-grow flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 active:scale-95 text-white py-4 rounded-2xl font-black text-sm shadow-xl shadow-primary/20 transition-all"
+            >
+              <Check className="w-5 h-5" /> Accept Order
+            </button>
+          )}
+          {isPreparing && (
+            <button 
+              onClick={() => onStatusUpdate(order.id, 'ready')}
+              className="flex-grow flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 active:scale-95 text-white py-4 rounded-2xl font-black text-sm shadow-xl shadow-blue-500/20 transition-all"
+            >
+              <Check className="w-5 h-5" /> Mark Done
+            </button>
+          )}
+          {isReady && (
+            <button 
+              onClick={() => onStatusUpdate(order.id, 'completed')}
+              className="flex-grow flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 active:scale-95 text-white py-4 rounded-2xl font-black text-sm shadow-xl shadow-green-500/20 transition-all"
+            >
+              <Check className="w-5 h-5" /> Mark Served
+            </button>
+          )}
+          {order.status === 'cancelled' && (
+            <div className="flex-grow flex items-center justify-center gap-2 bg-red-500/10 border border-red-500/50 text-red-500 py-4 rounded-2xl font-black text-sm uppercase tracking-widest animate-pulse">
+              <XCircle className="w-5 h-5" /> Cancelled
+            </div>
+          )}
+        </div>
       </div>
 
 
