@@ -86,6 +86,13 @@ function WaiterDashboardContent() {
       newCalls.forEach(c => shownCallsRef.current.add(c.id));
     }
 
+    // Reset shown status for resolved calls to allow re-notifying on subsequent calls for the same order
+    data.forEach((order: WaiterOrder) => {
+      if (!order.callWaiter && shownCallsRef.current.has(order.id)) {
+        shownCallsRef.current.delete(order.id);
+      }
+    });
+
     setOrders(data);
     setPrevOrders(data);
     prevOrdersRef.current = data;

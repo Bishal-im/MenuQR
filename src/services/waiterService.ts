@@ -210,13 +210,28 @@ export async function resolveWaiterCall(orderId: string, notifyCustomer: boolean
     if (!mongoose.Types.ObjectId.isValid(orderId)) {
       return false;
     }
+    // Find the order first to check items
+    const order = await OrderModel.findOne({ 
+      _id: new mongoose.Types.ObjectId(orderId), 
+      restaurantId: new mongoose.Types.ObjectId(session.restaurantId) 
+    });
+
+    if (!order) return false;
+
+    const update: any = { 
+      callWaiter: false,
+      waiterAccepted: notifyCustomer,
+      updatedAt: new Date()
+    };
+
+    // If it's a pure service call (no items), mark as completed
+    if (!order.items || order.items.length === 0) {
+      update.status = 'completed';
+    }
+
     const result = await OrderModel.findOneAndUpdate(
-      { _id: new mongoose.Types.ObjectId(orderId), restaurantId: new mongoose.Types.ObjectId(session.restaurantId) },
-      { 
-        callWaiter: false,
-        waiterAccepted: notifyCustomer,
-        updatedAt: new Date()
-      }
+      { _id: order._id },
+      update
     );
     return !!result;
   } catch (error) {
@@ -244,6 +259,7 @@ export async function resolveAllServiceCalls(notifyCustomer: boolean = false): P
       query.tableId = { $in: tableNumbers };
     }
 
+    // Mark all as resolved
     const result = await OrderModel.updateMany(
       query,
       { 
@@ -252,6 +268,13 @@ export async function resolveAllServiceCalls(notifyCustomer: boolean = false): P
         updatedAt: new Date() 
       }
     );
+
+    // Additionally, complete any active orders that have NO items (pure service calls)
+    await OrderModel.updateMany(
+      { ...query, items: { $size: 0 } },
+      { status: 'completed', updatedAt: new Date() }
+    );
+
     return result.modifiedCount > 0;
   } catch (error) {
     console.error("[WAITER SERVICE] Resolve All Error:", error);
