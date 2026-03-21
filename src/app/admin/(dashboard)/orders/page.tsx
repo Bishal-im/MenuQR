@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Search, 
   Filter, 
-  MoreHorizontal, 
+  X, 
   Clock, 
   CheckCircle2, 
   AlertCircle,
@@ -264,7 +264,7 @@ export default function OrdersPage() {
                 <div className="flex items-center justify-between mb-8">
                   <h3 className="text-xl font-bold">Order Details</h3>
                   <button onClick={() => setSelectedOrder(null)} className="rounded-lg p-2 hover:bg-white/10 text-muted">
-                    <MoreHorizontal className="h-6 w-6" />
+                    <X className="h-6 w-6" />
                   </button>
                 </div>
 
