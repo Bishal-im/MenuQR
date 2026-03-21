@@ -145,9 +145,7 @@ function WaiterDashboardContent() {
 
   const filteredOrders = orders.filter(o => {
     let matchesTab = false;
-    if (activeTab === 'all') {
-      matchesTab = ['pending', 'preparing', 'ready'].includes(o.status);
-    } else if (activeTab === 'history') {
+    if (activeTab === 'history') {
       matchesTab = ['completed', 'cancelled'].includes(o.status);
     } else if (activeTab === 'pending') {
       const isRecentCancellation = o.status === 'cancelled' && (Date.now() - new Date(o.updatedAt).getTime()) < 60000;
@@ -156,6 +154,11 @@ function WaiterDashboardContent() {
       matchesTab = o.status === activeTab;
     }
     
+    // In 'all' tab, we show orders that are pending, preparing, or ready
+    if (activeTab === 'all') {
+      matchesTab = ['pending', 'preparing', 'ready'].includes(o.status);
+    }
+
     const matchesSearch = o.tableId.includes(searchQuery) || o.id.includes(searchQuery);
     const matchesTable = selectedTableId === 'all' || o.tableId === selectedTableId;
     const hasItems = o.items && o.items.length > 0;
@@ -163,14 +166,50 @@ function WaiterDashboardContent() {
     return matchesTab && matchesSearch && matchesTable && hasItems;
   });
 
-  // For history, show newest first. For active tabs, show oldest first (chronological) per user request.
+  // Consolidate history orders if the active tab is 'history'
+  let displayedOrders = filteredOrders;
   if (activeTab === 'history') {
-    filteredOrders.reverse();
+    const consolidatedMap = new Map<string, WaiterOrder>();
+    
+    filteredOrders.forEach(order => {
+      const existing = consolidatedMap.get(order.tableId);
+      if (existing) {
+        // Merge items into existing entry
+        order.items.forEach(newItem => {
+          const itemInExisting = existing.items.find(i => i.id === newItem.id || i.name === newItem.name);
+          if (itemInExisting) {
+            itemInExisting.quantity += newItem.quantity;
+          } else {
+            existing.items.push({ ...newItem });
+          }
+        });
+        existing.totalAmount += order.totalAmount;
+        // Keep the most recent updatedAt
+        if (new Date(order.updatedAt) > new Date(existing.updatedAt)) {
+          existing.updatedAt = order.updatedAt;
+        }
+      } else {
+        // Create a new entry (deep copy items to avoid mutating original state)
+        consolidatedMap.set(order.tableId, {
+          ...order,
+          items: order.items.map(i => ({ ...i }))
+        });
+      }
+    });
+    
+    displayedOrders = Array.from(consolidatedMap.values());
+  }
+
+  // For history, show newest updated first. For active tabs, show oldest first (chronological) per user request.
+  if (activeTab === 'history') {
+    displayedOrders.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
   }
 
   const getTabCount = (tabValue: string) => {
     if (tabValue === 'history') {
-      return orders.filter(o => ['completed', 'cancelled'].includes(o.status) && o.items && o.items.length > 0).length;
+      // In history, count unique tables that have completed/cancelled orders
+      const historyOrders = orders.filter(o => ['completed', 'cancelled'].includes(o.status) && o.items && o.items.length > 0);
+      return new Set(historyOrders.map(o => o.tableId)).size;
     }
     return orders.filter(o => o.status === tabValue && o.items && o.items.length > 0).length;
   };
@@ -306,9 +345,9 @@ function WaiterDashboardContent() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map(i => <div key={i} className="h-80 glass rounded-[2rem] border border-neutral-800/50 animate-pulse" />)}
           </div>
-        ) : filteredOrders.length > 0 ? (
+        ) : displayedOrders.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredOrders.map((order) => (
+            {displayedOrders.map((order) => (
               <OrderCard 
                 key={order.id} 
                 order={order} 

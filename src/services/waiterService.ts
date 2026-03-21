@@ -52,7 +52,7 @@ export async function getOrders(): Promise<WaiterOrder[]> {
       .populate('items.menuItemId')
       .lean();
     
-    return orders.map((order: any) => ({
+    const mappedOrders: WaiterOrder[] = orders.map((order: any) => ({
       id: order._id.toString(),
       tableId: order.tableId,
       items: order.items.map((item: any) => ({
@@ -66,6 +66,43 @@ export async function getOrders(): Promise<WaiterOrder[]> {
       createdAt: order.createdAt instanceof Date ? order.createdAt.toISOString() : new Date(order.createdAt).toISOString(),
       updatedAt: order.updatedAt instanceof Date ? order.updatedAt.toISOString() : new Date(order.updatedAt).toISOString(),
     }));
+
+    // Safeguard: Merge active orders (pending, accepted, preparing, ready) for the same table and status
+    const mergedOrders: WaiterOrder[] = [];
+    const activeStatuses = ['pending', 'accepted', 'preparing', 'ready'];
+
+    mappedOrders.forEach(order => {
+      if (activeStatuses.includes(order.status)) {
+        const existingOrder = mergedOrders.find(
+          o => o.tableId === order.tableId && o.status === order.status
+        );
+
+        if (existingOrder) {
+          // Merge items
+          order.items.forEach(newItem => {
+            const existingItem = existingOrder.items.find(i => i.id === newItem.id || i.name === newItem.name);
+            if (existingItem) {
+              existingItem.quantity += newItem.quantity;
+            } else {
+              existingOrder.items.push({ ...newItem });
+            }
+          });
+          existingOrder.totalAmount += order.totalAmount;
+          // Keep the older createdAt but update updatedAt if newer
+          if (new Date(order.updatedAt) > new Date(existingOrder.updatedAt)) {
+            existingOrder.updatedAt = order.updatedAt;
+          }
+          if (order.callWaiter) existingOrder.callWaiter = true;
+        } else {
+          mergedOrders.push({ ...order, items: [...order.items.map(i => ({ ...i }))] });
+        }
+      } else {
+        // Just push history orders as is, UI will handle consolidation for display
+        mergedOrders.push(order);
+      }
+    });
+
+    return mergedOrders;
   } catch (error) {
     console.error("[WAITER SERVICE] Get Orders Error:", error);
     return [];
