@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { getOrders, updateStatus, resolveWaiterCall, resolveAllServiceCalls, WaiterOrder, OrderStatus } from "@/services/waiterService";
+import { getOrders, updateStatus, resolveWaiterCall, resolveAllServiceCalls, clearTableStatus, WaiterOrder, OrderStatus } from "@/services/waiterService";
 import OrderCard from "@/components/waiter/OrderCard";
 import WaiterCallModal from "@/components/waiter/WaiterCallModal";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -121,6 +121,13 @@ function WaiterDashboardContent() {
       // Immediate refresh after resolution
       await fetchOrders();
       if (currentModalCall?.id === id) setCurrentModalCall(null);
+    }
+  };
+  
+  const handleClearTable = async (tableId: string) => {
+    const success = await clearTableStatus(tableId);
+    if (success) {
+      await fetchOrders();
     }
   };
 
@@ -360,6 +367,7 @@ function WaiterDashboardContent() {
                 order={order} 
                 onStatusUpdate={handleStatusUpdate} 
                 onResolveCall={handleResolveCall}
+                onClearTable={handleClearTable}
               />
             ))}
           </div>

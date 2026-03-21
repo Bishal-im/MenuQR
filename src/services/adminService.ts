@@ -886,3 +886,19 @@ export async function deleteTable(id: string) {
     return { success: false, error: error.message };
   }
 }
+
+export async function clearTable(id: string) {
+  try {
+    await connectToDatabase();
+    const session = await getSession();
+    if (!session || !session.restaurantId) throw new Error("Unauthorized");
+
+    await TableModel.findOneAndUpdate(
+      { _id: new mongoose.Types.ObjectId(id), restaurantId: new mongoose.Types.ObjectId(session.restaurantId) },
+      { status: 'Empty' }
+    );
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}

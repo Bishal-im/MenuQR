@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, QrCode, Download, Trash2, Users, ExternalLink, MoreVertical, X, AlertCircle, Loader2 } from "lucide-react";
+import { Plus, QrCode, Download, Trash2, Users, ExternalLink, MoreVertical, X, AlertCircle, Loader2, RefreshCcw } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import DeleteConfirmationModal from "@/components/common/DeleteConfirmationModal";
-import { getTables, addTable, deleteTable, getStaff, assignWaiterToTable, StaffMember } from "@/services/adminService";
+import { getTables, addTable, deleteTable, getStaff, assignWaiterToTable, clearTable, StaffMember } from "@/services/adminService";
 import { QRCodeSVG } from "qrcode.react";
 import { useAuth } from "@/context/AuthContext";
 
@@ -77,6 +77,17 @@ export default function TablesPage() {
       await fetchData();
     } else {
       alert("Failed to assign waiter: " + res.error);
+    }
+    setIsSubmitting(false);
+  };
+
+  const handleClearTable = async (tableId: string) => {
+    setIsSubmitting(true);
+    const res = await clearTable(tableId);
+    if (res.success) {
+      await fetchData();
+    } else {
+      alert("Failed to clear table: " + res.error);
     }
     setIsSubmitting(false);
   };
@@ -250,6 +261,16 @@ export default function TablesPage() {
                </div>
              </div>
 
+            {table.status === "Occupied" && (
+              <button 
+                onClick={() => handleClearTable(table.id)}
+                disabled={isSubmitting}
+                className="mt-4 w-full flex items-center justify-center gap-2 rounded-xl bg-orange-500/10 border border-orange-500/20 py-2.5 text-xs font-bold text-orange-500 hover:bg-orange-500 hover:text-black transition-all disabled:opacity-50"
+              >
+                 <RefreshCcw className="h-3.5 w-3.5" /> Clear & Reset Table
+              </button>
+            )}
+
             <div className="mt-6 grid grid-cols-2 gap-3">
                <button 
                  onClick={() => setShowQRModal(table)}
@@ -279,7 +300,7 @@ export default function TablesPage() {
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => !isSubmitting && setIsModalOpen(false)} />
-          <div className="relative w-full max-w-lg rounded-3xl border border-border bg-card p-8 shadow-2xl animate-in zoom-in-95 duration-200">
+          <div className="relative w-full max-lg rounded-3xl border border-border bg-card p-8 shadow-2xl animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold">Add New Table</h3>
               <button 

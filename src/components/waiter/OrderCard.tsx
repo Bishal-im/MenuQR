@@ -10,16 +10,18 @@ import {
   Utensils, 
   XCircle,
   AlertCircle,
-  BellRing
+  BellRing,
+  Trash2
 } from "lucide-react";
 
 interface OrderCardProps {
   order: WaiterOrder;
   onStatusUpdate: (id: string, status: OrderStatus) => void;
   onResolveCall: (id: string) => void;
+  onClearTable?: (tableId: string) => void;
 }
 
-export default function OrderCard({ order, onStatusUpdate, onResolveCall }: OrderCardProps) {
+export default function OrderCard({ order, onStatusUpdate, onResolveCall, onClearTable }: OrderCardProps) {
   const isNew = order.status === 'pending';
   const isPreparing = order.status === 'preparing';
   const isReady = order.status === 'ready';
@@ -115,6 +117,14 @@ export default function OrderCard({ order, onStatusUpdate, onResolveCall }: Orde
             <div className="flex-grow flex items-center justify-center gap-2 bg-red-500/10 border border-red-500/50 text-red-500 py-4 rounded-2xl font-black text-sm uppercase tracking-widest animate-pulse">
               <XCircle className="w-5 h-5" /> Cancelled
             </div>
+          )}
+          {isHistory && onClearTable && (
+            <button 
+              onClick={() => onClearTable(order.tableId)}
+              className="flex-grow flex items-center justify-center gap-2 bg-neutral-800 hover:bg-neutral-700 active:scale-95 text-white py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all border border-neutral-700"
+            >
+              <Trash2 className="w-5 h-5" /> Clear Table
+            </button>
           )}
         </div>
       </div>

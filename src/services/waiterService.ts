@@ -194,6 +194,26 @@ export async function updateStatus(orderId: string, status: OrderStatus): Promis
     currentOrder.status = status;
     currentOrder.updatedAt = new Date();
     await currentOrder.save();
+
+    // If marking as completed or cancelled, check if table should be cleared automatically
+    if (['completed', 'cancelled'].includes(status.toLowerCase())) {
+      // Find any OTHER active orders for this table
+      const activeOrdersCount = await OrderModel.countDocuments({
+        restaurantId: currentOrder.restaurantId,
+        tableId: currentOrder.tableId,
+        status: { $in: ['pending', 'accepted', 'preparing', 'ready'] },
+        _id: { $ne: currentOrder._id }
+      });
+
+      if (activeOrdersCount === 0) {
+        // No more active orders, set table to Empty
+        await TableModel.findOneAndUpdate(
+          { number: currentOrder.tableId, restaurantId: currentOrder.restaurantId },
+          { status: 'Empty' }
+        );
+      }
+    }
+
     return true;
   } catch (error) {
     console.error("[WAITER SERVICE] Update Status Error:", error);
@@ -278,6 +298,26 @@ export async function resolveAllServiceCalls(notifyCustomer: boolean = false): P
     return result.modifiedCount > 0;
   } catch (error) {
     console.error("[WAITER SERVICE] Resolve All Error:", error);
+    return false;
+  }
+}
+
+export async function clearTableStatus(tableNumber: string): Promise<boolean> {
+  try {
+    await connectToDatabase();
+    const session = await getSession('waiter') || await getSession();
+    if (!session || !session.restaurantId) return false;
+
+    const restaurantId = new mongoose.Types.ObjectId(session.restaurantId);
+    
+    const result = await TableModel.findOneAndUpdate(
+      { number: tableNumber, restaurantId },
+      { status: 'Empty' }
+    );
+    
+    return !!result;
+  } catch (error) {
+    console.error("[WAITER SERVICE] Clear Table Error:", error);
     return false;
   }
 }
