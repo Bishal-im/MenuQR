@@ -8,7 +8,8 @@ import MenuItem from "@/components/customer/MenuItem";
 import CategoryBar from "@/components/customer/CategoryBar";
 import CartStickyButton from "@/components/customer/CartStickyButton";
 import ItemModal from "@/components/customer/ItemModal";
-import { Search, UtensilsCrossed, Star, Sparkles, Bell, Check, Loader2, Phone } from "lucide-react";
+import Link from "next/link";
+import { Search, UtensilsCrossed, Star, Sparkles, Bell, Check, Loader2, Phone, ArrowUpRight } from "lucide-react";
 
 function MenuContent() {
   const searchParams = useSearchParams();
@@ -28,18 +29,21 @@ function MenuContent() {
   const [activeServiceOrderId, setActiveServiceOrderId] = useState<string | null>(null);
   const [waiterAccepted, setWaiterAccepted] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [persistentOrderId, setPersistentOrderId] = useState<string | null>(null);
+  const [persistentOrderStatus, setPersistentOrderStatus] = useState<any>(null);
 
   useEffect(() => {
     const tableId = searchParams.get("tableId");
     const restaurantId = searchParams.get("restaurantId");
-    const storageKey = `menuqr_call_${restaurantId}`;
+    const callStorageKey = `menuqr_call_${restaurantId}`;
+    const orderStorageKey = `menuqr_order_${restaurantId}_${tableId}`;
 
     if (tableId && restaurantId) {
       setSession(tableId, restaurantId);
     }
 
     // Load active service call from localStorage (restaurant-scoped)
-    const savedCall = localStorage.getItem(storageKey);
+    const savedCall = localStorage.getItem(callStorageKey);
     if (savedCall) {
       setActiveServiceOrderId(savedCall);
       setWaiterNotified(true);
@@ -62,18 +66,35 @@ function MenuContent() {
               setWaiterNotified(false);
               setWaiterAccepted(false);
               setActiveServiceOrderId(null);
-              localStorage.removeItem(storageKey);
+              localStorage.removeItem(callStorageKey);
             } else {
               setWaiterAccepted(!!order.waiterAccepted);
               setWaiterNotified(!!order.callWaiter);
             }
           } catch (err) {
             console.error("Check saved call failed, clearing stale state", err);
-            // If the order can't be found or any other error, assume it's stale
             setWaiterNotified(false);
             setWaiterAccepted(false);
             setActiveServiceOrderId(null);
-            localStorage.removeItem(storageKey);
+            localStorage.removeItem(callStorageKey);
+          }
+        }
+
+        // Check for persistent order
+        const savedOrder = localStorage.getItem(orderStorageKey);
+        if (savedOrder) {
+          try {
+            const order = await getOrder(savedOrder);
+            const activeStatuses = ["pending", "accepted", "preparing", "ready"];
+            if (activeStatuses.includes(order.status)) {
+              setPersistentOrderId(savedOrder);
+              setPersistentOrderStatus(order.status);
+            } else {
+              localStorage.removeItem(orderStorageKey);
+            }
+          } catch (err) {
+            console.error("Check saved order failed", err);
+            localStorage.removeItem(orderStorageKey);
           }
         }
       } catch (e) {
@@ -107,7 +128,7 @@ function MenuContent() {
   useEffect(() => {
     if (!activeServiceOrderId) return;
     const restaurantId = searchParams.get("restaurantId");
-    const storageKey = `menuqr_call_${restaurantId}`;
+    const callStorageKey = `menuqr_call_${restaurantId}`;
 
     const pollStatus = async () => {
       try {
@@ -115,20 +136,17 @@ function MenuContent() {
         setWaiterAccepted(!!data.waiterAccepted);
         setWaiterNotified(!!data.callWaiter);
         
-        // If the call is no longer active (notified is false) AND not accepted (so no modal will show)
-        // then we can safely clear the activeServiceOrderId and localStorage
         if (!data.callWaiter && !data.waiterAccepted) {
           setWaiterNotified(false);
           setWaiterAccepted(false);
           setActiveServiceOrderId(null);
-          localStorage.removeItem(storageKey);
+          localStorage.removeItem(callStorageKey);
         }
       } catch (e) {
         console.error("Polling failed, assuming stale", e);
-        // On recurring failure, clear the state to prevent UI getting stuck
         setWaiterNotified(false);
         setActiveServiceOrderId(null);
-        localStorage.removeItem(storageKey);
+        localStorage.removeItem(callStorageKey);
       }
     };
 
@@ -139,7 +157,7 @@ function MenuContent() {
   const handleCallWaiter = async () => {
     const tableId = searchParams.get("tableId") || "12";
     const restaurantId = searchParams.get("restaurantId") || "default_rid";
-    const storageKey = `menuqr_call_${restaurantId}`;
+    const callStorageKey = `menuqr_call_${restaurantId}`;
     
     setIsCallingWaiter(true);
     try {
@@ -147,7 +165,7 @@ function MenuContent() {
       if (res.success) {
         setWaiterNotified(true);
         setActiveServiceOrderId(res.orderId);
-        localStorage.setItem(storageKey, res.orderId);
+        localStorage.setItem(callStorageKey, res.orderId);
       }
     } catch (e) {
       console.error("Failed to call waiter", e);
@@ -158,14 +176,14 @@ function MenuContent() {
 
   const handleDismissAcknowledgment = async () => {
     const restaurantId = searchParams.get("restaurantId");
-    const storageKey = `menuqr_call_${restaurantId}`;
+    const callStorageKey = `menuqr_call_${restaurantId}`;
 
     if (activeServiceOrderId) {
       await clearWaiterAccepted(activeServiceOrderId);
     }
     setWaiterAccepted(false);
     setActiveServiceOrderId(null);
-    localStorage.removeItem(storageKey);
+    localStorage.removeItem(callStorageKey);
   };
 
   if (loading) {
@@ -180,6 +198,20 @@ function MenuContent() {
 
   return (
     <div className="min-h-screen bg-black text-neutral-100 pb-32">
+      {/* Track Order Floating Label */}
+      {persistentOrderId && (
+        <div className="fixed top-24 left-0 right-0 z-50 flex justify-center animate-in slide-in-from-top duration-500">
+          <Link 
+            href={`/order-status/${persistentOrderId}`}
+            className="bg-orange-500 text-black px-6 py-2.5 rounded-full font-black text-xs uppercase tracking-widest shadow-2xl flex items-center gap-2 border border-orange-400 group active:scale-95 transition-all"
+          >
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            Track Active Order
+            <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+          </Link>
+        </div>
+      )}
+
       {/* Header Section */}
       <header className="p-6 pt-12 bg-gradient-to-b from-primary/20 to-transparent">
         <div className="flex items-center justify-between mb-8">

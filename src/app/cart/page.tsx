@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCart } from "@/context/CartContext";
 import { createOrder } from "@/services/customerService";
@@ -31,6 +31,10 @@ export default function CartPage() {
 
       const response = await createOrder(orderData);
       if (response.success) {
+        // Store orderId for persistent tracking per table/restaurant
+        const storageKey = `menuqr_order_${restaurantId || "default_rid"}_${tableId || "T1"}`;
+        localStorage.setItem(storageKey, response.orderId);
+        
         clearCart();
         router.push(`/order-success?orderId=${response.orderId}`);
       }

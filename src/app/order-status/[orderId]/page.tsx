@@ -47,6 +47,14 @@ export default function OrderStatusPage() {
     return () => clearInterval(interval);
   }, [orderId]);
 
+  // Effect to clear localStorage when order is no longer active
+  useEffect(() => {
+    if (orderData && (status === "completed" || status === "served" || status === "cancelled")) {
+      const orderStorageKey = `menuqr_order_${orderData.restaurantId}_${orderData.tableId}`;
+      localStorage.removeItem(orderStorageKey);
+    }
+  }, [status, orderData]);
+
   const handleCancelOrder = async () => {
     if (!orderId || typeof orderId !== 'string') return;
     
