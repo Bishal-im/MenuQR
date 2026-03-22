@@ -36,7 +36,7 @@ export default function CartPage() {
         localStorage.setItem(storageKey, response.orderId);
         
         clearCart();
-        router.push(`/order-success?orderId=${response.orderId}`);
+        router.push(`/order-success?orderId=${response.orderId}&tableId=${tableId || "T1"}&restaurantId=${restaurantId || "default_rid"}`);
       }
     } catch (e) {
       console.error("Order failed", e);

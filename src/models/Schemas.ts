@@ -93,6 +93,7 @@ const OrderSchema = new Schema({
   },
   callWaiter: { type: Boolean, default: false },
   waiterAccepted: { type: Boolean, default: false },
+  orderNumber: { type: Number, default: 1 },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

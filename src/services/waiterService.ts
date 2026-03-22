@@ -67,42 +67,7 @@ export async function getOrders(): Promise<WaiterOrder[]> {
       updatedAt: order.updatedAt instanceof Date ? order.updatedAt.toISOString() : new Date(order.updatedAt).toISOString(),
     }));
 
-    // Safeguard: Merge active orders (pending, accepted, preparing, ready) for the same table and status
-    const mergedOrders: WaiterOrder[] = [];
-    const activeStatuses = ['pending', 'accepted', 'preparing', 'ready'];
-
-    mappedOrders.forEach(order => {
-      if (activeStatuses.includes(order.status)) {
-        const existingOrder = mergedOrders.find(
-          o => o.tableId === order.tableId && o.status === order.status
-        );
-
-        if (existingOrder) {
-          // Merge items
-          order.items.forEach(newItem => {
-            const existingItem = existingOrder.items.find(i => i.id === newItem.id || i.name === newItem.name);
-            if (existingItem) {
-              existingItem.quantity += newItem.quantity;
-            } else {
-              existingOrder.items.push({ ...newItem });
-            }
-          });
-          existingOrder.totalAmount += order.totalAmount;
-          // Keep the older createdAt but update updatedAt if newer
-          if (new Date(order.updatedAt) > new Date(existingOrder.updatedAt)) {
-            existingOrder.updatedAt = order.updatedAt;
-          }
-          if (order.callWaiter) existingOrder.callWaiter = true;
-        } else {
-          mergedOrders.push({ ...order, items: [...order.items.map(i => ({ ...i }))] });
-        }
-      } else {
-        // Just push history orders as is, UI will handle consolidation for display
-        mergedOrders.push(order);
-      }
-    });
-
-    return mergedOrders;
+    return mappedOrders;
   } catch (error) {
     console.error("[WAITER SERVICE] Get Orders Error:", error);
     return [];
@@ -149,46 +114,6 @@ export async function updateStatus(orderId: string, status: OrderStatus): Promis
     });
 
     if (!currentOrder) return false;
-
-    // Check if there's already an order in the target status for this table
-    const targetOrder = await OrderModel.findOne({
-      restaurantId: currentOrder.restaurantId,
-      tableId: currentOrder.tableId,
-      status: status,
-      _id: { $ne: currentOrder._id }
-    });
-
-    if (targetOrder) {
-      // Merge items from currentOrder into targetOrder
-      const mergedItems = [...targetOrder.items];
-      
-      currentOrder.items.forEach((item: any) => {
-        const existingItemIndex = mergedItems.findIndex(i => 
-          i.menuItemId?.toString() === item.menuItemId?.toString() || i.name === item.name
-        );
-
-        if (existingItemIndex !== -1) {
-          mergedItems[existingItemIndex].quantity += item.quantity;
-        } else {
-          mergedItems.push({
-            menuItemId: item.menuItemId,
-            name: item.name,
-            quantity: item.quantity,
-            price: item.price
-          });
-        }
-      });
-
-      targetOrder.items = mergedItems;
-      targetOrder.totalAmount += currentOrder.totalAmount;
-      targetOrder.updatedAt = new Date();
-      
-      await targetOrder.save();
-
-      // Delete the current order as it has been merged
-      await OrderModel.findByIdAndDelete(currentOrder._id);
-      return true;
-    }
 
     // No target order, just update status
     currentOrder.status = status;

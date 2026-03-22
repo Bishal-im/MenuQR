@@ -202,11 +202,11 @@ function MenuContent() {
       {persistentOrderId && (
         <div className="fixed top-24 left-0 right-0 z-50 flex justify-center animate-in slide-in-from-top duration-500">
           <Link 
-            href={`/order-status/${persistentOrderId}`}
+            href={`/order-track?tableId=${searchParams.get("tableId")}&restaurantId=${searchParams.get("restaurantId")}`}
             className="bg-orange-500 text-black px-6 py-2.5 rounded-full font-black text-xs uppercase tracking-widest shadow-2xl flex items-center gap-2 border border-orange-400 group active:scale-95 transition-all"
           >
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            Track Active Order
+            Track My Order
             <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
           </Link>
         </div>

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { CheckCircle2, ShoppingBag, ArrowRight, Share2, Star } from "lucide-react";
 import Link from "next/link";
@@ -63,7 +63,7 @@ function SuccessContent() {
           </div>
 
           <Link 
-            href={`/order-status/${orderId}`}
+            href={`/order-track?tableId=${searchParams.get("tableId") || "12"}&restaurantId=${searchParams.get("restaurantId") || "default_rid"}`}
             className="w-full flex items-center justify-center gap-2 bg-white text-black py-4 rounded-2xl font-black text-sm hover:bg-neutral-200 transition-all active:scale-95 group"
           >
             Track Real-time Status

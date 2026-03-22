@@ -69,58 +69,18 @@ export async function getMenu(restaurantId: string) {
 export async function createOrder(data: OrderData) {
   await connectToDatabase();
   
-  // Check for an existing active order for this table and restaurant
-  // Sessions include: pending, accepted, preparing, ready
-  const activeStatuses = ['pending', 'accepted', 'preparing', 'ready'];
-  const existingOrder = await OrderModel.findOne({
+  // Find the highest order number for the current table to determine the next one
+  // We look for active orders or any order from this "session"
+  // If no orders exist, start at 1
+  const lastOrder = await OrderModel.findOne({
     restaurantId: mongoose.Types.ObjectId.isValid(data.restaurantId) ? data.restaurantId : undefined,
     tableId: data.tableId,
-    status: { $in: activeStatuses }
-  });
+    status: { $ne: 'cancelled' } 
+  }).sort({ orderNumber: -1 });
 
-  if (existingOrder) {
-    // Merge items into the existing order
-    const currentItems = [...existingOrder.items];
-    
-    data.items.forEach(newItem => {
-      const existingItemIndex = currentItems.findIndex(i => 
-        i.menuItemId?.toString() === newItem.menuItemId || i.name === newItem.name
-      );
+  const nextOrderNumber = lastOrder ? (lastOrder.orderNumber || 1) + 1 : 1;
 
-      if (existingItemIndex !== -1) {
-        // Increment quantity of existing item
-        currentItems[existingItemIndex].quantity += newItem.quantity;
-      } else {
-        // Add new item to the list
-        currentItems.push({
-          menuItemId: mongoose.Types.ObjectId.isValid(newItem.menuItemId) ? newItem.menuItemId : undefined,
-          name: newItem.name,
-          quantity: newItem.quantity,
-          price: newItem.price
-        });
-      }
-    });
-
-    existingOrder.items = currentItems;
-    existingOrder.totalAmount += data.totalAmount;
-    existingOrder.updatedAt = new Date();
-    
-    await existingOrder.save();
-
-    // Ensure table is marked as Occupied
-    await (mongoose.model('Table') as any).findOneAndUpdate(
-      { number: data.tableId, restaurantId: data.restaurantId },
-      { status: 'Occupied', lastOrderAt: new Date() }
-    );
-
-    return {
-      success: true,
-      orderId: existingOrder._id.toString(),
-      merged: true
-    };
-  }
-
-  // If no pending order, create a new one
+  // Create a new order (No Merging as per new requirement)
   const newOrder = await OrderModel.create({
     restaurantId: mongoose.Types.ObjectId.isValid(data.restaurantId) ? data.restaurantId : undefined,
     tableId: data.tableId,
@@ -131,7 +91,8 @@ export async function createOrder(data: OrderData) {
       price: item.price
     })),
     totalAmount: data.totalAmount,
-    status: 'pending'
+    status: 'pending',
+    orderNumber: nextOrderNumber
   });
 
   // Set table status to Occupied
@@ -143,7 +104,33 @@ export async function createOrder(data: OrderData) {
   return {
     success: true,
     orderId: newOrder._id.toString(),
+    orderNumber: nextOrderNumber
   };
+}
+
+export async function getOrdersByTable(tableId: string, restaurantId: string) {
+  await connectToDatabase();
+  
+  const orders = await OrderModel.find({
+    tableId,
+    restaurantId: mongoose.Types.ObjectId.isValid(restaurantId) ? restaurantId : undefined,
+    status: { $ne: 'cancelled' }
+  }).sort({ orderNumber: 1 }).populate('items.menuItemId');
+
+  return orders.map((order: any) => ({
+    id: order._id.toString(),
+    status: order.status,
+    orderNumber: order.orderNumber || 1,
+    items: order.items.map((item: any) => ({
+      id: item.menuItemId?._id?.toString() || item._id.toString(),
+      name: item.menuItemId?.name || item.name,
+      quantity: item.quantity,
+      price: item.price,
+      image: item.menuItemId?.image
+    })),
+    totalAmount: order.totalAmount,
+    createdAt: order.createdAt.toISOString(),
+  }));
 }
 
 export async function getOrder(orderId: string) {
@@ -170,6 +157,7 @@ export async function getOrder(orderId: string) {
       price: item.price
     })),
     totalAmount: order.totalAmount,
+    orderNumber: order.orderNumber || 1,
     createdAt: order.createdAt.toISOString(),
   };
 }
