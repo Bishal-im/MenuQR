@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -31,7 +31,11 @@ export default function AdminLoginPage() {
   useEffect(() => {
     if (user && !authLoading) {
       if (user.role === 'admin') {
-        router.push('/admin/dashboard');
+        if (!user.restaurantName) {
+          router.push('/admin/setup');
+        } else {
+          router.push('/admin/dashboard');
+        }
       }
       // If user is superadmin or waiter, we stay on this page but allow them to logout
     }

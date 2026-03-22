@@ -37,11 +37,11 @@ const PlatformStatsSchema = new Schema({
 
 // Restaurant Schema
 const RestaurantSchema = new Schema({
-  name: { type: String, required: true },
-  ownerName: { type: String, required: true },
+  name: { type: String, default: "" },
+  ownerName: { type: String, default: "" },
   email: { type: String, required: true },
-  phone: { type: String, required: true },
-  address: { type: String },
+  phone: { type: String, default: "" },
+  address: { type: String, default: "" },
   cuisine: { type: String },
   website: { type: String },
   isOpen: { type: Boolean, default: true },

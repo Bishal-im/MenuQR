@@ -9,8 +9,9 @@ import {
   CategoryModel,
   TableModel 
 } from "@/models/Schemas";
-import { getSession } from "@/services/authService";
+import { getSession, AuthUser } from "@/services/authService";
 import mongoose from "mongoose";
+import { cookies } from "next/headers";
 
 const isSuperAdmin = (email: string) => {
   const superadminEmail = process.env.SUPERADMIN_EMAIL;
@@ -895,10 +896,42 @@ export async function clearTable(id: string) {
 
     await TableModel.findOneAndUpdate(
       { _id: new mongoose.Types.ObjectId(id), restaurantId: new mongoose.Types.ObjectId(session.restaurantId) },
-      { status: 'Empty' }
     );
     return { success: true };
   } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function completeSetup(data: { name: string; ownerName: string; phone: string; address: string; }) {
+  try {
+    const session = await getSession();
+    if (!session || session.role !== 'admin') throw new Error("Unauthorized");
+    
+    // 1. Update settings
+    await updateRestaurantSettings(data);
+    
+    // 2. Fetch the updated restaurant to get the name
+    const restaurant = await RestaurantModel.findOne({ email: session.email });
+    
+    // 3. Update the cookie
+    const updatedUser: AuthUser = {
+      ...session,
+      name: data.ownerName,
+      restaurantName: data.name
+    };
+    
+    const cookieStore = await cookies();
+    cookieStore.set('menu_qr_admin_session', JSON.stringify(updatedUser), {
+      httpOnly: true, 
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 7 * 24 * 60 * 60,
+      path: "/",
+    });
+    
+    return { success: true };
+  } catch (error: any) {
+    console.error("[ADMIN SERVICE] Complete Setup Error:", error);
     return { success: false, error: error.message };
   }
 }

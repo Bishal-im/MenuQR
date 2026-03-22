@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { X, Loader2, Store, User, Mail, Phone, MapPin, Globe } from "lucide-react";
@@ -75,7 +75,6 @@ export default function RestaurantModal({ isOpen, onClose, onSuccess }: Restaura
                 <input 
                   type="text" 
                   placeholder="Restaurant Name"
-                  required
                   className="w-full bg-black/50 border border-neutral-800 focus:border-primary text-white rounded-xl py-3 pl-12 pr-4 outline-none transition-all text-sm font-medium"
                   value={formData.name}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
@@ -86,7 +85,6 @@ export default function RestaurantModal({ isOpen, onClose, onSuccess }: Restaura
                 <input 
                   type="text" 
                   placeholder="Full Address"
-                  required
                   className="w-full bg-black/50 border border-neutral-800 focus:border-primary text-white rounded-xl py-3 pl-12 pr-4 outline-none transition-all text-sm font-medium"
                   value={formData.address}
                   onChange={(e) => setFormData({...formData, address: e.target.value})}
@@ -102,7 +100,6 @@ export default function RestaurantModal({ isOpen, onClose, onSuccess }: Restaura
                 <input 
                   type="text" 
                   placeholder="Legal Owner Name"
-                  required
                   className="w-full bg-black/50 border border-neutral-800 focus:border-primary text-white rounded-xl py-3 pl-12 pr-4 outline-none transition-all text-sm font-medium"
                   value={formData.ownerName}
                   onChange={(e) => setFormData({...formData, ownerName: e.target.value})}
@@ -124,7 +121,6 @@ export default function RestaurantModal({ isOpen, onClose, onSuccess }: Restaura
                 <input 
                   type="text" 
                   placeholder="Contact Phone Number"
-                  required
                   className="w-full bg-black/50 border border-neutral-800 focus:border-primary text-white rounded-xl py-3 pl-12 pr-4 outline-none transition-all text-sm font-medium"
                   value={formData.phone}
                   onChange={(e) => setFormData({...formData, phone: e.target.value})}
